@@ -1,0 +1,410 @@
+# shellcheck shell=dash
+
+# GitHub / GitLab / Codeberg Release API client
+
+# Resolve a GitHub auth token from the chain:
+#   GITHUB_TOKEN → GH_TOKEN → `gh auth token`
+# The first two are env-var overrides; `gh auth token` lets users with a
+# stored `gh` CLI login use it without exporting a separate variable. Fails
+# silently at each step (unset vars expand empty; gh may not be installed).
+#
+# Set EGET_NO_GH_AUTH_TOKEN=1 (any non-empty value) to skip the `gh` lookup
+# — useful in CI / compliance / shared environments where you want eget to
+# only see explicitly-configured credentials.
+# Issue #33.
+___x_cmd_eget_api_github_token_(){
+    local _t="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+    if [ -z "$_t" ] && [ -z "${EGET_NO_GH_AUTH_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
+        _t="$( gh auth token 2>/dev/null )" || _t=""
+    fi
+    printf "%s" "$_t"
+}
+
+___x_cmd_eget_api_release(){
+    local forge="$1" owner="$2" repo="$3" tag="$4" pre_release="$5" source="$6"
+
+    local base_url
+    case "$forge" in
+        codeberg)   base_url="https://codeberg.org/api/v1" ;;
+        gitlab)     base_url="https://gitlab.com/api/v4" ;;
+        github|*)   base_url="https://api.github.com" ;;
+    esac
+
+    local token=""
+    case "$forge" in
+        codeberg)   token="${EGET_CODEBERG_TOKEN:-${EGET_FORGE_TOKEN:-}}" ;;
+        gitlab)     token="${EGET_GITLAB_TOKEN:-${EGET_FORGE_TOKEN:-}}" ;;
+        github|*)   token="$( ___x_cmd_eget_api_github_token_ )" ;;
+    esac
+
+    if [ "$source" = "1" ]; then
+        ___x_cmd_eget_api_source "$base_url" "$owner" "$repo" "$tag" "$token" "$forge"
+        return
+    fi
+
+    if [ "$forge" = "gitlab" ]; then
+        local project_id
+        project_id="$( printf "%s/%s" "$owner" "$repo" | ___x_cmd jq -sRr @uri )"
+        if [ -n "$tag" ]; then
+            ___x_cmd_eget_api_curl "$base_url/projects/$project_id/releases/$tag" "$token"
+        else
+            local releases_json
+            releases_json="$( ___x_cmd_eget_api_curl "$base_url/projects/$project_id/releases?per_page=10" "$token" )" || return
+            printf "%s" "$releases_json" | ___x_cmd jq -r '.[0]'
+        fi
+    else
+        if [ -n "$tag" ]; then
+            ___x_cmd_eget_api_curl "$base_url/repos/$owner/$repo/releases/tags/$tag" "$token"
+        else
+            local releases_json
+            releases_json="$( ___x_cmd_eget_api_curl "$base_url/repos/$owner/$repo/releases?per_page=10" "$token" )" || return
+            if [ "$pre_release" = "1" ]; then
+                printf "%s" "$releases_json" | ___x_cmd jq -r '.[0]'
+            else
+                printf "%s" "$releases_json" | ___x_cmd jq -r '[ .[] | select(.prerelease != true) ][0]'
+            fi
+        fi
+    fi
+}
+
+# Unified release-data fetcher. Wraps ___x_cmd_eget_api_release with the
+# GitHub HTML fallback so callers (select_, lsasset, ...) get a single
+# entry point that always emits the same shape:
+#   {tag_name, assets:[{name, browser_download_url, size, digest}]}
+# — whether the data came from the JSON API or the scraped release page.
+#
+# Release *selection* (tag vs. latest, pre-release inclusion) stays inside
+# ___x_cmd_eget_api_release; this function only owns the transport choice.
+#
+# Args: forge owner repo tag pre_release source
+# Stdout: release JSON on success. Stderr: nothing from underlying curl.
+# Returns: 0 on success; non-zero on total failure. Callers should diagnose
+# (e.g. via ___x_cmd_eget_api_is_ratelimited for rate-limit hints).
+#
+# Implementation note: we can't reliably distinguish 4xx (404 / 403) from
+# transient network failures here — `x ccmd` normalizes curl's exit code
+# to 1 — so we always try the HTML fallback when the API fails. For
+# definitive errors the fallback page also 404s, so this loop still
+# returns failure. Callers get a clean "failed to fetch" instead of a
+# mid-stream "API unavailable" message that doesn't apply to 4xx cases.
+___x_cmd_eget_api_release_unified_(){
+    local forge="$1" owner="$2" repo="$3" tag="$4" pre_release="$5" source="$6"
+    local json
+
+    # Suppress curl's stderr — it leaks "HTTP 404" / "HTTP 403" lines that
+    # look like noise to end users. We report errors ourselves with cleaner
+    # diagnostics (and rate-limit hints via ___x_cmd_eget_api_is_ratelimited).
+    if json="$( ___x_cmd_eget_api_release "$forge" "$owner" "$repo" "$tag" "$pre_release" "$source" 2>/dev/null )"; then
+        printf "%s" "$json"
+        return 0
+    fi
+
+    # Try the GitHub HTML page as a fallback (issue #33). For 4xx the page
+    # also 404s and we return failure below; for transient issues (network
+    # blip, 5xx, rate limit) this is where we recover.
+    [ "$forge" = "github" ] || return 1
+
+    if json="$( ___x_cmd_eget_api_release_html "$forge" "$owner" "$repo" "$tag" 2>/dev/null )"; then
+        printf "%s" "$json"
+        return 0
+    fi
+
+    return 1
+}
+
+# HTML fallback for GitHub release discovery. Used when the API is
+# rate-limited (Issue #33) — the releases page and expanded_assets view
+# are much more leniently throttled than api.github.com, and the actual
+# download URL is the same either way.
+#
+# Output is a JSON object in the same shape as the API release endpoint
+# ({tag_name, assets:[{name, browser_download_url, size, digest}]}) so the
+# rest of the pipeline (manifest match, asset detection, download) is
+# unaware the data came from HTML. Digest is always empty (HTML doesn't
+# expose it); size is 0 (unavailable from the page).
+#
+# Mirrors the grep pattern from edwinjhlee in issue #33:
+#   curl .../releases/expanded_assets/<tag> | grep <repo> | grep download
+___x_cmd_eget_api_release_html(){
+    local forge="$1" owner="$2" repo="$3" tag="$4"
+    [ "$forge" = "github" ] || return 1
+
+    local html url tag_name=""
+
+    if [ -n "$tag" ]; then
+        tag_name="$tag"
+        url="https://github.com/$owner/$repo/releases/expanded_assets/$tag"
+    else
+        # No tag: scrape the main releases page to discover the latest tag,
+        # then fetch expanded_assets for it. The releases page lists tags in
+        # reverse chronological order, so head -1 is the newest.
+        url="https://github.com/$owner/$repo/releases"
+        html="$( ___x_cmd_cmds curl -sS -L -f "$url" 2>/dev/null )" || return 1
+        tag_name="$( printf "%s" "$html" | \
+            grep -oE '/releases/tag/[^"/?#<> ]+' | \
+            head -1 | sed 's|^/releases/tag/||' )"
+        [ -z "$tag_name" ] && return 1
+        url="https://github.com/$owner/$repo/releases/expanded_assets/$tag_name"
+    fi
+
+    html="$( ___x_cmd_cmds curl -sS -L -f "$url" 2>/dev/null )" || return 1
+
+    # Extract every /releases/download/<tag>/<asset> link from the page.
+    # The expanded_assets view renders both relative (/owner/repo/...) and
+    # absolute (https://github.com/owner/repo/...) URLs — both share the
+    # /<owner>/<repo>/releases/download/... path, so matching that anchor
+    # catches both. sort -u because the same asset can appear twice
+    # (file-tree row + footer "show all assets" panel).
+    printf "%s" "$html" | \
+        grep -oE "/$owner/$repo/releases/download/$tag_name/[^\"'<>?# ]+" | \
+        sort -u | \
+        while IFS= read -r _path; do
+            [ -z "$_path" ] && continue
+            # Asset name = basename of the path. Pre-escape backslash and
+            # double-quote for safe interpolation into the jq -R raw input.
+            _name="${_path##*/}"
+            _name="${_name//\\/\\\\}"
+            _name="${_name//\"/\\\"}"
+            printf '{"name":"%s","browser_download_url":"https://github.com%s","size":0,"digest":""}\n' \
+                "$_name" "$_path"
+        done | \
+    ___x_cmd jq -s --arg tag "$tag_name" \
+        '{tag_name: $tag, assets: .}' 2>/dev/null || return 1
+}
+
+___x_cmd_eget_api_source(){
+    local base_url="$1" owner="$2" repo="$3" tag="$4" token="$5"
+
+    if [ -n "$tag" ]; then
+        local ref="tags/$tag"
+    else
+        local ref="latest"
+    fi
+
+    case "$base_url" in
+        *github*)
+            printf '{"tag_name":"%s","assets":[{"name":"source.tar.gz","browser_download_url":"%s/repos/%s/%s/tarball/%s"}]}' \
+                "${tag:-latest}" "$base_url" "$owner" "$repo" "$ref" | ___x_cmd jq .
+            ;;
+        *codeberg*)
+            printf '{"tag_name":"%s","assets":[{"name":"source.tar.gz","browser_download_url":"%s/repos/%s/%s/archive/%s.tar.gz"}]}' \
+                "${tag:-latest}" "$base_url" "$owner" "$repo" "$ref" | ___x_cmd jq .
+            ;;
+        *gitlab*)
+            printf '{"tag_name":"%s","assets":[{"name":"source.tar.gz","browser_download_url":"https://gitlab.com/%s/%s/-/archive/%s/%s-%s.tar.gz"}]}' \
+                "${tag:-latest}" "$owner" "$repo" "$ref" "$repo" "${tag:-latest}" | ___x_cmd jq .
+            ;;
+    esac
+}
+
+# Safely embed a string into an eval'd command. Follows the x-cmd
+# `_`-ending convention: the result is written to the global x_ for the
+# caller to read. Callers must declare `local x_=""` before calling so
+# that dash's dynamic scoping keeps the assignment local (no global
+# x_ pollution). Issue #37.
+#
+# Usage:
+#     local x_=""
+#     ___x_cmd_eget_api_shq_ "$url"
+#     eval "... $x_ ..."
+___x_cmd_eget_api_shq_(){
+    ___x_cmd_shq1_ "$1"
+}
+
+___x_cmd_eget_api_curl(){
+    local url="$1" token="$2"
+    local ssl_opts=""
+    [ "$___X_CMD_EGET_DISABLE_SSL" = "1" ] && ssl_opts="-k"
+
+    local auth_opts=""
+    if [ -n "$token" ]; then
+        auth_opts="-H \"Authorization: Bearer $token\""
+    fi
+
+    # Cache API responses for 10 minutes
+    if [ "$___X_CMD_EGET_UPDATE" != "1" ] && [ "$___X_CMD_EGET_NO_CCMD" != "1" ]; then
+        local x_=""
+        ___x_cmd_eget_api_shq_ "$url"
+        eval "x ccmd 10m -- curl -sS -L -f $ssl_opts $auth_opts $x_" 2>/dev/null && return $?
+    fi
+
+    local x_=""
+    ___x_cmd_eget_api_shq_ "$url"
+    eval "___x_cmd_cmds curl -sS -L -f $ssl_opts $auth_opts $x_"
+}
+
+# Detect GitHub unauthenticated rate-limiting and report when it resets.
+# The /rate_limit endpoint is free (does not count against the quota) and
+# still answers while limited, so we can use it to tell a 403 rate-limit apart
+# from a genuine fetch failure.
+# Sets ___X_CMD_EGET_RATE_WAIT to e.g. "; resets in ~12 min" when limited.
+# Returns 0 (true) if the core quota is exhausted. Non-github forges: false.
+___x_cmd_eget_api_is_ratelimited(){
+    [ "${1:-github}" = "github" ] || return 1
+    ___X_CMD_EGET_RATE_WAIT=""
+    local _j
+    _j="$( ___x_cmd_cmds curl -sS "https://api.github.com/rate_limit" 2>/dev/null )" || return 1
+    # `___x_cmd jo env` assigns JSON paths straight into shell vars (and
+    # auto-provisions jq). Heredoc, not a pipe, so it runs in this shell.
+    local _rem="" _reset=""
+    ___x_cmd jo env . _rem=.resources.core.remaining _reset=.resources.core.reset <<EOF
+$_j
+EOF
+    [ "$_rem" = "0" ] || return 1
+    if [ -n "$_reset" ]; then
+        local _now _delta
+        _now="$( ___x_cmd_cmds date +%s 2>/dev/null || printf '%s' "$_reset" )"
+        _delta=$(( _reset - _now ))
+        [ "${_delta:-0}" -gt 0 ] 2>/dev/null && ___X_CMD_EGET_RATE_WAIT="; resets in ~$(( ( _delta + 59 ) / 60 )) min"
+    fi
+    return 0
+}
+
+# Apply ___X_CMD_GHPROXY_ENDPOINT to a github.com download URL.
+# Auto-detects two endpoint shapes:
+#   - prefix mode:  ENDPOINT="https://ghproxy.com"        -> https://ghproxy.com/https://github.com/...
+#   - replace mode: ENDPOINT="https://gh-proxy.com/github.com" -> https://gh-proxy.com/github.com/...
+# Non-github URLs and unset endpoints are returned unchanged. Sets x_.
+___x_cmd_eget_api___ghproxy_(){
+    local url="$1"
+    local endpoint="${___X_CMD_GHPROXY_ENDPOINT:-}"
+    x_="$url"
+
+    [ -z "$endpoint" ] && return 1
+    case "$url" in
+        https://github.com/*|http://github.com/*) ;;
+        *) return 1 ;;
+    esac
+
+    local ep="${endpoint%/}"
+    [ -z "$ep" ] && return 1
+
+    case "$ep" in
+        */github.com)
+            local path="${url#https://github.com}"
+            path="${path#http://github.com}"
+            x_="${ep}${path}"
+            ;;
+        *)
+            x_="${ep}/${url}"
+            ;;
+    esac
+}
+
+# Build a mirror URL from owner/repo/tag/asset components. The URL is
+# constructed at call time — no full mirror URL is hardcoded in user-visible
+# code, logs, or advise. The default host is eget.ljh.sh (eget's own
+# hosted fallback), the default path prefix is /gh so the resulting URL
+# mirrors the github.com path structure.
+___x_cmd_eget_api___mirror_(){
+    local owner="$1" repo="$2" tag="$3" asset="$4"
+    local host="${EGET_MIRROR_HOST:-eget.ljh.sh}"
+    local prefix="${EGET_MIRROR_PATH:-gh}"
+    # Strip leading slash from prefix so concatenation is well-defined
+    case "$prefix" in
+        /*) prefix="${prefix#/}" ;;
+    esac
+    [ -z "$prefix" ] && prefix="gh"
+    printf "https://%s/%s/%s/%s/releases/download/%s/%s" \
+        "$host" "$prefix" "$owner" "$repo" "$tag" "$asset"
+}
+
+___x_cmd_eget_api_download(){
+    local url="$1" outfile="$2"
+    local ssl_opts=""
+    [ "$___X_CMD_EGET_DISABLE_SSL" = "1" ] && ssl_opts="-k"
+
+    local token=""
+    case "$url" in
+        *github*)   token="$( ___x_cmd_eget_api_github_token_ )" ;;
+        *codeberg*) token="${EGET_CODEBERG_TOKEN:-${EGET_FORGE_TOKEN:-}}" ;;
+        *gitlab*)   token="${EGET_GITLAB_TOKEN:-${EGET_FORGE_TOKEN:-}}" ;;
+    esac
+
+    local auth_opts=""
+    if [ -n "$token" ]; then
+        auth_opts="-H \"Authorization: Bearer $token\""
+    fi
+
+    # Speed-based stall detection: if average speed drops below
+    # EGET_SPEED_LIMIT bytes/sec for EGET_SPEED_TIME seconds, curl aborts
+    # with exit 28. Caller catches this and retries via eget mirror.
+    # 5s window: a github.com direct link that can't sustain 50 KB/s for 5s
+    # is effectively stalled — switch to the mirror fast rather than making
+    # the user wait the old 30s. A false positive just routes through the
+    # mirror, which is the reliable path anyway.
+    local speed_limit="${EGET_SPEED_LIMIT:-50000}"
+    local speed_time="${EGET_SPEED_TIME:-5}"
+
+    local fetch_url="$url"
+    ___x_cmd_eget_api___ghproxy_ "$url"
+    if [ "$x_" != "$url" ]; then
+        fetch_url="$x_"
+        [ "$___X_CMD_EGET_QUIET" = "0" ] && eget:info "Using GHPROXY: $fetch_url"
+    fi
+
+    ___x_cmd mkdirp "$(dirname "$outfile")"
+    [ "$___X_CMD_EGET_QUIET" = "0" ] && eget:info --url "$fetch_url" "Downloading $(basename "$outfile")"
+    local x_=""
+    ___x_cmd_eget_api_shq_ "$outfile"
+    local _outfile_quoted="$x_"
+    ___x_cmd_eget_api_shq_ "$fetch_url"
+    local _fetch_url_quoted="$x_"
+    eval "___x_cmd_cmds curl -sS -L -f $ssl_opts --speed-limit $speed_limit --speed-time $speed_time -o $_outfile_quoted $auth_opts $_fetch_url_quoted"
+}
+
+___x_cmd_eget_api_list_releases(){
+    local forge="$1" owner="$2" repo="$3" limit="${4:-20}"
+
+    local base_url token
+    case "$forge" in
+        codeberg)   base_url="https://codeberg.org/api/v1" ;;
+        gitlab)     base_url="https://gitlab.com/api/v4" ;;
+        github|*)   base_url="https://api.github.com" ;;
+    esac
+    case "$forge" in
+        codeberg)   token="${EGET_CODEBERG_TOKEN:-${EGET_FORGE_TOKEN:-}}" ;;
+        gitlab)     token="${EGET_GITLAB_TOKEN:-${EGET_FORGE_TOKEN:-}}" ;;
+        github|*)   token="$( ___x_cmd_eget_api_github_token_ )" ;;
+    esac
+
+    if [ "$forge" = "gitlab" ]; then
+        local project_id
+        project_id="$( printf "%s/%s" "$owner" "$repo" | ___x_cmd jq -sRr @uri )"
+        ___x_cmd_eget_api_curl "$base_url/projects/$project_id/releases?per_page=$limit" "$token"
+    else
+        ___x_cmd_eget_api_curl "$base_url/repos/$owner/$repo/releases?per_page=$limit" "$token"
+    fi
+}
+
+___x_cmd_eget_api_rate(){
+    case "${1:-}" in -h|--help) ___x_cmd help -m eget rate; return 0 ;; esac
+    local forge="${1:-github}"
+    case "$forge" in
+        gh)  forge="github" ;;
+    esac
+
+    # Only GitHub exposes a public /rate_limit endpoint that returns
+    # the per-token counters in the body. GitLab and Codeberg (Gitea)
+    # report rate-limit info only via HTTP headers on each request —
+    # there is no standalone query endpoint, so we don't support them.
+    if [ "$forge" != "github" ]; then
+        N=eget M="rate: only GitHub is supported (GitLab / Codeberg expose rate limits only via HTTP headers, no query endpoint)" log:ret:64
+        return
+    fi
+
+    local token
+    token="$( ___x_cmd_eget_api_github_token_ )"
+    local auth_opts=""
+    [ -n "$token" ] && auth_opts="-H \"Authorization: Bearer $token\""
+
+    local resp
+    local x_=""
+    ___x_cmd_eget_api_shq_ "https://api.github.com/rate_limit"
+    resp="$( eval "___x_cmd_cmds curl -sS -L -f $auth_opts $x_" )" || {
+        N=eget M="rate: failed to fetch from api.github.com" log:ret:1
+        return
+    }
+    printf "%s" "$resp" | ___x_cmd jq -r '.resources.core | "Rate limit: \(.remaining)/\(.limit) (resets at \(.reset | todate))"' 2>/dev/null || \
+        printf "Unable to fetch rate limit info\n"
+}

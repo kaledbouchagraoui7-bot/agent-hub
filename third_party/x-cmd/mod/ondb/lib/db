@@ -1,0 +1,208 @@
+# shellcheck shell=dash
+# ontology db - SQLite materialized view helpers
+# Single sqlite3 call per operation to minimize process spawns.
+# Recovery: meta.last_lines tracks sync point; stale db auto-replays from TSV redo.
+
+# Schema DDL
+___x_cmd_ondb_db_ddl="
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+INSERT OR IGNORE INTO meta (key, value) VALUES ('last_lines', '0');
+CREATE TABLE IF NOT EXISTS entities (id TEXT PRIMARY KEY, type TEXT NOT NULL, ctime INTEGER, mtime INTEGER);
+CREATE TABLE IF NOT EXISTS props (entity_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT, PRIMARY KEY (entity_id, key));
+CREATE TABLE IF NOT EXISTS links (from_id TEXT NOT NULL, rel TEXT NOT NULL, to_id TEXT NOT NULL, epoch INTEGER, PRIMARY KEY (from_id, rel, to_id));
+CREATE INDEX IF NOT EXISTS idx_entities_type ON entities(type);
+CREATE INDEX IF NOT EXISTS idx_links_from ON links(from_id, rel);
+CREATE INDEX IF NOT EXISTS idx_links_to ON links(to_id, rel);
+CREATE TABLE IF NOT EXISTS link_props (from_id TEXT NOT NULL, rel TEXT NOT NULL, to_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT, PRIMARY KEY(from_id, rel, to_id, key));
+"
+
+# Initialize db: create tables if not exist
+# Per-connection busy timeout (ms). Override via env var.
+___X_CMD_ONDB_BUSY_TIMEOUT="${___X_CMD_ONDB_BUSY_TIMEOUT:-5000}"
+
+___x_cmd_ondb_db_init(){
+    sqlite3 "$1" "PRAGMA journal_mode=WAL; PRAGMA busy_timeout=$___X_CMD_ONDB_BUSY_TIMEOUT; $___x_cmd_ondb_db_ddl" >/dev/null
+    printf '0\n' > "${1%.db}.lines"
+}
+
+# Wrapper: prepend busy_timeout to every sqlite3 invocation
+___x_cmd_ondb_db_exec(){
+    local db="$1"
+    shift
+    sqlite3 "$db" "PRAGMA busy_timeout=$___X_CMD_ONDB_BUSY_TIMEOUT; $*" >/dev/null
+}
+
+# Check if sqlite3 is available with JSON support
+# Sets $x_ to "1" or "0"
+___x_cmd_ondb_db_ready(){
+    [ -f "$___X_CMD_ROOT_DATA/sqlite/mode/sqlite_enable" ] || { x_="0"; return; }
+    if ! command -v sqlite3 >/dev/null 2>&1; then
+        x env use sqlite3 2>/dev/null || { x_="0"; return; }
+    fi
+    if ! sqlite3 :memory: "SELECT json_object('a',1);" >/dev/null 2>&1; then
+        x_="0"; return
+    fi
+    x_="1"
+}
+
+# Resolve db path and ensure db is in sync with TSV redo log.
+# Sets $x_ to db path or "" if sqlite not enabled/no db.
+# Honors ___X_CMD_ONDB_BACKEND: explicit awk/python skips SQLite;
+# explicit sqlite forces SQLite even if sqlite_enable file absent.
+___x_cmd_ondb_db_path(){
+    local dir="${1-.}"
+    local backend="${___X_CMD_ONDB_BACKEND:-auto}"
+
+    case "$backend" in
+        awk|python)         x_=""; return ;;
+        sqlite)
+            if ! command -v sqlite3 >/dev/null 2>&1; then
+                x env use sqlite3 2>/dev/null || { x_=""; return; }
+            fi
+            ;;
+        *)
+            ___x_cmd_ondb_db_ready
+            [ "$x_" = "1" ] || { x_=""; return; }
+            ;;
+    esac
+
+    local dbpath=""
+    if [ -n "$dir" ]; then
+        if [ -f "$dir/ondb.db" ]; then
+            dbpath="$dir/ondb.db"
+        elif [ -f "$dir/ondb.tsv" ] || [ -n "$(find "$dir" -maxdepth 1 -name 'snapshot.*' -type f -print -quit 2>/dev/null)" ]; then
+            dbpath="$dir/ondb.db"
+            ___x_cmd_ondb_db_init "$dbpath"
+            ___x_cmd_ondb_db_replay_if_stale "$dbpath" "$dir"
+            x_="$dbpath"; return
+        fi
+    else
+        if [ -f "ondb.db" ]; then
+            dbpath="ondb.db"
+        elif [ -f "ondb.tsv" ]; then
+            dbpath="ondb.db"
+            ___x_cmd_ondb_db_init "$dbpath"
+            ___x_cmd_ondb_db_replay_if_stale "$dbpath" ""
+            x_="$dbpath"; return
+        fi
+    fi
+    [ -n "$dbpath" ] || { x_=""; return; }
+
+    # Recovery: replay any TSV entries newer than last_epoch
+    ___x_cmd_ondb_db_replay_if_stale "$dbpath" "$dir" "$file"
+    x_="$dbpath"
+}
+
+# Replay TSV redo entries if db is stale (line count mismatch)
+___x_cmd_ondb_db_replay_if_stale(){
+    local db="$1" dir="$2" file="$3"
+
+    # Get the input source for reading TSV data
+    local input
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_read "$dir" "${file:-ondb.tsv}"
+        input="$x_"
+    else
+        input="cat '${file:-ondb.tsv}'"
+    fi
+
+    # Compare .lines with current redo.tsv line count
+    local ll=0
+    [ -f "${db%.db}.lines" ] && read -r ll < "${db%.db}.lines"
+    ll="${ll:-0}"
+
+    local cur_lines; cur_lines="$( eval "$input" | grep -c '.' )"
+    [ "$ll" = "$cur_lines" ] && return  # db is up to date
+
+    # .lines missing or stale: compare with sqlite meta
+    local last_lines; last_lines="$( sqlite3 "$db" "PRAGMA busy_timeout=$___X_CMD_ONDB_BUSY_TIMEOUT; SELECT value FROM meta WHERE key='last_lines';" | tail -n 1 )"
+    last_lines="${last_lines:-0}"
+
+    [ "$cur_lines" -le "$last_lines" ] && return  # db is up to date
+
+    # Incremental replay: only process new lines since last sync
+    local new_lines=$(( cur_lines - last_lines ))
+    ( printf '%s\n' "PRAGMA busy_timeout=$___X_CMD_ONDB_BUSY_TIMEOUT; BEGIN;"; eval "$input" | tail -n "$new_lines" | ___x_cmd_ondb_cawk compact_sql && printf '%s\n' "COMMIT;" ) | sqlite3 "$db" >/dev/null
+    ___x_cmd_ondb_db_exec "$db" "UPDATE meta SET value='$cur_lines' WHERE key='last_lines';"
+    printf '%s\n' "$cur_lines" > "${db%.db}.lines"
+}
+
+# SQL-escape: double single quotes
+___x_cmd_ondb_db_esc(){
+    eval "$1=\"\${$1//\'/\'\'}\""
+}
+
+# ─── Mutations (single sqlite3 call each) ──────────────────
+
+___x_cmd_ondb_db_add(){
+    local db="$1" type="$2" id="$3" ms="$4"
+    shift 4
+    local name="${1:-}"; [ $# -gt 0 ] && shift
+
+    ___x_cmd_ondb_db_esc type; ___x_cmd_ondb_db_esc id
+    local sql="INSERT OR REPLACE INTO entities (id,type,ctime,mtime) VALUES ('$id','$type',$ms,$ms);"
+
+    [ -n "$name" ] && {
+        ___x_cmd_ondb_db_esc name
+        sql="${sql} INSERT OR REPLACE INTO props (entity_id,key,value) VALUES ('$id','name','$name');"
+    }
+
+    local prop k v
+    for prop in "$@"; do
+        case "$prop" in *=*) ;; *) continue ;; esac
+        k="${prop%%=*}"; v="${prop#*=}"
+        ___x_cmd_ondb_db_esc k; ___x_cmd_ondb_db_esc v
+        sql="${sql} INSERT OR REPLACE INTO props (entity_id,key,value) VALUES ('$id','$k','$v');"
+    done
+
+    ___x_cmd_ondb_db_exec "$db" "$sql"
+}
+
+___x_cmd_ondb_db_set(){
+    local db="$1" id="$2" ms="$3"
+    shift 3
+    ___x_cmd_ondb_db_esc id
+
+    local sql="" prop k v
+    for prop in "$@"; do
+        case "$prop" in *=*) ;; *) continue ;; esac
+        k="${prop%%=*}"; v="${prop#*=}"
+        ___x_cmd_ondb_db_esc k
+        if [ -z "$v" ]; then
+            sql="${sql} DELETE FROM props WHERE entity_id='$id' AND key='$k';"
+        else
+            ___x_cmd_ondb_db_esc v
+            sql="${sql} INSERT OR REPLACE INTO props (entity_id,key,value) VALUES ('$id','$k','$v');"
+        fi
+    done
+    sql="${sql} UPDATE entities SET mtime=$ms WHERE id='$id';"
+
+    ___x_cmd_ondb_db_exec "$db" "$sql"
+}
+
+___x_cmd_ondb_db_rm(){
+    local db="$1" id="$2" ms="$3"
+    ___x_cmd_ondb_db_esc id
+    ___x_cmd_ondb_db_exec "$db" "DELETE FROM props WHERE entity_id='$id'; DELETE FROM link_props WHERE from_id='$id' OR to_id='$id'; DELETE FROM links WHERE from_id='$id' OR to_id='$id'; DELETE FROM entities WHERE id='$id';"
+}
+
+___x_cmd_ondb_db_link(){
+    local db="$1" from="$2" rel="$3" to="$4" ms="$5"
+    shift 5
+    ___x_cmd_ondb_db_esc from; ___x_cmd_ondb_db_esc rel; ___x_cmd_ondb_db_esc to
+    local sql="INSERT OR REPLACE INTO links (from_id,rel,to_id,epoch) VALUES ('$from','$rel','$to',$ms);"
+    local prop k v
+    for prop in "$@"; do
+        case "$prop" in *=*) ;; *) continue ;; esac
+        k="${prop%%=*}"; v="${prop#*=}"
+        ___x_cmd_ondb_db_esc k; ___x_cmd_ondb_db_esc v
+        sql="${sql} INSERT OR REPLACE INTO link_props (from_id,rel,to_id,key,value) VALUES ('$from','$rel','$to','$k','$v');"
+    done
+    ___x_cmd_ondb_db_exec "$db" "$sql"
+}
+
+___x_cmd_ondb_db_unlink(){
+    local db="$1" from="$2" rel="$3" to="$4" ms="$5"
+    ___x_cmd_ondb_db_esc from; ___x_cmd_ondb_db_esc rel; ___x_cmd_ondb_db_esc to
+    ___x_cmd_ondb_db_exec "$db" "DELETE FROM link_props WHERE from_id='$from' AND rel='$rel' AND to_id='$to'; DELETE FROM links WHERE from_id='$from' AND rel='$rel' AND to_id='$to';"
+}

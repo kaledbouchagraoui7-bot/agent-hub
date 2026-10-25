@@ -1,0 +1,76 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_validate(){
+    local dir="" schema=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb validate "$@" ; return 0 ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            -s|--schema) schema="$2"; arg:2:shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    local input has_schema=0
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_read "$dir"
+        input="$x_"
+        # Auto-detect schema file in ondb dir
+        [ -z "$schema" ] && schema="$dir/schema.tsv"
+    else
+        input="cat 'ondb.tsv'"
+    fi
+
+    local schema_input=""
+    if [ -n "$schema" ] && [ -f "$schema" ]; then
+        schema_input="cat '$schema'; "
+        has_schema=1
+    fi
+
+    # SQLite path: basic dangling-link check only
+    ___x_cmd_ondb_db_path "$dir"
+    if [ -n "$x_" ]; then
+        local db="$x_" errs=0
+        local dangling; dangling="$( sqlite3 "$db" "
+            SELECT 'dangling_from: link from=' || l.from_id || ' rel=' || l.rel || ' to=' || l.to_id
+            FROM links l
+            WHERE NOT EXISTS (SELECT 1 FROM entities e WHERE e.id=l.from_id);
+        " )"
+        local dangling_to; dangling_to="$( sqlite3 "$db" "
+            SELECT 'dangling_to: link from=' || l.from_id || ' rel=' || l.rel || ' to=' || l.to_id
+            FROM links l
+            WHERE NOT EXISTS (SELECT 1 FROM entities e WHERE e.id=l.to_id);
+        " )"
+        [ -n "$dangling" ] && errs=$(( errs + 1 ))
+        [ -n "$dangling_to" ] && errs=$(( errs + 1 ))
+        [ "$errs" = "0" ] && printf "Graph is valid.\n" || {
+            [ -n "$dangling" ] && printf '%s\n' "$dangling"
+            [ -n "$dangling_to" ] && printf '%s\n' "$dangling_to"
+        }
+        # Schema validation still goes through AWK (SQLite has no schema engine)
+        if [ "$has_schema" = "1" ]; then
+            local lib="$___X_CMD_ROOT_MOD/ondb/lib/awk/ontology.awk"
+            local schemalib="$___X_CMD_ROOT_MOD/ondb/lib/awk/schema.awk"
+            local prog="$___X_CMD_ROOT_MOD/ondb/lib/awk/validate.awk"
+            local schema_errs
+            schema_errs="$( eval "${schema_input}cat '$dir/ondb.tsv'" 2>/dev/null | ___x_cmd_cmds awk -v ONTO_SCHEMA=1 \
+                -f "$lib" -f "$schemalib" -f "$prog" 2>&1 )"
+            if [ -n "$schema_errs" ]; then
+                printf '%s\n' "$schema_errs"
+                errs=$(( errs + 1 ))
+            fi
+        fi
+        [ "$errs" = "0" ]
+        return
+    fi
+
+    # AWK fallback
+    local lib="$___X_CMD_ROOT_MOD/ondb/lib/awk/ontology.awk"
+    local schemalib="$___X_CMD_ROOT_MOD/ondb/lib/awk/schema.awk"
+    local prog="$___X_CMD_ROOT_MOD/ondb/lib/awk/validate.awk"
+
+    eval "${schema_input}${input}" | ___x_cmd_cmds awk -v ONTO_SCHEMA="$has_schema" \
+        -f "$lib" -f "$schemalib" -f "$prog"
+}

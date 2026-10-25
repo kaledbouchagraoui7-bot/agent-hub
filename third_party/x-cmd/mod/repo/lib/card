@@ -1,0 +1,314 @@
+# shellcheck shell=dash disable=SC2016
+
+___x_cmd_repo_card(){
+    local days=90
+    local mode=auto
+    local verbose=0
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m repo card ; return 0 ;;
+            --days)     days="$2" ; shift 2 ;;
+            --days=*)   days="${1#--days=}" ; shift ;;
+            -v|--verbose)
+                        verbose=1; shift ;;
+            --tty|--yml|--auto)
+                        mode=${1#--}; shift ;;
+            -*)         N=repo M="Unknown flag -> $1 (try --days N)" log:ret:64 ;;
+            *)          break ;;
+        esac
+    done
+
+    [ $# -gt 0 ] || N=repo M="Usage: x repo card [--days N] [--verbose] <id>" log:ret:64
+
+    case "$days" in
+        ''|*[!0-9]*) N=repo M="--days must be a positive integer, got -> $days" log:ret:64 ;;
+    esac
+
+    local id="$1"
+    local owner_repo=""
+
+    case "$id" in *@*) id="${id%@*}" ;; esac
+
+    case "$id" in
+        github.com/*) owner_repo="${id#github.com/}" ;;
+        gh/*)         owner_repo="${id#gh/}" ;;
+        */*)          owner_repo="$id" ;;
+        *)            N=repo M="Invalid repo id -> $id (expect owner/repo)" log:ret:1 ;;
+    esac
+
+    # ___x_cmd ccmd 1h -- ___x_cmd_repo_card_emit_"$mode" "$owner_repo" "$days"
+    # Note: ccmd 1h is a 1-hour result cache, not a wrapper. It caches
+    # the function's stdout for 1h, which breaks when different inputs
+    # (e.g. running x repo card for two different repos) hit the same
+    # cached output. Call the emit function directly.
+    ___x_cmd_repo_card_emit_"$mode" "$owner_repo" "$days" "$verbose"
+}
+
+
+___x_cmd_repo_card_emit_auto(){
+    if [ -t 1 ]; then
+        ___x_cmd_repo_card_emit_tty "$@"
+    else
+        ___x_cmd_repo_card_emit_yml "$@"
+    fi
+}
+
+
+# --verbose delegates wholesale to `x repo loc` rather than reimplementing
+# the count: the TTY path pipes card's API YAML through card.awk and then
+# hands off to loc's own renderer, so the CODE table exists in exactly one
+# place. Without --verbose neither branch touches disk.
+___x_cmd_repo_card_emit_tty(){
+    local owner_repo="$1" days="$2" verbose="${3:-0}"
+    ___x_cmd_repo_card_emit_yml___api "$owner_repo" "$days" \
+        | ___x_cmd_cmds awk -f "$___X_CMD_ROOT_MOD/repo/lib/awk/card.awk" || return $?
+    [ "$verbose" = 1 ] && ___x_cmd_repo_loc_emit_tty "$owner_repo"
+    return 0
+}
+
+___x_cmd_repo_card_emit_yml(){
+    local owner_repo="$1" days="$2" verbose="${3:-0}"
+    ___x_cmd_repo_card_emit_yml___api "$owner_repo" "$days" || return $?
+    [ "$verbose" = 1 ] && ___x_cmd_repo_loc_emit_yml_embed "$owner_repo"
+    return 0
+}
+
+# The API half, and the only half worth caching: it costs a GraphQL
+# round-trip plus a REST call, and a 3h-old star count is fine. The loc
+# half stays outside the cache — it reads a local clone the user may have
+# just edited. Keeping them separate also means the cache key needs no
+# verbose bit, so `card` and `card --verbose` share one cached response.
+___x_cmd_repo_card_emit_yml___api(){
+    ___x_cmd ccmd 3h -- ___x_cmd_repo_card_emit_yml___inner "$@"
+}
+
+___x_cmd_repo_card_emit_yml___inner(){
+    local owner_repo="$1"
+    local days="$2"
+    local owner="${owner_repo%/*}"
+    local repo="${owner_repo#*/}"
+
+    local gh_token
+    gh_token=$(gh auth token 2>/dev/null) || gh_token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+    if [ -z "$gh_token" ]; then
+        N=repo M="No GitHub token. Run 'gh auth login' or set GH_TOKEN." log:ret:1
+    fi
+
+    # Six windows: 30-day (recent momentum), 60-day, 90-day (quarter
+    # default, user-overridable via --days), 180-day (half-year), 360-day
+    # (year) and 720-day (two years). `sort -n -u` both orders them and
+    # collapses the duplicate that --days 30 / 60 / 180 / 360 / 720 would
+    # otherwise produce, so the window count is 6 normally and 7 when
+    # --days names a value outside the fixed set.
+    #
+    # Date math goes through `x date` (x-cmd's date module) instead of
+    # the system `date` binary, so we don't need the macOS-vs-Linux
+    # dual-syntax fallback (`-v-` / `-d "N days ago"`). One
+    # `x epoch get_` gives the current epoch; subtracting N days in
+    # seconds gives the cutoff timestamp, and `x date dump_` formats it
+    # into YYYY-MM-DD for client-side comparison against GraphQL date
+    # fields like publishedAt[:10].
+
+    local x_
+    ___x_cmd epoch get_
+    local now_ts="$x_"
+
+    local win_list w
+    win_list=$(printf '%s\n' 30 60 "$days" 180 360 720 | sort -n -u)
+    # Four parallel search-string lists, one per metric, each in window
+    # order. They're concatenated metric-major below because card_yaml
+    # indexes the flat result array as [metric * W + window].
+    #
+    # `while read` over a heredoc rather than `for w in $win_list`: zsh
+    # doesn't field-split unquoted parameters, so the `for` form hands the
+    # whole newline-joined list to the loop body in one go and the
+    # arithmetic below dies with "operator expected". x-cmd is sourced as a
+    # shell function in interactive zsh, so this path has to survive both.
+    # The heredoc (not a pipe) keeps the accumulators in this shell.
+    local r="repo:${owner_repo}"
+    local label_lines="" date_lines="" win_lines=""
+    local s_merged="" s_openpr="" s_closei="" s_openi="" d
+    while read -r w; do
+        [ -n "$w" ] || continue
+        ___x_cmd date dump_ --fmt '%Y-%m-%d' $(( now_ts - w * 86400 ))
+        d="$x_"
+        label_lines="${label_lines}last${w}d
+"
+        date_lines="${date_lines}${d}
+"
+        win_lines="${win_lines}${w}
+"
+        s_merged="${s_merged}${r} is:pr is:merged created:>${d}
+"
+        s_openpr="${s_openpr}${r} is:pr state:open created:>${d}
+"
+        s_closei="${s_closei}${r} is:issue state:closed created:>${d}
+"
+        s_openi="${s_openi}${r} is:issue state:open created:>${d}
+"
+    done <<A
+$win_list
+A
+    local search_lines="${s_merged}${s_openpr}${s_closei}${s_openi}"
+
+    # GraphQL: every static repo field + one aliased search per
+    # (metric, window) pair + defaultBranchRef for the HEAD SHA and the
+    # all-time commit count, all in one round-trip.
+    #
+    # History:
+    # - GraphQL `search(...)` at root level works when aliased (the
+    #   earlier failure was when search was nested inside a
+    #   `repository(...)` selection — that returns 0 silently).
+    # - `defaultBranchRef` is pulled into a separate aliased
+    #   repository query because inlining it alongside a large
+    #   field set hits an undocumented GraphQL cost ceiling.
+    # - `history(since:DATE)` errors when multiple aliased instances
+    #   are on the same level, and even a single instance is
+    #   currently broken on GitHub's backend, so windowed commit
+    #   counts go via REST below. Unfiltered `history{totalCount}`
+    #   is fine and feeds the `total:` commit figure.
+    local query response
+    # No recentStar / recentFork: GitHub's GraphQL `stargazers` /
+    # `forks` connections are capped at first:100 with no time-series
+    # summary endpoint (unlike commits which have /stats/commit_activity).
+    # For popular repos this undercounts by 1-2 orders of magnitude.
+    # The total counts (star: ... / fork: ...) in the popularity:
+    # section are exact (stargazerCount / forkCount), so dropping the
+    # deltas is honest: the card shows "this repo has 115k stars" but
+    # not "X stars in 30 days". Story: .x-cmd/story/260824.recentstar-fork-cap.md
+    #
+    # All jq filter logic lives in lib/awk/card.jq as named
+    # functions (card_query / card_search_counts / card_commit_counts
+    # / card_yaml); this shell function just feeds it inputs and
+    # reads back outputs.
+    card_jq_dir="${___X_CMD_ROOT_MOD}/repo/lib/awk"
+
+    # The newline-delimited lists built above become JSON arrays here, so
+    # everything downstream is indexed rather than named — adding a window
+    # is a one-token change to the `printf` above.
+    local searches labels dates wins
+    searches=$(printf '%s' "$search_lines" | ___x_cmd jq -R -s 'split("\n") | map(select(length > 0))')
+    labels=$(printf '%s' "$label_lines"  | ___x_cmd jq -R -s 'split("\n") | map(select(length > 0))')
+    dates=$(printf '%s' "$date_lines"    | ___x_cmd jq -R -s 'split("\n") | map(select(length > 0))')
+    wins=$(printf '%s' "$win_lines"      | ___x_cmd jq -R -s 'split("\n") | map(select(length > 0) | tonumber)')
+
+    query=$(___x_cmd jq -nc -L "$card_jq_dir" \
+        --arg o "$owner" --arg n "$repo" --argjson searches "$searches" \
+        'include "card"; card_query($o; $n; $searches)')
+
+    response=$(curl -sS \
+        -H "Authorization: bearer $gh_token" \
+        -H "Content-Type: application/json" \
+        -d "$query" https://api.github.com/graphql 2>/dev/null) || response=""
+    if [ -z "$response" ]; then
+        N=repo M="GraphQL fetch failed for -> $owner_repo" log:ret:1
+    fi
+
+    # Pull every search count from the GraphQL response in one jq call as a
+    # JSON array, in the same metric-major order the queries were built.
+    local search_count counts
+    search_count=$(printf '%s' "$searches" | ___x_cmd jq 'length')
+    counts=$(___x_cmd jq -c -L "$card_jq_dir" --argjson cnt "$search_count" \
+        'include "card"; card_search_counts($cnt)' <<A
+$response
+A
+)
+
+    # recentCommit via /stats/commit_activity. This endpoint returns
+    # daily commit counts for the last 52 weeks (no 100-cap) and is
+    # public (no admin scope required). GitHub caches it for ~1h.
+    # One call gets all 4 windows (30/90/180/360 days) via a single
+    # jq filter that sums the tail of the flattened days array.
+    #
+    # GitHub computes this asynchronously: on a cold cache it answers 202
+    # with an empty body or {}, and card_commit_counts then honestly reports
+    # 0 for every window. Without a retry that silently turns "stats not
+    # ready" into "no commits" — and the ccmd 3h result cache above pins the
+    # bogus zeros for the next three hours. So retry until the body is an
+    # array, but only for the not-ready shape: a `message` field means a real
+    # 404/403 (archived, fork, blocked, or empty repo) that will never become
+    # an array, and retrying it just burns 6s per repo.
+    local commit_raw commit_data attempt
+    commit_raw=""
+    attempt=0
+    while [ "$attempt" -lt 3 ]; do
+        attempt=$((attempt + 1))
+        commit_raw=$(curl -sS -H "Authorization: bearer $gh_token" \
+            "https://api.github.com/repos/${owner_repo}/stats/commit_activity" 2>/dev/null)
+        case "$(printf '%s' "$commit_raw" | ___x_cmd jq -r 'if type == "array" then "ok" elif type == "object" and has("message") then "dead" else "wait" end' 2>/dev/null)" in
+            ok)   break ;;
+            dead) commit_raw=""; break ;;
+        esac
+        commit_raw=""
+        [ "$attempt" -lt 3 ] && sleep 3
+    done
+    if [ -z "$commit_raw" ]; then
+        repo:warn "no commit_activity for $owner_repo; recording commit: 0"
+        commit_raw='[]'
+    fi
+    commit_data=$(printf '%s' "$commit_raw" | ___x_cmd jq -c -L "$card_jq_dir" --argjson wins "$wins" \
+        'include "card"; card_commit_counts($wins)')
+
+    # card_commit_counts leaves a null for any window past the endpoint's
+    # 364-day horizon (i.e. 720d). Fill those from REST /commits?since=,
+    # counting via the Link header's last-page number rather than paging
+    # the commits themselves — one HEAD request regardless of repo size.
+    local i=0 cnt
+    while read -r w; do
+        [ -n "$w" ] || continue
+        if [ "$w" -gt 364 ]; then
+            ___x_cmd date dump_ --fmt '%Y-%m-%d' $(( now_ts - w * 86400 ))
+            ___x_cmd_repo_card__commit_since "$owner_repo" "$x_" "$gh_token"
+            cnt="$x_"
+            commit_data=$(printf '%s' "$commit_data" | ___x_cmd jq -c \
+                --argjson i "$i" --argjson v "$cnt" '.[$i] = $v')
+        fi
+        i=$((i + 1))
+    done <<A
+$win_list
+A
+
+    local collected_at
+    collected_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+    # Single jq pass. Static metrics in github:, every windowed stat in
+    # recent: (one block per window label), all-time figures in total:,
+    # and detail: holds the API-derived HEAD SHA. No local clone / no git
+    # fetch on this path.
+    ___x_cmd jq -r -L "$card_jq_dir" \
+        --argjson labels "$labels" \
+        --argjson dates "$dates" \
+        --argjson counts "$counts" \
+        --argjson commits "$commit_data" \
+        --arg collected_at "$collected_at" \
+        'include "card";
+         card_yaml($labels; $dates; $counts; $commits; null; $collected_at)' <<A
+$response
+A
+
+}
+
+
+# Count commits since a date via REST, using the Link header's rel="last"
+# page number with per_page=1 — that number IS the commit count, so a repo
+# with 40k commits costs one request instead of 400. GitHub omits Link
+# entirely when the result fits on one page, in which case the body length
+# (0 or 1) is the answer.
+___x_cmd_repo_card__commit_since(){
+    local url="https://api.github.com/repos/$1/commits?since=$2T00:00:00Z&per_page=1"
+    local n
+    n=$(curl -sSI -H "Authorization: bearer $3" "$url" 2>/dev/null \
+        | ___x_cmd_cmds awk 'tolower($1) == "link:" {
+              if (match($0, /[?&]page=[0-9]+>; rel="last"/)) {
+                  s = substr($0, RSTART, RLENGTH)
+                  sub(/^[?&]page=/, "", s); sub(/>.*$/, "", s)
+                  print s
+              }
+          }')
+    case "$n" in
+        ''|*[!0-9]*)
+            n=$(curl -sS -H "Authorization: bearer $3" "$url" 2>/dev/null \
+                | ___x_cmd jq 'if type == "array" then length else 0 end' 2>/dev/null) || n=0 ;;
+    esac
+    x_="${n:-0}"
+}

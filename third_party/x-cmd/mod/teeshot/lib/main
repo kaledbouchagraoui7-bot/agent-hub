@@ -1,0 +1,44 @@
+# shellcheck shell=dash
+
+# Section: teeshot main dispatcher
+#
+# Usage:
+#   x teeshot [--head N] [--tail M] [--no-cache] [--] <cmd>...
+#   <cmd> | x teeshot [--head N] [--tail M] [--no-cache]
+#   x teeshot --cache <op> [...]
+#
+# Default: capture command (or stdin) output to cache, show metadata + head/tail.
+
+# Note: util/ calls ___x_cmd epoch day_ directly to get the integer day
+# number. The x dispatcher (___x_cmd) autoloads epoch on first call,
+# so no explicit `xrc:mod epoch/lib/main` is needed here.
+xrc:mod:lib     teeshot   run cache util
+
+___x_cmd_teeshot___main(){
+    if [ "$#" -eq 0 ]; then
+        # No args — check stdin
+        if [ -t 0 ]; then
+            ___x_cmd help -m teeshot
+            return 0
+        fi
+        # stdin is a pipe → forward to run
+        ___x_cmd_teeshot_run "$@"
+        return $?
+    fi
+
+    # Check for --cache flag at the start
+    case "$1" in
+        --cache)
+            shift
+            ___x_cmd_teeshot_cache "$@"
+            return $?
+            ;;
+        -h|--help)
+            ___x_cmd help -m teeshot "$@"
+            return 0
+            ;;
+    esac
+
+    # Otherwise: run mode
+    ___x_cmd_teeshot_run "$@"
+}

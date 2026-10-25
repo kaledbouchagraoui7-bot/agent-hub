@@ -1,0 +1,169 @@
+# shellcheck shell=dash
+
+# ls_install — browse packages from the x install database that are eget-installable.
+#
+# Source of truth: `x install --ls --tsv`. We filter rows whose rule column
+# (col 8) contains /eget and project to NAME / REPO / DESC_EN.
+#
+# Layout mirrors the install module (lib/info/ls + lib/fz):
+#   _installdb          raw data rows (no header)
+#   _installdb_tsv      TSV with header (pipe-friendly)
+#   _installdb_list     pretty table via `x column -t` (human eye)
+#   _installdb_fz       interactive fzf browser with --printinfo preview
+#   _installdb_preview  preview one package (used by fzf --preview)
+#   _installdb_auto     TTY → fz, non-TTY → tsv
+
+# Raw data rows: NAME \t REPO \t DESCRIPTION (truncated, English).
+# No header. Sorted by name. LC_ALL=C so BSD sort doesn't choke on
+# multi-byte text in the description column.
+___x_cmd_eget_ls_installdb(){
+    local tsv_data
+    tsv_data="$( x install --ls --tsv 2>/dev/null )" || {
+        N=eget M="ls: failed to read x install database (is x install available?)" log:ret:1
+        return
+    }
+    [ -n "$tsv_data" ] || {
+        N=eget M="ls: x install database is empty" log:ret:1
+        return
+    }
+
+    # x install --tsv columns: 1=name 2=category 3=lang 4=source
+    # 5=desc_cn 6=desc_en 7=binlist 8=rule 9=other
+    # Filter rows where rule (col 8) contains /eget; extract owner/repo from source.
+    printf "%s" "$tsv_data" | awk -F'\t' '
+        NR == 1 { next }
+        $8 ~ /\/eget/ {
+            src = $4
+            sub(/^https?:\/\/[^\/]+\//, "", src)
+            sub(/\/$/, "", src)
+            desc = $6
+            if (length(desc) > 60) desc = substr(desc, 1, 60) "..."
+            printf "%s\t%s\t%s\n", $1, src, desc
+        }
+    ' | LC_ALL=C sort
+}
+
+# TSV with header. Suitable for piping into awk/grep/fzf --filter.
+___x_cmd_eget_ls_installdb_tsv(){
+    printf "NAME\tREPO\tDESCRIPTION\n"
+    ___x_cmd_eget_ls_installdb
+}
+
+# Pretty table view via `x column -t`. LC_ALL=C so the awk inside
+# x column doesn't choke on multi-byte descriptions.
+___x_cmd_eget_ls_installdb_list(){
+    ___x_cmd_eget_ls_installdb_tsv | LC_ALL=C x column -t -s "$(printf '\t')"
+}
+
+# Preview a single package via `x install --printinfo`.
+# Used by fzf --preview; safe to call directly.
+___x_cmd_eget_ls_installdb_preview(){
+    [ -n "$1" ] || return 0
+    ___x_cmd install --printinfo "$1"
+}
+
+# Interactive fzf browser.
+# Mirrors `x install --fz` styling: ANSI colorized columns (yellow name,
+# green repo, dim description), sticky header via --header-lines, right-side
+# preview pane running `x install --printinfo`.
+#
+# fzf does not auto-align columns. Tabs are expanded via --tabstop but each
+# tab becomes a fixed-width gap, not aligned to the longest field. For real
+# alignment we pad NAME / REPO to fixed widths inside awk before fzf sees
+# them. Description is left as-is (fzf will wrap/truncate to window width).
+#
+# Search: fzf searches the full row by default (--nth=1,2,2 lets the user
+# type either a name like "jq" or a repo like "jqlang/jq").
+#
+# Output: the selected NAME, with ANSI codes stripped. Empty if cancelled.
+___x_cmd_eget_ls_installdb_fz(){
+    local query="$1"
+    local selection
+    selection="$( {
+        printf "NAME\tREPO\tDESCRIPTION\n"
+        ___x_cmd_eget_ls_installdb
+    } | ___x_cmd_cmds awk -F'\t' '
+        BEGIN {
+            YELLOW = "\033[33m"; GREEN = "\033[32m"; DIM = "\033[2m"
+            BOLD   = "\033[1m";  RST   = "\033[0m"
+        }
+        NR == 1 {
+            # Header row: bold, columns padded so the body rows line up.
+            printf "%s%-22.22s%s\t%s%-40.40s%s\t%s%s%s\n", \
+                BOLD, $1, RST, BOLD, $2, RST, BOLD, $3, RST
+            next
+        }
+        {
+            printf "%s%-22.22s%s\t%s%-40.40s%s\t%s%s%s\n", \
+                YELLOW, $1, RST, GREEN, $2, RST, DIM, $3, RST
+        }' \
+        | ___x_cmd fzf \
+            --ansi --reverse --height='80%' \
+            --tabstop=2 \
+            --query="$query" \
+            --header-lines=1 \
+            --header-border=horizontal \
+            --header-label=' eget-installable (from x install DB) ' \
+            --delimiter='\t' \
+            --nth=1,2 \
+            --bind='ctrl-w:toggle-preview-wrap' \
+            --bind='ctrl-r:change-preview-window(down,30%,70%,border-horizontal|down,50%,99%,border-horizontal|right,70%|hidden|down,30%,99%,border-horizontal)' \
+            --preview='x install --printinfo {1}' \
+            --preview-window='down:70%:30%:border-horizontal:wrap' \
+    )"
+    # Strip any ANSI codes and extract the first tab-delimited field.
+    [ -n "$selection" ] || return 0
+    selection="$( printf "%s\n" "$selection" \
+        | sed $'s/\033\\[[0-9;]*m//g' \
+        | awk -F'\t' '{ gsub(/[ \t]+$/, "", $1); print $1 }' )"
+
+    # Hand off to the post-select menu (TTY → ui select, pipe → reference).
+    ___x_cmd_eget_ls_installdb_postselect "$selection"
+}
+
+# After-the-fact action menu, mirrors `x install --ls --app` shape.
+# TTY  → ___x_cmd ui select with use / snap / reference / EXIT
+# pipe → print reference commands only (no interactivity)
+___x_cmd_eget_ls_installdb_postselect(){
+    local name="$1"
+    [ -n "$name" ] || return 0
+
+    if [ -t 1 ]; then
+        local id=
+        ___x_cmd ui select id,cmd "What to do with '$name'?"           \
+            "x eget use   $name    (install to ~/.local/bin)"          \
+            "x eget snap  $name -- --help    (try without installing)" \
+            "show reference commands"                                   \
+            "EXIT" || return 1
+        case "$id" in
+            1)  ___x_cmd eget use "$name"                       ;;
+            2)  ___x_cmd eget snap "$name" -- --help            ;;
+            3)  ___x_cmd_eget_ls_installdb_reference "$name"   ;;
+            *)  return 0                                       ;;
+        esac
+    else
+        ___x_cmd_eget_ls_installdb_reference "$name"
+    fi
+}
+
+# Reference commands for a selected package. Used by the post-select menu
+# and as the non-interactive fallback. Output is plain text so callers can
+# grep / copy-paste.
+___x_cmd_eget_ls_installdb_reference(){
+    local name="$1"
+    [ -n "$name" ] || return 0
+    printf "Selected: %s\n" "$name"
+    printf "  x eget use %s\n" "$name"
+    printf "  x eget --to <dir> %s\n" "$name"
+    printf "  x eget snap %s -- [args...]\n" "$name"
+}
+
+# Auto-dispatch: TTY → fz (interactive), non-TTY → tsv (raw).
+# Same shape as install module's --auto.
+___x_cmd_eget_ls_installdb_auto(){
+    if [ -t 1 ]; then
+        ___x_cmd_eget_ls_installdb_fz "$@"
+    else
+        ___x_cmd_eget_ls_installdb_tsv
+    fi
+}

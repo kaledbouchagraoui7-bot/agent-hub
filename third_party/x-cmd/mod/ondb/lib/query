@@ -1,0 +1,115 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_query(){
+    local type="" dir="" fmt="tsv"
+    local TAB; TAB="$(printf '\t')"
+    local wfilters="" tsv_cols=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb query "$@" ; return 0 ;;
+            --type)     type="$2"; arg:2:shift ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --tsv)      fmt="tsv"; shift ;;
+            --json)     fmt="json"; shift ;;
+            --where)
+                local kv="$2"
+                wfilters="${wfilters}${wfilters:+$TAB}${kv%%=*}=${kv#*=}"
+                arg:2:shift
+                ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    # For TSV mode, read schema to get columns for this type
+    if [ "$fmt" = "tsv" ]; then
+        local schema_file
+        [ -n "$dir" ] && schema_file="$dir/schema.tsv" || schema_file="schema.tsv"
+        if [ -f "$schema_file" ]; then
+            # Extract cols line for this type: "type\tTask\tcols\tid title status"
+            tsv_cols="$( grep "$(printf 'type\t%s\tcols' "$type")" "$schema_file" 2>/dev/null | cut -f4- | tr '\t' ' ' | tr -d '\n' )"
+        fi
+    fi
+
+    # Resolve backend explicitly
+    ___x_cmd_ondb_backend_resolve
+    local backend="$x_"
+
+    # SQLite path
+    if [ "$backend" = "sqlite" ]; then
+        ___x_cmd_ondb_db_path "$dir"
+        if [ -n "$x_" ]; then
+            local db="$x_"
+            local sql="SELECT e.id, e.type, IFNULL(p.value,'') FROM entities e LEFT JOIN props p ON p.entity_id=e.id AND p.key='name'"
+            local joins="" where=""
+            [ -n "$type" ] && where="${where:+${where} AND }e.type='$type'"
+
+            # Build JOIN + WHERE for each --where filter
+            local i=1 fcount
+            fcount="$(printf '%s\n' "$wfilters" | wc -l | tr -d ' ')"
+            [ -z "$wfilters" ] && fcount=0
+            while [ "$i" -le "$fcount" ]; do
+                local kv; kv="$(printf '%s\n' "$wfilters" | sed -n "${i}p")"
+                local k="${kv%%=*}" v="${kv#*=}"
+                ___x_cmd_ondb_db_esc k; ___x_cmd_ondb_db_esc v
+                joins="${joins} JOIN props p${i} ON p${i}.entity_id=e.id AND p${i}.key='${k}'"
+                where="${where:+${where} AND }p${i}.value='${v}'"
+                i=$(( i + 1 ))
+            done
+
+            [ -n "$where" ] && sql="$sql${joins} WHERE $where"
+            sql="$sql ORDER BY e.ctime"
+
+            if [ "$fmt" = "json" ]; then
+                sqlite3 "$db" "SELECT json_group_array(json_object('id', e.id, 'type', e.type, 'name', IFNULL(p.value,''))) FROM entities e LEFT JOIN props p ON p.entity_id=e.id AND p.key='name'${joins} WHERE ${where:-1=1} ORDER BY e.ctime;"
+            else
+                sqlite3 -separator '	' "$db" "$sql"
+            fi
+            return
+        fi
+        # db_path returned empty (no db file, no tsv); fall through to AWK
+    fi
+
+    # JS path
+    if [ "$backend" = "js" ] && command -v bun >/dev/null 2>&1 && [ -z "$wfilters" ]; then
+        local input
+        if [ -n "$dir" ]; then
+            ___x_cmd_ondb_logpath_read "$dir"
+            input="$x_"
+        else
+            input="cat 'ondb.tsv'"
+        fi
+        eval "$input" | bun run "$___X_CMD_ROOT_MOD/ondb/lib/js/query.js" --type="${type:-}"
+        return
+    fi
+
+    # Python path
+    if [ "$backend" = "python" ] && command -v python3 >/dev/null 2>&1 && [ -z "$wfilters" ]; then
+        local input
+        if [ -n "$dir" ]; then
+            ___x_cmd_ondb_logpath_read "$dir"
+            input="$x_"
+        else
+            input="cat 'ondb.tsv'"
+        fi
+        eval "$input" | python3 "$___X_CMD_ROOT_MOD/ondb/lib/py/query.py" --type="${type:-}"
+        return
+    fi
+
+    # AWK fallback (default or explicit awk, or python unavailable)
+    local input
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_read "$dir"
+        input="$x_"
+    else
+        input="cat 'ondb.tsv'"
+    fi
+
+    eval "$input" | ___x_cmd_cmds awk \
+        -v ONTO_TYPE="${type:-}" -v ONTO_FMT="$fmt" -v ONTO_FILTERS="$wfilters" \
+        -v ONTO_TSV_COLS="${tsv_cols:-}" \
+        -f "$___X_CMD_ROOT_MOD/ondb/lib/awk/ontology.awk" \
+        -f "$___X_CMD_ROOT_MOD/ondb/lib/awk/schema.awk" \
+        -f "$___X_CMD_ROOT_MOD/ondb/lib/awk/query.awk"
+}

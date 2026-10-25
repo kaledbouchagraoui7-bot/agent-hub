@@ -1,0 +1,47 @@
+
+[ -f "$___X_CMD_ROOT_BOOT/alias/co.disable"         ]  ||  {
+    alias ,='___x_cmd co --exec'
+    alias "，"='___x_cmd co --exec'
+}
+
+[ -f "$___X_CMD_ROOT_BOOT/alias/coco.disable"       ]  ||  {
+    alias ,,='___x_cmd coco --exec'
+    alias "，，"='___x_cmd coco --exec'
+}
+
+[ ! -d "$HOME/.gnupg" ] ||  {
+    GPG_TTY=$(tty)
+    export GPG_TTY
+}
+
+if [ "$___X_CMD_SHELL" = bash ] || [ "$___X_CMD_SHELL" = zsh ]; then
+    if [ -f "$___X_CMD_ROOT_CACHE/shortcut/compile/shortcut.$___X_CMD_SHELL" ] || ___x_cmd shortcut compile "$___X_CMD_SHELL"; then
+        ___x_cmd_source_invoke "$___X_CMD_ROOT_CACHE/shortcut/compile/shortcut.$___X_CMD_SHELL"
+    fi
+else
+    if [ -f "$___X_CMD_ROOT_CACHE/shortcut/compile/shortcut.sh" ] || ___x_cmd shortcut compile posixshell; then
+        ___x_cmd_source_invoke "$___X_CMD_ROOT_CACHE/shortcut/compile/shortcut.sh"
+    fi
+fi
+
+case "$___X_CMD_SHELL" in
+    bash|ash)
+        if [ -f "$___X_CMD_ROOT_CACHE/slash/compile/slash.sh" ]; then
+            ___x_cmd_source_invoke "$___X_CMD_ROOT_CACHE/slash/compile/slash.sh"
+        fi
+        ;;
+    zsh)
+        if [ -f "$___X_CMD_ROOT_CACHE/slash/compile/slash.sh" ]; then
+            ___x_cmd_source_invoke "$___X_CMD_ROOT_CACHE/slash/compile/slash.sh"
+        fi
+
+        if [ -f "$___X_CMD_ROOT_MOD/slash/lib/complete-zsh" ]; then
+            ___x_cmd_source_invoke "$___X_CMD_ROOT_MOD/slash/lib/complete-zsh"
+        fi
+        ;;
+    dash)
+        if [ -f "$___X_CMD_ROOT_CACHE/slash/compile/slash.dash" ]; then
+            ___x_cmd_source_invoke "$___X_CMD_ROOT_CACHE/slash/compile/slash.dash"
+        fi
+        ;;
+esac

@@ -1,0 +1,1582 @@
+{
+"#name"
+:
+{
+"skill"
+:
+null
+,
+"zh"
+:
+"Skill 管理"
+,
+"en"
+:
+"Skill Management"
+}
+,
+"#synopsis"
+:
+null
+,
+"#desc"
+:
+{
+"en"
+:
+"Manage Agent Skills to enhance LLM task execution.\n\nSkills are reusable capabilities that extend LLM abilities for specific tasks.\nThis module allows you to browse, add, remove, and manage skills for various AI agents.\n"
+,
+"zh"
+:
+"管理 Agent Skills，增强 LLM 任务执行能力。\n\nSkills 是可复用的能力扩展，用于增强 LLM 在特定任务上的表现。\n本模块支持浏览、添加、移除和管理多种 AI agent 的 skills。\n"
+}
+,
+"#tip"
+:
+[
+{
+"en"
+:
+"Quick start:\n1. Run 'x skill lr' to see all available skills\n2. Run 'x skill ls' to see activated skills in current project\n3. Run 'x skill suggest' to get AI-recommended skills for your project\n"
+,
+"zh"
+:
+"快速开始：\n1. 运行 'x skill lr' 查看所有可用 skills\n2. 运行 'x skill ls' 查看当前项目已激活的 skills\n3. 运行 'x skill suggest' 获取 AI 推荐的 skills\n"
+}
+,
+{
+"en"
+:
+"Skill source prefixes:\n- clawhub/*        — Clawhub platform\n- x-mod/*          — x-cmd built-in module\n- <author>/<name>  — awesome list, auto-cached (e.g. anthropics/pptx)\n- GitHub URL       — install directly from repo\n"
+,
+"zh"
+:
+"Skill 来源前缀：\n- clawhub/*        — Clawhub 平台\n- x-mod/*          — x-cmd 内置模块\n- <author>/<name>  — awesome 列表，自动缓存（如 anthropics/pptx）\n- GitHub URL       — 从仓库直接安装\n"
+}
+,
+{
+"en"
+:
+"x-mod/* represents an x-cmd built-in module.\nUse 'x <mod> --help' for documentation.\nTo keep across sessions, note it in AGENTS.md.\n"
+,
+"zh"
+:
+"x-mod/* 代表 x-cmd 内置模块。使用 'x <mod> --help' 获取文档。\n跨会话保留在 AGENTS.md 中备注即可。\n"
+}
+,
+{
+"en"
+:
+"Agent skill directories (when --agent is specified):\nclaude → .claude/skills/    gemini → .gemini/skills/\ncodex  → .codex/skills/     others → .agents/skills/\nWithout --agent, installs to both .agents/skills/ and .claude/skills/.\nGlobal scope: ~/.<agent>/skills/\nOverride with --skill-dir.\n"
+,
+"zh"
+:
+"Agent skill 目录（指定 --agent 时）：\nclaude → .claude/skills/    gemini → .gemini/skills/\ncodex  → .codex/skills/     其他   → .agents/skills/\n不指定 --agent 时，默认同时安装到 .agents/skills/ 和 .claude/skills/。\n全局作用域：~/.<agent>/skills/    使用 --skill-dir 可覆盖。\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x skill lr"
+,
+"zh"
+:
+"示例: 列出所有可用 skills"
+,
+"en"
+:
+"Example: list all available skills"
+}
+,
+{
+"cmd"
+:
+"x skill ls"
+,
+"zh"
+:
+"示例: 列出当前项目已激活的 skills"
+,
+"en"
+:
+"Example: list activated skills in current project"
+}
+,
+{
+"cmd"
+:
+"x skill suggest --auto"
+,
+"zh"
+:
+"示例: 自动应用 AI 推荐的 skills"
+,
+"en"
+:
+"Example: auto-apply AI-recommended skills"
+}
+,
+{
+"cmd"
+:
+"x skill add anthropics/pptx"
+,
+"zh"
+:
+"示例: 添加 pptx skill"
+,
+"en"
+:
+"Example: add pptx skill"
+}
+,
+{
+"cmd"
+:
+"x skill add anthropics/pptx --agent claude"
+,
+"zh"
+:
+"示例: 仅为 claude-code agent 添加 pptx skill"
+,
+"en"
+:
+"Example: add pptx skill for claude-code agent only"
+}
+,
+{
+"cmd"
+:
+"x skill add https://github.com/google-gemini/gemini-skills --skill gemini-api-dev --skill gemini-interactions-api"
+,
+"zh"
+:
+"示例: 从 GitHub 仓库添加多个 skills"
+,
+"en"
+:
+"Example: add multiple skills from GitHub repo"
+}
+,
+{
+"cmd"
+:
+"x skill rm --skill-dir .claude/skills anthropics/skill-creator"
+,
+"zh"
+:
+"示例: 从当前项目移除 skill-creator skill"
+,
+"en"
+:
+"Example: remove skill-creator skill from current project"
+}
+]
+,
+"ls-remote|lr|ll"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出所有可用 skills（从远程仓库）"
+,
+"en"
+:
+"List all available skills from remote repository"
+}
+,
+"#tip"
+:
+[
+{
+"en"
+:
+"Data sources: x-cmd modules (x-mod/*), awesome skill list, GitHub repos (--github).\nData auto-refreshes every 7 days. Use 'x skill update' to force refresh.\n"
+,
+"zh"
+:
+"数据源：x-cmd 模块（x-mod/*）、awesome skill 列表、GitHub 仓库（--github）。\n数据每 7 天自动刷新，使用 'x skill update' 强制刷新。\n"
+}
+]
+,
+"--csv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 CSV 格式输出"
+,
+"en"
+:
+"Output in CSV format"
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出"
+,
+"en"
+:
+"Output in TSV format"
+}
+}
+,
+"--github"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"zh"
+:
+"从 GitHub 仓库列出 skills"
+,
+"en"
+:
+"List skills from GitHub repository"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"GitHub 仓库 URL"
+,
+"en"
+:
+"GitHub repository URL"
+}
+}
+}
+,
+"--prompt"
+:
+{
+"#tag"
+:
+[
+"inner"
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"输出供 AI 理解的指导 prompt"
+,
+"en"
+:
+"Output guidance prompt for AI to understand skill lr results"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x skill lr --tsv"
+,
+"zh"
+:
+"示例: 以 TSV 格式列出所有 skills"
+,
+"en"
+:
+"Example: list all skills in TSV format"
+}
+,
+{
+"cmd"
+:
+"x skill lr --github https://github.com/google-gemini/gemini-skills"
+,
+"zh"
+:
+"示例: 从 GitHub 仓库列出 skills"
+,
+"en"
+:
+"Example: list skills from GitHub repository"
+}
+]
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出当前项目已激活的 skills"
+,
+"en"
+:
+"List activated skills in current project"
+}
+,
+"#tip"
+:
+[
+{
+"en"
+:
+"Without --skill-dir, scans project and global directories for all agents\n(claude, codex, gemini, and generic). Use --agent to limit scope.\n"
+,
+"zh"
+:
+"不指定 --skill-dir 时，扫描所有 agent（claude、codex、gemini 及通用）\n的项目目录和全局目录。使用 --agent 限定范围。\n"
+}
+]
+,
+"--agent"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 AI Agent 类型"
+,
+"en"
+:
+"Specify AI agent type"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Agent 类型"
+,
+"en"
+:
+"Agent type"
+}
+,
+"#cand"
+:
+[
+"claude"
+,
+"codex"
+,
+"gemini"
+]
+}
+}
+,
+"--skill-dir"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 skills 存放目录"
+,
+"en"
+:
+"Specify skills directory"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目录路径"
+,
+"en"
+:
+"Directory path"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__dir"
+}
+}
+,
+"--id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仅输出 skill ID 列表"
+,
+"en"
+:
+"Output only skill IDs"
+}
+}
+,
+"--fzapp"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"使用 FZF 交互式浏览和管理"
+,
+"en"
+:
+"Browse and manage interactively with FZF"
+}
+}
+,
+"--preview"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以人类可读格式显示"
+,
+"en"
+:
+"Display in human-readable format"
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出"
+,
+"en"
+:
+"Output in TSV format"
+}
+}
+,
+"--csv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 CSV 格式输出"
+,
+"en"
+:
+"Output in CSV format"
+}
+}
+}
+,
+"info"
+:
+{
+"#synopsis"
+:
+"<skill-id>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"显示指定 skill 的索引信息"
+,
+"en"
+:
+"Show index information of specified skill"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Skill ID"
+,
+"en"
+:
+"Skill ID"
+}
+,
+"#exec:stdout"
+:
+"___x_cmd skill --advise_list_full"
+}
+}
+,
+"cat"
+:
+{
+"#synopsis"
+:
+"<skill-id>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"显示指定 skill 的完整内容"
+,
+"en"
+:
+"Display full content of specified skill"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Skill ID"
+,
+"en"
+:
+"Skill ID"
+}
+,
+"#exec:stdout"
+:
+"___x_cmd skill --advise_list_full"
+}
+}
+,
+"which"
+:
+{
+"#synopsis"
+:
+"<skill-id> <relative-path>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"显示指定 skill 的文件路径"
+,
+"en"
+:
+"Show file path of specified skill"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Skill ID"
+,
+"en"
+:
+"Skill ID"
+}
+,
+"#exec:stdout"
+:
+"___x_cmd skill --advise_list_full"
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Skill 目录内的相对路径"
+,
+"en"
+:
+"Relative path inside skill directory"
+}
+,
+"#cand"
+:
+[
+"SKILL.md"
+]
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x skill which pdf SKILL.md"
+,
+"zh"
+:
+"示例: 显示 pdf skill 的 SKILL.md 文件路径"
+,
+"en"
+:
+"Example: show path to SKILL.md in pdf skill"
+}
+]
+}
+,
+"update"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"更新 skill 数据索引"
+,
+"en"
+:
+"Update skill data index"
+}
+}
+,
+"suggest"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"根据项目上下文推荐合适的 skills"
+,
+"en"
+:
+"Recommend suitable skills based on project context"
+}
+,
+"#tip"
+:
+[
+{
+"en"
+:
+"Reads project context files → gets enabled skill list →\ngets all available skill list → AI recommends matching skills.\nRequires the corresponding agent to be installed.\n"
+,
+"zh"
+:
+"读取项目上下文文件 → 获取已启用 skill 列表 →\n获取全部可用 skill 列表 → AI 推荐匹配的 skill。\n需要对应 agent 已安装。\n"
+}
+]
+,
+"--agent"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 AI Agent 类型"
+,
+"en"
+:
+"Specify AI agent type"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Agent 类型"
+,
+"en"
+:
+"Agent type"
+}
+,
+"#cand"
+:
+[
+"claude"
+,
+"codex"
+,
+"gemini"
+]
+}
+}
+,
+"--app"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"交互式选择并应用"
+,
+"en"
+:
+"Interactive selection and apply"
+}
+}
+,
+"--print"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仅打印推荐列表"
+,
+"en"
+:
+"Print recommendation list only"
+}
+}
+,
+"--auto"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"自动应用所有推荐"
+,
+"en"
+:
+"Automatically apply all recommendations"
+}
+}
+,
+"--fit"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"获取当前 Agent 的配置文件路径"
+,
+"en"
+:
+"Get current agent configuration file path"
+}
+}
+}
+,
+"dir"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"总结、列出指定的 Skill 目录"
+,
+"en"
+:
+"Summarize and list specified skill directories"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x skill dir ls --ws /path/to/test"
+,
+"zh"
+:
+"示例: 列出指定目录下的 skills"
+,
+"en"
+:
+"Example: list skills in specified directory"
+}
+,
+{
+"cmd"
+:
+"x skill dir sum --ws /path/to/test"
+,
+"zh"
+:
+"示例: 统计工作区 skill 目录信息"
+,
+"en"
+:
+"Example: sum up workspace skill directory information"
+}
+]
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出指定目录下的 skills"
+,
+"en"
+:
+"List skills in specified directory"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x skill dir ls --ws /path/to/test"
+,
+"zh"
+:
+"示例: 列出指定目录下的 skills"
+,
+"en"
+:
+"Example: list skills in specified directory"
+}
+]
+,
+"--ws"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目录路径"
+,
+"en"
+:
+"Directory path"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__dir"
+}
+}
+,
+"sum"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"统计 skill 目录信息"
+,
+"en"
+:
+"Sum up skill directory information"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x skill dir sum --ws /path/to/test"
+,
+"zh"
+:
+"示例: 统计工作区 skill 目录信息"
+,
+"en"
+:
+"Example: sum up workspace skill directory information"
+}
+]
+,
+"--ws"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目录路径"
+,
+"en"
+:
+"Directory path"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__dir"
+}
+}
+}
+,
+"prompt"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"管理 skill 机制的 prompt 模板"
+,
+"en"
+:
+"Manage skill mechanism prompt templates"
+}
+,
+"setup"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"将 skill 机制 prompt 注入到指定文件"
+,
+"en"
+:
+"Inject skill mechanism prompt into file"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目标文件路径"
+,
+"en"
+:
+"Target file path"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__file"
+}
+}
+,
+"text"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"获取 skill 机制的 prompt 文本"
+,
+"en"
+:
+"Get skill mechanism prompt text"
+}
+}
+,
+"rm"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"从指定文件移除 skill 机制 prompt"
+,
+"en"
+:
+"Remove skill mechanism prompt from file"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目标文件路径"
+,
+"en"
+:
+"Target file path"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__file"
+}
+}
+,
+"#tag"
+:
+[
+"inner"
+]
+}
+,
+"add"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"添加 skill 到当前项目（默认安装到 .agents/skills/ 和 .claude/skills/）"
+,
+"en"
+:
+"Add skill to current project (installs to both .agents/skills/ and .claude/skills/ by default)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"默认同时安装到 .agents/skills/ 和 .claude/skills/ 两个目录。\n使用 --agent 指定 agent 类型可限定只安装到该 agent 的目录。\n"
+,
+"en"
+:
+"By default, installs to both .agents/skills/ and .claude/skills/.\nUse --agent to limit installation to a specific agent's directory.\n"
+}
+,
+{
+"zh"
+:
+"使用 clawhub/ 前缀添加 skill 时，系统会根据网络环境自动选择数据源。\n中国用户使用 ByteDance/Volcano Engine 镜像站 (cn.clawhub-mirror.com) 以提升访问速度；\n国际用户使用 OpenCLAW 官方平台 (clawhub.ai)。\n详情参阅：https://cn.clawhub-mirror.com/about 或 https://clawhub.ai/about\n"
+,
+"en"
+:
+"When adding skills with the clawhub/ prefix, the system automatically selects a data source based on your network environment.\nUsers in China use the ByteDance/Volcano Engine mirror (cn.clawhub-mirror.com) for improved accessibility;\nInternational users use the OpenCLAW official platform (clawhub.ai).\nSee: https://cn.clawhub-mirror.com/about or https://clawhub.ai/about\n"
+}
+]
+,
+"--skill-dir"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 skills 存放目录"
+,
+"en"
+:
+"Specify skills directory"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目录路径"
+,
+"en"
+:
+"Directory path"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__dir"
+}
+}
+,
+"--agent|-a"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 AI Agent 类型（限定只安装到该 agent 的 skill 目录）"
+,
+"en"
+:
+"Specify AI agent type (limits install to that agent's directory only)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Agent type"
+,
+"zh"
+:
+"Agent 类型"
+}
+,
+"#cand"
+:
+[
+"claude"
+,
+"gemini"
+,
+"codex"
+,
+"opencode"
+,
+"kimi"
+,
+"openclaw"
+]
+}
+}
+,
+"--skill|-s"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定要添加的 skill 名称"
+,
+"en"
+:
+"Specify skill name to add"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Skill name"
+,
+"zh"
+:
+"Skill 名称"
+}
+}
+}
+,
+"--project|-p"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"安装到项目作用域"
+,
+"en"
+:
+"Install to project scope"
+}
+}
+,
+"--global|-g"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"安装到全局作用域"
+,
+"en"
+:
+"Install to global scope"
+}
+}
+,
+"--no-cache"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"跳过缓存，强制重新下载"
+,
+"en"
+:
+"Skip cache, force re-download"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Skill 来源（skills 或 GitHub URL）"
+,
+"en"
+:
+"Skill source (skills or GitHub URL)"
+}
+,
+"#exec:stdout"
+:
+"___x_cmd skill --advise_list_full"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x skill add anthropics/pptx"
+,
+"zh"
+:
+"示例: 添加 pptx skill（默认安装到 .agents/skills/ 和 .claude/skills/）"
+,
+"en"
+:
+"Example: add pptx skill (installs to both .agents/skills/ and .claude/skills/ by default)"
+}
+,
+{
+"cmd"
+:
+"x skill add anthropics/pptx --agent claude"
+,
+"zh"
+:
+"示例: 仅为 claude-code agent 添加 pptx skill"
+,
+"en"
+:
+"Example: add pptx skill for claude-code agent only"
+}
+,
+{
+"cmd"
+:
+"x skill add clawhub/self-improving-agent"
+,
+"zh"
+:
+"示例: 从 Clawhub 添加 self-improving-agent skill"
+,
+"en"
+:
+"Example: add self-improving-agent skill from Clawhub"
+}
+,
+{
+"cmd"
+:
+"x skill add https://github.com/google-gemini/gemini-skills --skill gemini-api-dev --skill gemini-interactions-api"
+,
+"zh"
+:
+"示例: 从 GitHub 仓库添加多个 skills"
+,
+"en"
+:
+"Example: add multiple skills from GitHub repo"
+}
+,
+{
+"cmd"
+:
+"x skill add https://github.com/google-gemini/gemini-skills --no-cache"
+,
+"zh"
+:
+"示例: 从 GitHub 添加 skill，跳过缓存强制重新下载"
+,
+"en"
+:
+"Example: add skill from GitHub, skip cache"
+}
+]
+}
+,
+"rm"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"从当前项目移除 skill"
+,
+"en"
+:
+"Remove skill from current project"
+}
+,
+"--skill-dir"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 skills 存放目录"
+,
+"en"
+:
+"Specify skills directory"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目录路径"
+,
+"en"
+:
+"Directory path"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__dir"
+}
+}
+,
+"--project|-p"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"安装到项目作用域"
+,
+"en"
+:
+"Install to project scope"
+}
+}
+,
+"--global|-g"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"安装到全局作用域"
+,
+"en"
+:
+"Install to global scope"
+}
+}
+,
+"--agent|-a"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 AI Agent 类型"
+,
+"en"
+:
+"Specify AI agent type"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Agent type"
+,
+"zh"
+:
+"Agent 类型"
+}
+,
+"#cand"
+:
+[
+"claude"
+,
+"gemini"
+,
+"codex"
+,
+"opencode"
+,
+"kimi"
+,
+"openclaw"
+]
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Skill"
+,
+"en"
+:
+"Skill"
+}
+}
+}
+,
+"#subcmd:Management"
+:
+[
+"add"
+,
+"rm"
+,
+"ls"
+,
+"ll"
+]
+,
+"#subcmd:AI"
+:
+[
+"suggest"
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

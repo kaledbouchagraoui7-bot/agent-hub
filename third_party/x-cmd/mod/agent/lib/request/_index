@@ -1,0 +1,794 @@
+# shellcheck shell=dash disable=2120
+
+xrc:mod:lib     agent       request/workspace request/util request/x-chat
+
+___x_cmd_agent_request(){
+    # local retry=1
+
+    local content=""
+    local harness=""
+    local filelist=""
+    local NL="$___X_CMD_UNSEENCHAR_NEWLINE"
+    local output_format="text"
+    local output_file=""
+    local overwrite=""
+    local stdoutfile=""
+    local stderrfile=""
+
+    local pipe=""
+    local workspace=""
+    local reference_workspace=""
+    local reference_name=""
+    local is_no_thinking=""
+    local is_new_workspace_session=""
+    local session_desc=""
+    local is_debug=""
+    local timeout_secs="3000"
+    local skill_dirlist=""
+    local toolmode="all"
+
+    [ "$#" -gt 0 ] || set -- --help
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m agent request "$@" ; return 0 ;;
+
+            --harness)      harness="$2"  ;                     arg:2:shift ;;
+            --file|-f)      filelist="${filelist}${NL}${2}" ;   arg:2:shift ;;
+            --pipe)         pipe="$(___x_cmd_cmds cat)" ;       shift ;;
+
+            --output|-o)    output_file="$2"   ;                arg:2:shift ;;
+            --overwrite)    overwrite=1;                        shift ;;
+            --json)         output_format=json;                 shift ;;
+            --workspace)    workspace="$2";                     arg:2:shift ;;
+            --new-workspace-session)
+                            is_new_workspace_session=1;         shift ;;
+            --session-desc) session_desc="$2";                  arg:2:shift ;;
+            --reference-workspace)
+                            reference_workspace="$2";           arg:2:shift ;;
+            --stdout-file)  stdoutfile="$2";                    arg:2:shift ; ___x_cmd ensurefp "$stdoutfile";;
+            --stderr-file)  stderrfile="$2";                    arg:2:shift ; ___x_cmd ensurefp "$stderrfile";;
+            --timeout)      timeout_secs="$2";                  arg:2:int; arg:2:shift ;;
+
+            --no-thinking)  is_no_thinking=1 ;                  shift ;;
+            --debug)        is_debug=1 ;                        shift ;;
+            # --retry)        retry="$2" ; arg:2:shift ;;
+            --skill-dir)    skill_dirlist="${skill_dirlist}${NL}${2}" ;
+                            arg:2:shift ;;
+            --tool)         toolmode="$2" ;                     arg:2:shift ;;
+
+            --)             shift; break ;;
+            *)              break ;;
+        esac
+    done
+
+    timeout_secs="${timeout_secs:-3000}"
+
+    ___x_cmd agent isready || {
+        if ___x_cmd_runmode_allow_manual; then
+            agent:info "Agent not initialized -- running 'x agent init' automatically"
+            ___x_cmd agent init || return $?
+        else
+            agent:error "Agent is not ready. Please run 'x agent init' to setup the agent first."
+            return 1
+        fi
+    }
+
+    local x_=""
+    if [ -z "$harness" ]; then
+        x_=""; ___x_cmd_agent_harness_
+        harness="$x_"
+    fi
+
+    ___x_cmd_agent_harness_validate "$harness" || return $?
+
+    toolmode="${toolmode:-all}"
+    case "$toolmode" in
+        all|read-only|read-write) ;;
+        *)  agent:error "Unknown --tool value: '$toolmode' (expected: all, read-only, read-write)"
+            return 64 ;;
+    esac
+
+    if [ -n "$pipe" ]; then
+        content="${content}
+<STDIN>
+${pipe}
+</STDIN>
+"
+    fi
+
+    while read -r f; do
+        [ -f "$f" ]  || continue
+        content="${content}
+<FILE path=\"${f}\">
+$(___x_cmd_cmds cat "$f")
+</FILE>
+"
+    done <<A
+$filelist
+A
+
+    local session_output_dir="$___X_CMD_ROOT_TMP/agent/request/session/$harness"
+    local session_metadata_dir=""
+    if [ -n "$workspace" ]; then
+        [ -d "$workspace" ] || ___x_cmd mkdirp "$workspace" || return $?
+        x_=""; ___x_cmd abspath_ "$workspace"
+        workspace="${x_:-"$workspace"}"
+
+        session_output_dir="$workspace/.x-cmd/agent/request/session"
+        session_metadata_dir="$session_output_dir/metadata/$harness"
+        x_=""; ___x_cmd_agent_request___workspace_prompt_ "$workspace" || return $?
+        content="${content}${x_}"
+    fi
+
+    if [ -n "$reference_workspace" ]; then
+        if [ ! -d "$reference_workspace" ]; then
+            reference_workspace=""
+        else
+            x_=""; ___x_cmd abspath_ "$reference_workspace"
+            reference_workspace="${x_:-"$reference_workspace"}"
+
+            x_=""; ___x_cmd_agent_request___reference_name_ "$reference_workspace" "$reference_name"
+            reference_name="${x_:-reference}"
+            x_=""; ___x_cmd_agent_request___reference_workspace_prompt_ "${workspace:-$PWD}" "$reference_workspace" "$reference_name" || return $?
+            content="${content}${x_}"
+        fi
+    fi
+
+    x_=""; ___x_cmd_agent___skill_prompt_ "$skill_dirlist"
+    content="${content}${x_}"
+
+    local IFS=" " ; local msg="$*"
+    [ -z "$msg" ] || {
+        content="${content}
+<USERMSG>
+${msg}
+</USERMSG>
+"
+    }
+
+    if [ -z "$session_desc" ] && [ -n "$msg" ]; then
+        x_=""; ___x_cmd_agent_request___session_desc_ "$msg"
+        session_desc="$x_"
+    fi
+
+    if [ -z "$output_file" ]; then
+        ___x_cmd_agent_request___run
+        return $?
+    else
+        content="${content}
+Output your response wrapped with:
+<OUTPUT-CONTENT>
+...
+</OUTPUT-CONTENT>
+"
+
+        if [ -f "$output_file" ] && [ "${overwrite:-}" != "1" ]; then
+            ___x_cmd bakman backup "$output_file"
+        fi
+
+        x_="$( ___x_cmd_agent_request___run )" || \
+        case $? in
+            130)    return 130 ;;
+            0)      ;;
+            *)      return $? ;;
+        esac
+
+        x_="${x_#*<OUTPUT-CONTENT>}"
+        x_="${x_%</OUTPUT-CONTENT>*}"
+        x_="${x_#"$NL"}"
+        x_="${x_%"$NL"}"
+        printf "%s" "$x_" > "$output_file"
+    fi
+
+}
+
+____X_CMD_AGENT_ERR_AUTHFAILURE=77
+____X_CMD_AGENT_ERR_SESSION_INVALID=78
+____X_CMD_AGENT_ERR_RATE_LIMIT=79
+____X_CMD_AGENT_ERR_NETWORK_TIMEOUT=124
+____X_CMD_AGENT_ERR_SIGINT=130
+
+___x_cmd_agent_request___run(){
+    agent:info "Sending request to harness '$harness'"
+    ___x_cmd_agent_request___run_validate || return $?
+    if [ "${toolmode:-all}" != "all" ]; then
+        case "$harness" in
+            x-chat|claude|claude-*) ;;
+            *)  agent:debug "Harness '$harness' does not support --tool restriction, ignoring (all tools allowed)" ;;
+        esac
+    fi
+    case "$harness" in
+        x-chat) ___x_cmd_agent_request___run_attempt ;;
+        *)      ___x_cmd retry -i 3 -m 3 ___x_cmd_agent_request___run_attempt ;;
+    esac
+}
+
+___x_cmd_agent_request___run_validate(){
+    case "$harness" in
+        claude)
+                local loggedIn=; loggedIn="$( ___x_cmd claude -- auth status | ___x_cmd jo .loggedIn )"
+                if [ "$loggedIn" != "true" ]; then
+                    agent:warn \
+                        --tip1 "x claude auth login" \
+                        --tip2 "x claude use -h" \
+                        "Claude auth status is not logged in"
+                    return "$____X_CMD_AGENT_ERR_AUTHFAILURE"
+                fi
+                ;;
+        claude-*)
+                local subcmd="${harness#claude-}"
+                local loggedIn=; loggedIn="$( ___x_cmd claude "$subcmd" auth status | ___x_cmd jo .loggedIn )"
+                if [ "$loggedIn" != "true" ]; then
+                    agent:warn "Claude $subcmd auth status is not logged in"
+                    return "$____X_CMD_AGENT_ERR_AUTHFAILURE"
+                fi
+                ;;
+        codex)
+                if [ "$( ___x_cmd codex -- login status 2>&1 )" = "Not logged in" ]; then
+                    agent:warn \
+                        --tip "x codex login" \
+                        "Codex auth status is not logged in"
+                    return "$____X_CMD_AGENT_ERR_AUTHFAILURE"
+                fi
+                ;;
+        cursor)
+                ___x_cmd hascmd cursor || ___x_cmd hascmd agent || {
+                    agent:error "Not found cursor command"
+                    return 1
+                }
+
+                if [ "$( ___x_cmd_agent_request___cursor_runcmd status --format json | ___x_cmd jo .isAuthenticated )" != "true" ]; then
+                    agent:warn "Cursor auth status is not logged in"
+                    return "$____X_CMD_AGENT_ERR_AUTHFAILURE"
+                fi
+                ;;
+        gemini-cli)
+                ___x_cmd hascmd gemini || ___x_cmd env use gemini-cli  || {
+                    agent:error "Not found gemini command"
+                    return 1
+                }
+                ;;
+        opencode)
+                ___x_cmd hascmd opencode || ___x_cmd env use opencode || {
+                    agent:error "Not found opencode command"
+                    return 1
+                }
+                ;;
+        kimi-cli)
+                ___x_cmd hascmd kimi-cli || ___x_cmd kimi --install  || {
+                    agent:error "Not found kimi command"
+                    return 1
+                }
+                ;;
+        x-chat)
+                ___x_cmd chat --isready >/dev/null 2>&1 || {
+                    agent:warn \
+                        --tip "x chat init" \
+                        "x chat is not ready"
+                    return "$____X_CMD_AGENT_ERR_AUTHFAILURE"
+                }
+                ;;
+    esac
+}
+
+___x_cmd_agent_request___run_attempt(){
+    ___x_cmd_agent_request___run_exec "$harness" "$content" "$output_format" "$workspace" "$is_no_thinking" "$stdoutfile" "$stderrfile" "$reference_workspace"
+    local ret=$?
+
+    if [ $ret -eq 0 ]; then
+        agent:info "Request to harness '$harness' completed successfully"
+        return 0
+    fi
+
+    if [ "$ret" = "$____X_CMD_AGENT_ERR_NETWORK_TIMEOUT" ]; then
+        agent:error "Agent request timed out after ${timeout_secs}s, aborting"
+        ___X_CMD_RETRY_ABORT=1
+        return "$____X_CMD_AGENT_ERR_NETWORK_TIMEOUT"
+    elif [ "$ret" = "$____X_CMD_AGENT_ERR_AUTHFAILURE" ]; then
+        case "$harness" in
+            kimi-cli)
+                agent:info "Authentication ..."
+                ___x_cmd timeout 10 x-cmd kimi login || {
+                    ___X_CMD_RETRY_ABORT=1
+                    return "$____X_CMD_AGENT_ERR_AUTHFAILURE"
+                }
+
+                ___x_cmd_agent_request___run_exec "$harness" "Say OK" "text" "" "1" "/dev/null" "/dev/null" "" || {
+                    ret=$?
+                    ___X_CMD_RETRY_ABORT=1
+                    return $ret
+                }
+
+                agent:info "Auto-login succeeded, retrying original request"
+                ___x_cmd_agent_request___run_exec "$harness" "$content" "$output_format" "$workspace" "$is_no_thinking" "$stdoutfile" "$stderrfile" "$reference_workspace"
+                ret=$?
+                ;;
+            *)
+                agent:warn "Authentication failed for harness '$harness', aborting"
+                ___X_CMD_RETRY_ABORT=1
+                return "$____X_CMD_AGENT_ERR_AUTHFAILURE"
+                ;;
+        esac
+    elif [ "$ret" = "$____X_CMD_AGENT_ERR_RATE_LIMIT" ]; then
+        agent:warn "Agent request hit rate limit, aborting"
+        ___X_CMD_RETRY_ABORT=1
+        return "$____X_CMD_AGENT_ERR_RATE_LIMIT"
+    elif [ "$ret" = "$____X_CMD_AGENT_ERR_SIGINT" ]; then
+        agent:warn "Agent request interrupted by user (SIGINT)"
+        ___X_CMD_RETRY_ABORT=1
+        return "$____X_CMD_AGENT_ERR_SIGINT"
+    fi
+
+    # Any other failure: back up the current workspace session id so that the
+    # next retry will create a brand-new persistent session.
+    if [ "$harness" != "x-chat" ] && [ -n "$workspace" ] && [ "$is_new_workspace_session" != "1" ]; then
+        agent:warn "Request failed (exit $ret), backing up current workspace session for retry with a new one"
+        ___x_cmd_agent_request___invalidate_current_session_
+    fi
+
+    return $ret
+}
+
+___x_cmd_agent_request___run_exec(){(
+    local harness="$1"
+    local content="$2"
+    local output_format="$3"
+    local workspace="$4"
+    local is_no_thinking="$5"
+    local stdoutfile="$6"
+    local stderrfile="$7"
+    local reference_workspace="$8"
+    shift $#
+
+    local session_dir=""
+    local current_file=""
+    local real_session_id=""
+    local user_session_cwd=""
+    local is_session_first=""
+    local save_session_id_file=""
+    local now=""
+    local ret=0
+
+    [ -z "$stdoutfile" ] || exec >> "$stdoutfile"
+    [ -z "$stderrfile" ] || exec 2>> "$stderrfile"
+
+    if [ -n "$session_output_dir" ]; then
+        ___x_cmd rmrf "$session_output_dir/metadata/status" "$session_output_dir/metadata/stderr.txt"
+    fi
+
+    if [ -n "$workspace" ]; then
+        current_file="$session_metadata_dir/current"
+        x_=""; ___x_cmd epoch get_
+        now="$x_"
+
+        if [ "$is_new_workspace_session" != "1" ] && [ -f "$current_file" ]; then
+            read -r real_session_id < "$current_file"
+            if [ -n "$real_session_id" ]; then
+                session_dir="$session_metadata_dir/$real_session_id"
+                if [ -d "$session_dir" ] && [ -f "$session_dir/cwd" ]; then
+                    read -r user_session_cwd < "$session_dir/cwd"
+                fi
+            fi
+        fi
+
+        if [ -z "$real_session_id" ] && [ "$is_new_workspace_session" != "1" ]; then
+            ___x_cmd_agent_request___migrate_session_
+            if [ -f "$current_file" ]; then
+                read -r real_session_id < "$current_file"
+                if [ -n "$real_session_id" ]; then
+                    session_dir="$session_metadata_dir/$real_session_id"
+                    if [ -d "$session_dir" ] && [ -f "$session_dir/cwd" ]; then
+                        read -r user_session_cwd < "$session_dir/cwd"
+                    fi
+                fi
+            fi
+        fi
+
+        if [ -z "$real_session_id" ] || [ -z "$user_session_cwd" ] || [ ! -d "$user_session_cwd" ]; then
+            is_session_first=1
+            agent:debug "Session is first time, creating a new session"
+            user_session_cwd="$workspace"
+        else
+            printf "%s\n" "$user_session_cwd" > "$session_dir/cwd"
+            printf "%s\n" "$now" > "$session_dir/updated_at"
+        fi
+
+        ___x_cmd_cmds cd "$user_session_cwd" || return $?
+        user_session_cwd="$PWD"
+
+        case "$harness" in
+            claude|claude-*|kimi-cli|x-chat)
+                if [ "$is_session_first" = "1" ]; then
+                    real_session_id="$( ___x_cmd uuid )"
+                    session_dir="$session_metadata_dir/$real_session_id"
+                    ___x_cmd mkdirp "$session_dir"
+                    printf "%s\n" "$user_session_cwd" > "$session_dir/cwd"
+                    printf "%s\n" "$now" > "$session_dir/created_at"
+                    printf "%s\n" "$now" > "$session_dir/updated_at"
+                    printf "%s\n" "$session_desc" > "$session_dir/desc"
+                fi
+                ;;
+            cursor)
+                if [ "$is_session_first" = "1" ]; then
+                    real_session_id="$( ___x_cmd_agent_request___cursor_runcmd create-chat )"
+                    session_dir="$session_metadata_dir/$real_session_id"
+                    ___x_cmd mkdirp "$session_dir"
+                    printf "%s\n" "$user_session_cwd" > "$session_dir/cwd"
+                    printf "%s\n" "$now" > "$session_dir/created_at"
+                    printf "%s\n" "$now" > "$session_dir/updated_at"
+                    printf "%s\n" "$session_desc" > "$session_dir/desc"
+                fi
+                ;;
+            codex|codex-ds|gemini-cli|opencode)
+                if [ "$is_session_first" = "1" ]; then
+                    save_session_id_file="$session_metadata_dir/.extracting_$(___x_cmd uuid)"
+                fi
+                ;;
+        esac
+    fi
+
+    case "$harness" in
+        claude|claude-*)
+            if [ -n "$workspace" ]; then
+                if [ "$is_session_first" = "1" ]; then
+                    set -- --session-id "$real_session_id"
+                else
+                    set -- --resume "$real_session_id"
+                fi
+            fi
+
+            local claude_subcmd="--"
+            case "$harness" in
+                claude-*)   claude_subcmd="${harness#claude-}" ;;
+            esac
+
+            if [ -n "$is_no_thinking" ]; then
+                set -- "$@" --settings '{"alwaysThinkingEnabled": false}'
+            fi
+
+            local claude_allowed_tools=""
+            case "$toolmode" in
+                all)    claude_allowed_tools="Write,Read,Edit,Bash(x *),Bash(x-cmd *),Bash(source ~/.x-cmd.root/X *),Bash(git add *),Bash(git commit *),Bash(git diff *),Bash(git log *),Bash(git status),Bash(git status *),Bash(git push *),Bash(git pull *),Bash(git fetch *),Bash(git checkout *),Bash(git branch *),Bash(git stash *),Bash(git merge *),Bash(git tag *),Bash(npm *),Bash(pytest)" ;;
+                *)      claude_allowed_tools="$(___x_cmd_agent_request___toolmode_tools_ claude "$toolmode")" ;;
+            esac
+
+            {
+                IS_SANDBOX=1 ___x_cmd timeout "$timeout_secs" x-cmd claude "$claude_subcmd" "$@" \
+                --verbose --output-format stream-json \
+                --dangerously-skip-permissions \
+                --allowedTools "$claude_allowed_tools" \
+                ${reference_workspace:+--add-dir "$reference_workspace"} \
+                --print "$content" < /dev/null
+                printf "%s\n" "[EXITCODE] $?"
+            } | ___x_cmd_agent_request___handle_output claude "$output_format" "$is_session_first" "$user_session_cwd" "$save_session_id_file" "$session_output_dir"
+            ret=$?
+
+            if [ -n "$real_session_id" ]; then
+                ___x_cmd claude session extract --session "$real_session_id" --output "$session_output_dir"
+            fi
+            ___x_cmd_agent_request___finalize_session_
+            return $ret
+            ;;
+        codex|codex-ds)
+            local codex_subcmd=""
+            case "$harness" in
+                codex-ds)   codex_subcmd="ds" ;;
+            esac
+
+            set -- exec
+            if [ -n "$workspace" ]; then
+                if [ "$is_session_first" != "1" ]; then
+                    set -- "$@" resume "$real_session_id"
+                fi
+            fi
+
+            if [ -n "$is_no_thinking" ]; then
+                set -- "$@" --config model_reasoning_effort=low
+            fi
+
+            {
+                ___x_cmd timeout "$timeout_secs" x-cmd codex ${codex_subcmd:+"$codex_subcmd"} -- "$@" --json --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check \
+                ${reference_workspace:+--add-dir "$reference_workspace"} \
+                "$content" < /dev/null 2>&1
+                printf "%s\n" "[EXITCODE] $?"
+            } | ___x_cmd_agent_request___handle_output codex "$output_format" "$is_session_first" "$user_session_cwd" "$save_session_id_file" "$session_output_dir"
+            ret=$?
+            ___x_cmd_agent_request___extract_session_id_
+            ___x_cmd_agent_request___finalize_session_
+            return $ret
+            ;;
+        cursor)
+            if [ -n "$workspace" ]; then
+                set -- --resume "$real_session_id"
+            fi
+
+            if [ "$output_format" = "json" ]; then
+                set -- --output-format stream-json
+            fi
+
+            ___x_cmd_agent_request___cursor_runcmd "$@" --trust --yolo --print "$content"
+            ret=$?
+            ___x_cmd_agent_request___finalize_session_
+            return $ret
+            ;;
+        gemini-cli)
+            if [ -n "$workspace" ]; then
+                if [ "$is_session_first" != "1" ]; then
+                    set -- --resume "$real_session_id"
+                fi
+            fi
+
+            [ -z "$is_no_thinking" ] || GEMINI_CLI_SYSTEM_SETTINGS_PATH="$___X_CMD_ROOT_MOD/agent/lib/request/data/gemini-no-think.json"
+
+            {
+                ___x_cmd timeout "$timeout_secs" x-cmd gemini cli -- --yolo "$@" \
+                ${reference_workspace:+--include-directories "$reference_workspace"} \
+                --output-format stream-json --prompt "$content" < /dev/null
+                printf "%s\n" "[EXITCODE] $?"
+            } | ___x_cmd_agent_request___handle_output gemini-cli "$output_format" "$is_session_first" "$user_session_cwd" "$save_session_id_file" "$session_output_dir"
+            ret=$?
+            ___x_cmd_agent_request___extract_session_id_
+            ___x_cmd_agent_request___finalize_session_
+            return $ret
+            ;;
+        opencode)
+            if [ -n "$workspace" ]; then
+                if [ "$is_session_first" != "1" ]; then
+                    set -- --session "$real_session_id"
+                fi
+            fi
+
+            if [ -n "$is_no_thinking" ]; then
+                set -- "$@" --variant low
+            fi
+
+            {
+                OPENCODE_PERMISSION='{"*":"allow"}' ___x_cmd timeout "$timeout_secs" x-cmd opencode run "$@" --format json "$content" < /dev/null
+                printf "%s\n" "[EXITCODE] $?"
+            } | ___x_cmd_agent_request___handle_output opencode "$output_format" "$is_session_first" "$user_session_cwd" "$save_session_id_file" "$session_output_dir"
+            ret=$?
+            ___x_cmd_agent_request___extract_session_id_
+            ___x_cmd_agent_request___finalize_session_
+            return $ret
+            ;;
+        kimi-cli)
+            if [ -n "$workspace" ]; then
+                set -- --session "$real_session_id"
+            fi
+
+            if [ -n "$is_no_thinking" ]; then
+                set -- "$@" --no-thinking
+            fi
+
+            # IS_DEBUG: remove --final-message-only to get full event stream
+            if [ "$is_debug" != "1" ]; then
+                set -- "$@" --final-message-only
+            fi
+
+            {
+                ___x_cmd timeout "$timeout_secs" x-cmd kimi -- "$@" --yolo --print --output-format stream-json \
+                ${reference_workspace:+--add-dir "$reference_workspace"} \
+                --prompt "$content" < /dev/null
+                printf "%s\n" "[EXITCODE] $?"
+            } | ___x_cmd_agent_request___handle_output kimi-cli "$output_format" "$is_session_first" "$user_session_cwd" "$save_session_id_file" "$session_output_dir"
+            ret=$?
+            ___x_cmd_agent_request___finalize_session_
+            return $ret
+            ;;
+        x-chat)
+            if [ -n "$workspace" ]; then
+                set -- --session "$real_session_id"
+            fi
+
+            ___x_cmd_agent_request___run_exec_x_chat "$@" "$content" < /dev/null
+            ret=$?
+            ___x_cmd_agent_request___finalize_session_
+            return $ret
+            ;;
+    esac
+)}
+
+___x_cmd_agent_request___handle_output(){
+    local harness="$1"
+    local output_format="$2"
+    local is_session_first="$3"
+    local user_session_cwd="$4"
+    local save_session_id_file="$5"
+    local session_output_dir="$6"
+
+    is_debug="$is_debug" \
+    output_format="$output_format" \
+    is_session_first="$is_session_first" \
+    user_session_cwd="$user_session_cwd" \
+    save_session_id_file="$save_session_id_file" \
+    session_output_dir="$session_output_dir" \
+    ____X_CMD_AGENT_ERR_AUTHFAILURE="$____X_CMD_AGENT_ERR_AUTHFAILURE" \
+    ____X_CMD_AGENT_ERR_NETWORK_TIMEOUT="$____X_CMD_AGENT_ERR_NETWORK_TIMEOUT" \
+    ____X_CMD_AGENT_ERR_RATE_LIMIT="$____X_CMD_AGENT_ERR_RATE_LIMIT" \
+    ____X_CMD_AGENT_ERR_SIGINT="$____X_CMD_AGENT_ERR_SIGINT" \
+    harness="$harness" \
+    ___x_cmd awk0 -m j/json -m j/jiter \
+        -f "$___X_CMD_ROOT_MOD/agent/lib/awk/handle_output.awk"
+}
+
+___x_cmd_agent_request___invalidate_current_session_(){
+    local current_file="$session_metadata_dir/current"
+    [ -f "$current_file" ] || return 0
+
+    local invalid_session_id=""
+    read -r invalid_session_id < "$current_file"
+    [ -n "$invalid_session_id" ] || return 0
+
+    local ts=""
+    x_=""; ___x_cmd epoch get_; ts="$x_"
+
+    local invalid_dir="$session_metadata_dir/invalid"
+    ___x_cmd mkdirp "$invalid_dir"
+
+    ___x_cmd mv "$current_file" "$invalid_dir/$invalid_session_id.$ts"
+}
+
+# Coarse tool mode -> per-harness native tool list
+# read-only:  read/search only, no file modification, no command execution
+# read-write: read-only + file modification, no command execution
+___x_cmd_agent_request___toolmode_tools_(){
+    case "$1:$2" in
+        x-chat:read-only)       printf '%s' "readfile,findgrep,diffv4a,get_x_cmd_help,gg,histsum,update_stats" ;;
+        x-chat:read-write)      printf '%s' "readfile,findgrep,diffv4a,get_x_cmd_help,gg,histsum,update_stats,writefile,create_temp" ;;
+        claude:read-only)       printf '%s' "Read,Glob,Grep" ;;
+        claude:read-write)      printf '%s' "Read,Write,Edit,Glob,Grep" ;;
+    esac
+}
+
+___x_cmd_agent_request___cursor_runcmd(){
+    if ___x_cmd hascmd cursor; then
+        ___x_cmd_agent_request___cursor_runcmd(){
+            ___x_cmd timeout "$timeout_secs" cursor agent "$@"
+        }
+    elif ___x_cmd hascmd agent; then
+        ___x_cmd_agent_request___cursor_runcmd(){
+            ___x_cmd timeout "$timeout_secs" agent "$@"
+        }
+    else
+        agent:error "Not found cursor or agent command"
+        return 1
+    fi
+
+    ___x_cmd_agent_request___cursor_runcmd "$@"
+}
+
+___x_cmd_agent_request___session_desc_(){
+    local msg="$1"
+    if [ -z "$msg" ]; then
+        x_=""
+        return 0
+    fi
+    local first_line=""
+    first_line="${msg%%"$NL"*}"
+    x_="$(printf '%.80s' "$first_line")"
+}
+
+___x_cmd_agent_request___extract_session_id_(){
+    [ -n "$save_session_id_file" ] || return 0
+    [ -f "$save_session_id_file" ] || return 0
+    local extracted_id=""
+    read -r extracted_id < "$save_session_id_file"
+    ___x_cmd rmrf "$save_session_id_file"
+    [ -n "$extracted_id" ] || return 0
+    real_session_id="$extracted_id"
+    session_dir="$session_metadata_dir/$real_session_id"
+    ___x_cmd mkdirp "$session_dir"
+    printf "%s\n" "$user_session_cwd" > "$session_dir/cwd"
+    printf "%s\n" "$now" > "$session_dir/created_at"
+    printf "%s\n" "$now" > "$session_dir/updated_at"
+    printf "%s\n" "$session_desc" > "$session_dir/desc"
+}
+
+___x_cmd_agent_request___finalize_session_(){
+    [ -n "$workspace" ] || return 0
+    [ "$ret" -eq 0 ] || return 0
+    [ -n "$real_session_id" ] || return 0
+    [ -n "$session_dir" ] || return 0
+    [ -d "$session_dir" ] || return 0
+
+    local current_file="$session_metadata_dir/current"
+    ___x_cmd_agent_request___update_current_ "$current_file" "$real_session_id"
+    ___x_cmd_agent_request___cleanup_sessions_ "$session_metadata_dir" "$real_session_id"
+}
+
+___x_cmd_agent_request___update_current_(){
+    local current_file="$1"
+    local real_session_id="$2"
+    [ -n "$current_file" ] || return 0
+    [ -n "$real_session_id" ] || return 0
+    local tmpfile="${current_file}.tmp.$$"
+    ___x_cmd ensurefp "$tmpfile"
+    printf "%s\n" "$real_session_id" > "$tmpfile"
+    mv "$tmpfile" "$current_file"
+}
+
+___x_cmd_agent_request___cleanup_sessions_(){
+    local session_metadata_dir="$1"
+    local current_id="$2"
+    [ -d "$session_metadata_dir" ] || return 0
+    [ -n "$current_id" ] || return 0
+
+    local keep=30
+    local count=0
+    local dir=""
+    local id=""
+
+    for dir in "$session_metadata_dir"/*; do
+        [ -d "$dir" ] || continue
+        id="${dir##*/}"
+        case "$id" in
+            .*) continue ;;
+            "$current_id") continue ;;
+        esac
+        count=$((count + 1))
+    done
+
+    local max_other=$((keep - 1))
+    [ "$count" -le "$max_other" ] && return 0
+
+    local to_delete=$((count - max_other))
+    [ "$to_delete" -le 0 ] && return 0
+
+    local tmp_list="$session_metadata_dir/.cleanup_$$"
+    : > "$tmp_list"
+    for dir in "$session_metadata_dir"/*; do
+        [ -d "$dir" ] || continue
+        id="${dir##*/}"
+        case "$id" in
+            .*) continue ;;
+            "$current_id") continue ;;
+        esac
+        local updated_at=0
+        if [ -f "$dir/updated_at" ]; then
+            read -r updated_at < "$dir/updated_at"
+        fi
+        printf "%s %s\n" "$updated_at" "$id" >> "$tmp_list"
+    done
+
+    sort -n "$tmp_list" | head -n "$to_delete" | while read -r updated_at id; do
+        [ "$updated_at" -lt "$now" ] || continue
+        ___x_cmd rmrf "$session_metadata_dir/$id"
+    done
+
+    ___x_cmd rmrf "$tmp_list"
+}
+
+___x_cmd_agent_request___migrate_session_(){
+    local session_output_dir="${session_metadata_dir%/metadata/*}"
+    local old_user_session_file="$session_output_dir/metadata/user_session_id"
+    local old_user_session_id=""
+    local old_map_file=""
+    local old_real_session_id=""
+    local old_cwd=""
+    local migrated_at=""
+
+    [ -f "$old_user_session_file" ] || return 0
+    read -r old_user_session_id < "$old_user_session_file"
+    [ -n "$old_user_session_id" ] || return 0
+
+    old_map_file="$session_output_dir/metadata/session_id_map/$old_user_session_id"
+    [ -f "$old_map_file" ] || return 0
+    { read -r old_real_session_id && read -r old_cwd; } < "$old_map_file"
+    [ -n "$old_real_session_id" ] || return 0
+
+    x_=""; ___x_cmd epoch get_
+    migrated_at="$x_"
+
+    local new_session_dir="$session_metadata_dir/$old_real_session_id"
+    ___x_cmd mkdirp "$new_session_dir"
+    printf "%s\n" "${old_cwd:-$workspace}" > "$new_session_dir/cwd"
+    printf "%s\n" "$migrated_at" > "$new_session_dir/created_at"
+    printf "%s\n" "$migrated_at" > "$new_session_dir/updated_at"
+    printf "%s\n" "migrated session" > "$new_session_dir/desc"
+
+    ___x_cmd_agent_request___update_current_ "$current_file" "$old_real_session_id"
+
+    ___x_cmd rmrf "$session_output_dir/metadata/session_id_map"
+    ___x_cmd rmrf "$old_user_session_file"
+    agent:info "Migrated workspace session from old format"
+}

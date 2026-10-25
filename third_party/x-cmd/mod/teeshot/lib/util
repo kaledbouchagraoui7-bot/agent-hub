@@ -1,0 +1,193 @@
+# shellcheck shell=dash
+
+# Section: teeshot shared utilities
+#
+# Cache layout (day-bucketed, foundation for future 15-day TTL cleanup):
+#   $___X_CMD_ROOT_CACHE/teeshot/<day>/<id>.out     # full captured output
+#   $___X_CMD_ROOT_CACHE/teeshot/<day>/<id>.meta    # metadata (key=value lines)
+#   $___X_CMD_ROOT_CACHE/teeshot/legacy/<id>.out    # pre-day-layout files (orphan)
+#
+#   <day> = integer day number (output of `x epoch day` = epoch_seconds/86400)
+#   <id>  = 16-char hex prefix of sha256("<cmd>|$HOSTNAME|<stdinsha?>")
+#
+# Why day-bucketed?
+#   - Cleanup service can GC `<day>/` dirs older than N days in O(days) stat calls
+#   - Same day, same cmd → same id (idempotent cache within a day)
+#   - Different day, same cmd → different id (don't accidentally hit stale cache)
+#
+# Backward compat: orphan files at $___X_CMD_ROOT_CACHE/teeshot/<id>.out (no
+# enclosing <day>/) are listed under a synthetic "legacy" day label so existing
+# cached snapshots stay discoverable.
+
+___X_CMD_TEESHOT_CACHE_DIR="${___X_CMD_TEESHOT_CACHE_DIR:-$___X_CMD_ROOT_CACHE/teeshot}"
+
+# Compute the current day directory (or fallback "legacy" if x epoch day is unavailable).
+# Result cached in ___X_CMD_TEESHOT_TODAY for the lifetime of the shell.
+___X_CMD_TEESHOT_TODAY=""
+___X_CMD_TEESHOT_TODAY_DIR=""
+
+___x_cmd_teeshot_util_init(){
+    ___x_cmd mkdirp "$___X_CMD_TEESHOT_CACHE_DIR" || {
+        N=teeshot M="Fail to create cache dir: $___X_CMD_TEESHOT_CACHE_DIR" log:ret:1
+    }
+    if [ -z "$___X_CMD_TEESHOT_TODAY" ]; then
+        ___X_CMD_TEESHOT_TODAY="$(___x_cmd_teeshot_util_day 2>/dev/null)" || ___X_CMD_TEESHOT_TODAY="legacy"
+    fi
+    ___X_CMD_TEESHOT_TODAY_DIR="$___X_CMD_TEESHOT_CACHE_DIR/$___X_CMD_TEESHOT_TODAY"
+    ___x_cmd mkdirp "$___X_CMD_TEESHOT_TODAY_DIR" || {
+        N=teeshot M="Fail to create today dir: $___X_CMD_TEESHOT_TODAY_DIR" log:ret:1
+    }
+}
+
+# Section: Day computation
+
+# Internal: get current day integer.
+# Uses the x dispatcher (___x_cmd) to invoke `epoch day_` which sets x_ to
+# the integer day number. xrc autoloads epoch on first call, so no explicit
+# `xrc:mod epoch/lib/main` is needed in lib/main.
+# Falls back to empty (caller labels it "legacy") on any failure.
+___x_cmd_teeshot_util_day(){
+    local x_
+    ___x_cmd epoch day_ 2>/dev/null && printf '%s' "$x_"
+}
+
+# Section: Cache id computation
+
+# Compute a short hex id for cache.
+# Args: $1 = cmd string (or "(stdin)"), $2 = optional stdin content
+# Echoes the 16-char hex id.
+___x_cmd_teeshot_id(){
+    local cmd="$1"
+    local stdin_hash="${2:-}"
+    local host
+    host="${HOSTNAME:-$(uname -n 2>/dev/null || echo unknown)}"
+
+    local payload
+    if [ -n "$stdin_hash" ]; then
+        payload="${cmd}|${host}|${stdin_hash}"
+    else
+        payload="${cmd}|${host}"
+    fi
+
+    if ___x_cmd hascmd sha256sum; then
+        printf '%s' "$payload" | sha256sum | awk '{print substr($1, 1, 16)}'
+    elif ___x_cmd hascmd shasum; then
+        printf '%s' "$payload" | shasum -a 256 | awk '{print substr($1, 1, 16)}'
+    elif ___x_cmd hascmd openssl; then
+        printf '%s' "$payload" | openssl dgst -sha256 -hex | awk '{print substr($NF, 1, 16)}'
+    else
+        N=teeshot M="No sha256 tool found (need sha256sum/shasum/openssl)" log:ret:1
+    fi
+}
+
+# Section: Path resolution (search across all day dirs + legacy)
+
+# Find the actual .out / .meta file path for an id, scanning all day dirs and legacy.
+# Args: $1 = id, $2 = extension ("out" or "meta")
+# Echoes the path, or empty if not found.
+___x_cmd_teeshot_resolve_path(){
+    local id="$1"
+    local ext="$2"
+    local base="$___X_CMD_TEESHOT_CACHE_DIR"
+
+    # Check today's dir first (most common hit)
+    if [ -f "$base/$___X_CMD_TEESHOT_TODAY/$id.$ext" ]; then
+        printf '%s\n' "$base/$___X_CMD_TEESHOT_TODAY/$id.$ext"
+        return 0
+    fi
+
+    # Scan all <day>/ subdirs
+    local day_dir
+    for day_dir in "$base"/*/; do
+        [ -d "$day_dir" ] || continue
+        # Skip legacy dir (handled separately)
+        case "$(basename "$day_dir")" in
+            legacy) continue ;;
+        esac
+        if [ -f "$day_dir$id.$ext" ]; then
+            printf '%s\n' "$day_dir$id.$ext"
+            return 0
+        fi
+    done
+
+    # Legacy: top-level orphan files (no enclosing day dir)
+    if [ -f "$base/$id.$ext" ]; then
+        printf '%s\n' "$base/$id.$ext"
+        return 0
+    fi
+
+    return 1
+}
+
+# Section: Metadata I/O
+
+# Write metadata file. Args: $1 = id, rest = key=value lines
+___x_cmd_teeshot_meta_write(){
+    local id="$1"; shift
+    local meta_file="$___X_CMD_TEESHOT_TODAY_DIR/$id.meta"
+    {
+        [ "$#" -gt 0 ] && printf '%s\n' "$@"
+    } > "$meta_file"
+}
+
+# Read a single key from meta file. Args: $1 = id, $2 = key
+# Echoes the value (empty if not found).
+___x_cmd_teeshot_meta_get(){
+    local id="$1"
+    local key="$2"
+    local meta_file
+    if ! meta_file="$(___x_cmd_teeshot_resolve_path "$id" meta)"; then
+        return 0
+    fi
+    awk -F= -v k="$key" '
+        $1 == k { sub(/^[^=]*=/, ""); print; exit }
+    ' "$meta_file"
+}
+
+# List all cache entries as "<day>\t<id>" lines, one per entry.
+# Includes legacy top-level files under "legacy" day.
+___x_cmd_teeshot_meta_ls(){
+    local base="$___X_CMD_TEESHOT_CACHE_DIR"
+    [ -d "$base" ] || return 0
+
+    # Section: per-day subdirs (skip "legacy")
+    local day_dir day id
+    for day_dir in "$base"/*/; do
+        [ -d "$day_dir" ] || continue
+        day="$(basename "$day_dir")"
+        [ "$day" = "legacy" ] && continue
+        for id in "$day_dir"*.out; do
+            [ -f "$id" ] || continue
+            id="${id##*/}"
+            id="${id%.out}"
+            printf '%s\t%s\n' "$day" "$id"
+        done
+    done
+
+    # Section: legacy top-level .out files (no enclosing day dir)
+    if [ -d "$base" ]; then
+        for id in "$base"/*.out; do
+            [ -f "$id" ] || continue
+            id="${id##*/}"
+            id="${id%.out}"
+            printf '%s\t%s\n' "legacy" "$id"
+        done
+    fi
+}
+
+# Section: Formatting
+
+# Format byte count as human-readable. Args: $1 = bytes
+# Echoes e.g. "412 KB" or "1.2 MB" or "512 B".
+___x_cmd_teeshot_fmt_bytes(){
+    local bytes="${1:-0}"
+    if [ "$bytes" -lt 1000 ] 2>/dev/null; then
+        printf '%s B' "$bytes"
+    elif [ "$bytes" -lt 1000000 ] 2>/dev/null; then
+        awk -v b="$bytes" 'BEGIN { printf "%.0f KB", b/1000 }'
+    elif [ "$bytes" -lt 1000000000 ] 2>/dev/null; then
+        awk -v b="$bytes" 'BEGIN { printf "%.1f MB", b/1000000 }'
+    else
+        awk -v b="$bytes" 'BEGIN { printf "%.2f GB", b/1000000000 }'
+    fi
+}

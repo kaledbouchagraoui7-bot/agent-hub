@@ -1,0 +1,152 @@
+# shellcheck shell=dash
+# Benchmark harness for ondb.
+# Usage: x ondb bench gendataset|testsqlite|testpython|testawk
+
+___x_cmd_ondb_bench(){
+    local op="${1:-}"
+    [ -n "$op" ] || { N=ondb M="bench requires an operation" log:ret:64; return; }
+    shift
+
+    case "$op" in
+        gendataset)     ___x_cmd_ondb_bench_gendataset "$@" ;;
+        testsqlite)     ___x_cmd_ondb_bench_test "sqlite" "$@" ;;
+        testpython)     ___x_cmd_ondb_bench_test "python" "$@" ;;
+        testjs)         ___x_cmd_ondb_bench_test "js" "$@" ;;
+        testawk)        ___x_cmd_ondb_bench_test "awk" "$@" ;;
+        *)              N=ondb M="Unknown bench op: $op. Use: gendataset, testsqlite, testpython, testjs, testawk" log:ret:64 ;;
+    esac
+}
+
+# Generate standard dataset: n entities + 2n links, zero escape
+# Usage: x ondb bench gendataset [dir] [n] [escape_density]
+# Defaults: dir=/tmp/ondb_bench_std, n=1000, escape_density=zero
+___x_cmd_ondb_bench_gendataset(){
+    local dir="${1:-/tmp/ondb_bench_std}"
+    local n="${2:-1000}"
+    local density="${3:-zero}"
+
+    ___x_cmd mkdirp "$dir"
+    rm -f "$dir/ondb.tsv" "$dir/ondb.db" "$dir/ondb.lines" "$dir"/*.snapshot.* "$dir"/log.*
+
+    python3 - "$dir" "$n" "$density" << 'PYEOF'
+import sys, os
+
+dir = sys.argv[1]
+n = int(sys.argv[2])
+density = sys.argv[3]
+
+out = open(os.path.join(dir, 'ondb.tsv'), 'w')
+
+def esc(s, d):
+    if d == 'zero':
+        return s
+    # minimal escape for testing
+    return s.replace('\\', '\\\\').replace('\t', '\\t').replace('\n', '\\n')
+
+# Entities
+for i in range(1, n + 1):
+    name = esc(f"Name {i}", density)
+    desc = esc(f"Description {i}", density)
+    out.write(f"add\tProject\tp{i}\t{1000000 + i}\tname\t{name}\tdesc\t{desc}\n")
+
+# Links: each entity links to next 2
+for i in range(1, n + 1):
+    for j in range(1, 3):
+        target = ((i + j - 1) % n) + 1
+        out.write(f"link\tp{i}\tdepends_on\tp{target}\t{2000000 + i * 10 + j}\n")
+
+out.close()
+
+line_count = n + n * 2
+print(f"Generated: {dir}/ondb.tsv")
+print(f"  Entities: {n}, Links: {n*2}, Total lines: {line_count}")
+print(f"  Size: {os.path.getsize(os.path.join(dir, 'ondb.tsv'))} bytes")
+PYEOF
+}
+
+# Run benchmark for a single backend
+# Usage: x ondb bench test<backend> [dir]
+# Output: TSV with columns: backend, operation, ms
+___x_cmd_ondb_bench_test(){
+    local backend="$1"
+    local src_dir="${2:-/tmp/ondb_bench_std}"
+    local src_tsv="$src_dir/ondb.tsv"
+
+    [ -f "$src_tsv" ] || { N=ondb M="Dataset not found: $src_tsv. Run: x ondb bench gendataset $src_dir" log:ret:64; return; }
+
+    # Use a fresh temp dir per backend to avoid compact deleting shared ondb.tsv
+    local dir; dir="$(mktemp -d)"
+    cp "$src_tsv" "$dir/ondb.tsv"
+    local tsv="$dir/ondb.tsv"
+
+    # Prepare backend environment
+    case "$backend" in
+        sqlite)
+            mkdir -p "$___X_CMD_ROOT_DATA/sqlite/mode"
+            touch "$___X_CMD_ROOT_DATA/sqlite/mode/sqlite_enable"
+            x scotty mod install > /dev/null 2>&1
+            local line_count; line_count="$(wc -l < "$tsv" | tr -d ' ')"
+            x ondb compact -f "$tsv" > /dev/null 2>&1
+            local db="${tsv%.tsv}.db"
+            if [ -f "$db" ]; then
+                sqlite3 "$db" "UPDATE meta SET value='$line_count' WHERE key='last_lines';" 2>/dev/null
+                printf '%s\n' "$line_count" > "${tsv%.tsv}.lines"
+            fi
+            ;;
+        js)
+            export ___X_CMD_ONDB_BACKEND=js
+            ;;
+        python)
+            export ___X_CMD_ONDB_BACKEND=python
+            ;;
+        awk)
+            export ___X_CMD_ONDB_BACKEND=awk
+            ;;
+    esac
+
+    # Header
+    printf "backend\toperation\tms\n"
+
+    # Measure: 3 runs avg for each operation
+    # Use -f only (no -d) to prevent compact from deleting ondb.tsv
+    local c q l g
+    c="$(___x_cmd_ondb_bench_run "$backend" "compact" "x ondb compact -f $tsv")"
+    q="$(___x_cmd_ondb_bench_run "$backend" "query" "x ondb query -f $tsv --where 'name=Name 1'")"
+    l="$(___x_cmd_ondb_bench_run "$backend" "ls" "x ondb ls -f $tsv")"
+    g="$(___x_cmd_ondb_bench_run "$backend" "get" "x ondb get --id p1 -f $tsv")"
+
+    printf "%s\tcompact\t%s\n" "$backend" "$c"
+    printf "%s\tquery\t%s\n" "$backend" "$q"
+    printf "%s\tls\t%s\n" "$backend" "$l"
+    printf "%s\tget\t%s\n" "$backend" "$g"
+
+    # Cleanup backend environment
+    case "$backend" in
+        sqlite)
+            rm -f "$___X_CMD_ROOT_DATA/sqlite/mode/sqlite_enable"
+            x scotty mod install > /dev/null 2>&1
+            ;;
+        js|python|awk)
+            unset ___X_CMD_ONDB_BACKEND
+            ;;
+    esac
+
+    rm -rf "$dir"
+}
+
+# Run a command 3 times and return average ms (integer)
+___x_cmd_ondb_bench_run(){
+    local backend="$1" op="$2" cmd="$3"
+    local total=0
+    local i t
+    for i in 1 2 3; do
+        t="$( { time eval "$cmd" > /dev/null 2>&1; } 2>&1 | grep real | sed 's/real[[:space:]]*//' )"
+        # Convert m0.000s to ms
+        local min sec ms
+        min="$(echo "$t" | sed 's/m.*//')"
+        sec="$(echo "$t" | sed 's/.*m//' | sed 's/s//')"
+        ms="$(python3 -c "print(int(($min * 60 + $sec) * 1000))")"
+        total=$((total + ms))
+    done
+    python3 -c "print(round($total / 3))"
+}

@@ -1,0 +1,1148 @@
+{
+"#name"
+:
+{
+"date"
+:
+null
+,
+"zh"
+:
+"日期时间"
+,
+"en"
+:
+"Date and time"
+}
+,
+"#desc"
+:
+{
+"zh"
+:
+"获取当前时间、按格式转换时间戳、计算时间差"
+,
+"en"
+:
+"Get current time, convert time formats, compute time differences"
+}
+,
+"#synopsis"
+:
+[
+"x date [dump] [--<fmt>] [<timestamp>]"
+,
+"x date <subcmd>"
+]
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"默认以 ISO 格式输出当前时间（等价于 x date dump）\n省略 --&lt;fmt&gt; 时使用 ISO 格式；省略 &lt;timestamp&gt; 时使用当前时间\n支持秒级/毫秒级/小数时间戳（1743038674 / 1743038674123 / 1743038674.123）\n"
+,
+"en"
+:
+"Default outputs current time in ISO format (equivalent to x date dump)\n--&lt;fmt&gt; defaults to ISO when omitted; &lt;timestamp&gt; uses now when omitted\nSupports seconds/milliseconds/decimal timestamps (1743038674 / 1743038674123 / 1743038674.123)\n"
+}
+,
+{
+"zh"
+:
+"对于开发者，可以使用 timestamp_ 进行加速\n"
+,
+"en"
+:
+"Developers could use timestamp_ for efficiency\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x date dump"
+,
+"zh"
+:
+"示例: 以 ISO 格式输出当前时间（默认 dump 行为）"
+,
+"en"
+:
+"Example: Output current time in ISO (default dump behavior)"
+}
+,
+{
+"cmd"
+:
+"x date dump --str"
+,
+"zh"
+:
+"示例: 字符串格式，适合文件名"
+,
+"en"
+:
+"Example: String format suitable for filenames"
+}
+,
+{
+"cmd"
+:
+"x date dump --vlid"
+,
+"zh"
+:
+"示例: UTC 短格式 ID"
+,
+"en"
+:
+"Example: UTC short ID"
+}
+,
+{
+"cmd"
+:
+"x date dump --iso 1743038674"
+,
+"zh"
+:
+"示例: 时间戳转 ISO 格式（支持秒/毫秒/小数）"
+,
+"en"
+:
+"Example: Convert timestamp to ISO (supports s/ms/decimal)"
+}
+,
+{
+"cmd"
+:
+"x date dump --fmt '%Y/%m/%d %H:%M:%S'"
+,
+"zh"
+:
+"示例: 用 strftime 风格自定义格式输出"
+,
+"en"
+:
+"Example: Custom strftime-style format output"
+}
+,
+{
+"cmd"
+:
+"x date timestamp"
+,
+"zh"
+:
+"示例: 获取当前时间戳（秒）"
+,
+"en"
+:
+"Example: Get current timestamp (seconds)"
+}
+,
+{
+"cmd"
+:
+"x date timestamp '2026-03-27 12:00:00'"
+,
+"zh"
+:
+"示例: ISO 时间字符串转时间戳"
+,
+"en"
+:
+"Example: Convert ISO time string to timestamp"
+}
+,
+{
+"cmd"
+:
+"x date iso2ts '2026-03-27'"
+,
+"zh"
+:
+"示例: 日期字符串转时间戳"
+,
+"en"
+:
+"Example: Convert date string to timestamp"
+}
+,
+{
+"cmd"
+:
+"x date vlid2ts '260327_092434'"
+,
+"zh"
+:
+"示例: vlid 短格式 ID 转时间戳"
+,
+"en"
+:
+"Example: Convert vlid short ID to timestamp"
+}
+,
+{
+"cmd"
+:
+"x date diff '2026-01-01' '2026-03-27'"
+,
+"zh"
+:
+"示例: 计算两个日期相差天数"
+,
+"en"
+:
+"Example: Calculate days between two dates"
+}
+,
+{
+"cmd"
+:
+"x date diff '2026-03-27'"
+,
+"zh"
+:
+"示例: 计算指定日期到今天的距离"
+,
+"en"
+:
+"Example: Calculate distance from date to today"
+}
+,
+{
+"cmd"
+:
+"x date minus 1743038674 1743000000"
+,
+"zh"
+:
+"示例: 计算两个 epoch 时间之差（秒）"
+,
+"en"
+:
+"Example: Compute difference between two epochs (seconds)"
+}
+,
+{
+"cmd"
+:
+"x date minus --human 1743038674 1743000000"
+,
+"zh"
+:
+"示例: 用人类可读格式显示时间差"
+,
+"en"
+:
+"Example: Show time difference in human-readable form"
+}
+,
+{
+"cmd"
+:
+"x date minus --day 1743038674 1743000000"
+,
+"zh"
+:
+"示例: 按天计算时间差"
+,
+"en"
+:
+"Example: Compute difference in days"
+}
+,
+{
+"cmd"
+:
+"x date minus --human '2025-03-27' '2025-03-26'"
+,
+"zh"
+:
+"示例: 两个日期字符串相减"
+,
+"en"
+:
+"Example: Subtract two date strings"
+}
+,
+{
+"cmd"
+:
+"x date parse '2026-03-27T09:24:34+0800'"
+,
+"zh"
+:
+"示例: 将 ISO 时间字符串解析为时间戳"
+,
+"en"
+:
+"Example: Parse ISO time string to timestamp"
+}
+,
+{
+"cmd"
+:
+"x date parse --fmt '%Y/%m/%d' '2026/03/27'"
+,
+"zh"
+:
+"示例: 用自定义 fmt 解析时间字符串"
+,
+"en"
+:
+"Example: Parse time string with custom fmt"
+}
+]
+,
+"#subcmd:Format"
+:
+[
+"dump"
+]
+,
+"#subcmd:Timestamp"
+:
+[
+"timestamp"
+,
+"timestamp_"
+,
+"iso2ts"
+,
+"vlid2ts"
+,
+"parse"
+]
+,
+"#subcmd:Calculation"
+:
+[
+"diff"
+,
+"minus"
+]
+,
+"dump"
+:
+{
+"#synopsis"
+:
+"[--<fmt>] [<timestamp>]"
+,
+"#desc"
+:
+{
+"zh"
+:
+"格式化输出当前时间或时间戳；省略 --&lt;fmt&gt; 时默认为 ISO 格式"
+,
+"en"
+:
+"Format the current time or a timestamp; defaults to ISO when --&lt;fmt&gt; is omitted"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x date dump"
+,
+"zh"
+:
+"示例: 以 ISO 格式输出当前时间（dump 默认）"
+,
+"en"
+:
+"Example: Output current time in ISO (dump default)"
+}
+,
+{
+"cmd"
+:
+"x date dump --iso"
+,
+"zh"
+:
+"示例: 显式指定 ISO 格式输出当前时间"
+,
+"en"
+:
+"Example: Explicitly request ISO format for current time"
+}
+,
+{
+"cmd"
+:
+"x date dump --iso0"
+,
+"zh"
+:
+"示例: UTC 零时区 ISO 格式"
+,
+"en"
+:
+"Example: UTC zero-timezone ISO format"
+}
+,
+{
+"cmd"
+:
+"x date dump --str"
+,
+"zh"
+:
+"示例: 字符串格式，适合文件名"
+,
+"en"
+:
+"Example: String format suitable for filenames"
+}
+,
+{
+"cmd"
+:
+"x date dump --varname"
+,
+"zh"
+:
+"示例: 变量名格式"
+,
+"en"
+:
+"Example: Varname format"
+}
+,
+{
+"cmd"
+:
+"x date dump --varname0"
+,
+"zh"
+:
+"示例: UTC 变量名格式（无时区偏移）"
+,
+"en"
+:
+"Example: UTC varname format (no timezone offset)"
+}
+,
+{
+"cmd"
+:
+"x date dump --vlid"
+,
+"zh"
+:
+"示例: UTC 短格式 ID"
+,
+"en"
+:
+"Example: UTC short ID"
+}
+,
+{
+"cmd"
+:
+"x date dump --rfc"
+,
+"zh"
+:
+"示例: RFC 3339 格式输出"
+,
+"en"
+:
+"Example: Output in RFC 3339 format"
+}
+,
+{
+"cmd"
+:
+"x date dump --email"
+,
+"zh"
+:
+"示例: Email 头格式 (RFC 2822 / RFC 5322)"
+,
+"en"
+:
+"Example: Email header format (RFC 2822 / RFC 5322)"
+}
+,
+{
+"cmd"
+:
+"x date dump --fmt '%Y/%m/%d %H:%M:%S'"
+,
+"zh"
+:
+"示例: 用 strftime 风格自定义格式输出"
+,
+"en"
+:
+"Example: Custom strftime-style format output"
+}
+,
+{
+"cmd"
+:
+"x date dump --go '2006-01-02 15:04:05 Z07:00'"
+,
+"zh"
+:
+"示例: 用 Go 风格时间格式输出"
+,
+"en"
+:
+"Example: Go-style time format output"
+}
+,
+{
+"cmd"
+:
+"x date dump --iso 1743038674"
+,
+"zh"
+:
+"示例: 时间戳转 ISO 格式（支持秒/毫秒/小数）"
+,
+"en"
+:
+"Example: Convert timestamp to ISO (supports s/ms/decimal)"
+}
+,
+{
+"cmd"
+:
+"x date dump --str 1743038674"
+,
+"zh"
+:
+"示例: 时间戳转字符串格式"
+,
+"en"
+:
+"Example: Convert timestamp to string format"
+}
+,
+{
+"cmd"
+:
+"x date dump --varname 1743038674"
+,
+"zh"
+:
+"示例: 时间戳转变量名格式"
+,
+"en"
+:
+"Example: Convert timestamp to varname format"
+}
+,
+{
+"cmd"
+:
+"x date dump --vlid 1743038674"
+,
+"zh"
+:
+"示例: 时间戳转 UTC 短格式 ID"
+,
+"en"
+:
+"Example: Convert timestamp to UTC short ID"
+}
+,
+{
+"cmd"
+:
+"x date dump --offset '+0000' --iso"
+,
+"zh"
+:
+"示例: 指定时区偏移输出"
+,
+"en"
+:
+"Example: Specify timezone offset for output"
+}
+,
+{
+"cmd"
+:
+"x date dump -v 1d --iso"
+,
+"zh"
+:
+"示例: 当前时间加 1 天后再格式输出"
+,
+"en"
+:
+"Example: Add 1 day to now then format"
+}
+,
+{
+"cmd"
+:
+"x date dump --second 1743038674"
+,
+"zh"
+:
+"示例: 反向输出原始 epoch 秒数"
+,
+"en"
+:
+"Example: Reverse: output raw epoch seconds"
+}
+]
+,
+"--iso"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"ISO 格式 YYYY-MM-DDThh:mm:ss+tz"
+,
+"en"
+:
+"ISO format YYYY-MM-DDThh:mm:ss+tz"
+}
+}
+,
+"--iso0"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"与 --iso 相同，但强制零时区（YYYY-MM-DDThh:mm:ss+0000）"
+,
+"en"
+:
+"Same as --iso but forces UTC zero-timezone (YYYY-MM-DDThh:mm:ss+0000)"
+}
+}
+,
+"--str"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"字符串格式 YYYY-MM-DD_hh:mm:ss+tz（适合文件名）"
+,
+"en"
+:
+"String format YYYY-MM-DD_hh:mm:ss+tz (suitable for filenames)"
+}
+}
+,
+"--varname"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"变量名格式 YYYY_MM_DD_hh_mm_ss_tz"
+,
+"en"
+:
+"Varname format YYYY_MM_DD_hh_mm_ss_tz"
+}
+}
+,
+"--varname0"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"与 --varname 相同，但强制零时区"
+,
+"en"
+:
+"Same as --varname but forces UTC zero-timezone"
+}
+}
+,
+"--vlid"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"UTC 短格式 ID YYMMDD_hhmmss（variable length ID）"
+,
+"en"
+:
+"UTC short ID YYMMDD_hhmmss (variable length ID)"
+}
+}
+,
+"--rfc"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"RFC 3339 格式 YYYY-MM-DD hh:mm:ss+tz（ISO 8601 兼容，空格分隔）"
+,
+"en"
+:
+"RFC 3339 format YYYY-MM-DD hh:mm:ss+tz (ISO 8601 compatible, space-separated)"
+}
+}
+,
+"--email"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Email 头格式 (RFC 2822 / RFC 5322): 'Fri, 27 Mar 2026 09:24:34 +0800'"
+,
+"en"
+:
+"Email header format (RFC 2822 / RFC 5322): 'Fri, 27 Mar 2026 09:24:34 +0800'"
+}
+}
+,
+"--fmt"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"自定义 strftime 格式字符串，支持 %Y %y %m %d %H %M %S %z %:z %_z %a %A %b %B %N %[1-9]N %%"
+,
+"en"
+:
+"Custom strftime format string; supports %Y %y %m %d %H %M %S %z %:z %_z %a %A %b %B %N %[1-9]N %%"
+}
+}
+,
+"--go"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Go 风格时间格式（参考时间 2006-01-02 15:04:05 MST），自动转换为 --fmt"
+,
+"en"
+:
+"Go-style time format (reference 2006-01-02 15:04:05 MST); auto-translated to --fmt"
+}
+}
+,
+"--offset"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显式指定时区偏移（如 +0800 / -0500 / +0000），省略时使用系统时区"
+,
+"en"
+:
+"Explicit timezone offset (e.g. +0800 / -0500 / +0000); defaults to system TZ when omitted"
+}
+}
+,
+"--second"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"反向输出原始 epoch 秒数（其它 --&lt;fmt&gt; 输出日期字符串）"
+,
+"en"
+:
+"Reverse: output raw epoch seconds (other --&lt;fmt&gt; flags produce date strings)"
+}
+}
+,
+"-v"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"应用时间偏移（humantime 单位：1d/2h/30m/1y1mo 或裸秒数），再格式输出"
+,
+"en"
+:
+"Apply time delta (humantime units: 1d/2h/30m/1y1mo or bare seconds), then format"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"可选时间戳（秒级/毫秒级/带小数），省略时使用当前时间"
+,
+"en"
+:
+"Optional timestamp (seconds/milliseconds/decimal); uses current time when omitted"
+}
+}
+}
+,
+"timestamp"
+:
+{
+"#synopsis"
+:
+"[<time_string>]"
+,
+"#desc"
+:
+{
+"zh"
+:
+"获取当前时间戳（秒级），或将时间字符串转换为时间戳（支持多种 ISO 格式）"
+,
+"en"
+:
+"Get current timestamp (seconds), or convert a time string to a timestamp (supports various ISO formats)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"时间字符串（可选），ISO 格式或其他支持格式"
+,
+"en"
+:
+"Time string (optional), ISO format or other supported formats"
+}
+}
+}
+,
+"timestamp_"
+:
+{
+"#synopsis"
+:
+"[<time_string>]"
+,
+"#desc"
+:
+{
+"zh"
+:
+"获取当前时间戳保存到变量 x_，或转换时间字符串为时间戳（非输出形式）"
+,
+"en"
+:
+"Get current timestamp into variable x_, or convert a time string to a timestamp (non-output form)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"时间字符串（可选），ISO 格式或其他支持格式"
+,
+"en"
+:
+"Time string (optional), ISO format or other supported formats"
+}
+}
+}
+,
+"iso2ts"
+:
+{
+"#synopsis"
+:
+"<time_string>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"将 ISO 格式时间字符串转换为时间戳（秒级）"
+,
+"en"
+:
+"Convert an ISO format time string to a timestamp (seconds)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"时间字符串，支持多种 ISO 格式"
+,
+"en"
+:
+"Time string, supports various ISO formats"
+}
+}
+}
+,
+"vlid2ts"
+:
+{
+"#synopsis"
+:
+"<vlid_string>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"将 vlid 格式（YYMMDD_hhmmss）转换为时间戳（秒级）"
+,
+"en"
+:
+"Convert a vlid format (YYMMDD_hhmmss) string to a timestamp (seconds)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"vlid 字符串，格式为 YYMMDD_hhmmss（UTC 时间）"
+,
+"en"
+:
+"vlid string, format is YYMMDD_hhmmss (UTC time)"
+}
+}
+}
+,
+"parse"
+:
+{
+"#synopsis"
+:
+"<time_string> [--fmt <format>]"
+,
+"#desc"
+:
+{
+"zh"
+:
+"将格式化时间字符串解析为 epoch 时间戳（默认 fmt='%Y-%m-%dT%H:%M:%S%z'，未指定时区则用系统 TZ）"
+,
+"en"
+:
+"Parse a formatted time string into an epoch timestamp (default fmt='%Y-%m-%dT%H:%M:%S%z', falls back to system TZ when no offset is given)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"时间字符串（必填）"
+,
+"en"
+:
+"Time string (required)"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"自定义 fmt 格式，可选；支持 %Y %y %m %d %H %M %S %z %:z %%"
+,
+"en"
+:
+"Custom fmt format, optional; supports %Y %y %m %d %H %M %S %z %:z %%"
+}
+}
+}
+,
+"diff"
+:
+{
+"#synopsis"
+:
+"<date1> [date2]"
+,
+"#desc"
+:
+{
+"zh"
+:
+"计算两个日期之间的天数差（单参数则计算到今天的距离）"
+,
+"en"
+:
+"Calculate days between two dates (single arg calculates distance to today)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"第一个日期，ISO 格式"
+,
+"en"
+:
+"First date, ISO format"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"第二个日期（可选，默认今天）"
+,
+"en"
+:
+"Second date (optional, defaults to today)"
+}
+}
+}
+,
+"minus"
+:
+{
+"#synopsis"
+:
+"<( --human | --day )> <time1> <time2?>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"计算两个时间之差（输出秒数、人类可读时长、或天数）；支持 epoch 秒数或日期字符串；单参数则与当前时间作差"
+,
+"en"
+:
+"Compute the difference between two times (output seconds, human-readable duration, or days); accepts epoch seconds or date strings; single arg computes distance to now"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"第一个时间（epoch 秒数或日期字符串）"
+,
+"en"
+:
+"First time (epoch seconds or date string)"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"第二个时间（可选，默认当前时间）"
+,
+"en"
+:
+"Second time (optional, defaults to now)"
+}
+}
+,
+"#3"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"修饰符：--human 输出 1d2h3m4s，--day 按天取整（向正方向舍入）"
+,
+"en"
+:
+"Modifiers: --human outputs 1d2h3m4s, --day rounds to days (away from zero)"
+}
+}
+}
+}
+

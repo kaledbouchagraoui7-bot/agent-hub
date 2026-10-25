@@ -1,0 +1,241 @@
+# shellcheck shell=dash
+
+# cache — unified cache management for x eget
+#
+# Two cache directories live under $___X_CMD_EGET_DATA:
+#   cache/<owner>--<repo>/<version>/<asset_name>   — raw archive (post-SHA-256)
+#   snap/<owner>--<repo>/<version>/bin/<binary>    — extracted executable
+#
+# All snap reads/writes go through the helpers below so that
+# `x eget cache {ls,clear,purge,rm,info}` can introspect them too.
+
+xrc fsiter
+
+# Path helpers — set x_ in caller scope
+___x_cmd_eget_cache_archive_path_(){
+    x_="$___X_CMD_EGET_DATA/cache/${1}--${2}"
+}
+___x_cmd_eget_cache_snap_path_(){
+    x_="$___X_CMD_EGET_DATA/snap/${1}--${2}"
+}
+
+# Read snap .default-version. Sets x_ to the version (empty if not set).
+___x_cmd_eget_cache_snap_default_version_(){
+    local owner="$1" repo="$2"
+    ___x_cmd_eget_cache_snap_path_ "$owner" "$repo"
+    local _p="$x_"
+    if [ -f "$_p/.default-version" ]; then
+        x_="$( cat "$_p/.default-version" 2>/dev/null )" || x_=""
+    else
+        x_=""
+    fi
+}
+
+# Write a snap cache entry: cp binary, write metadata.
+# Args: owner repo version bin_name bin_path
+# Sets x_ to the final binary path on success.
+___x_cmd_eget_cache_snap_write_(){
+    local owner="$1" repo="$2" version="$3" bin_name="$4" bin_path="$5"
+    ___x_cmd_eget_cache_snap_path_ "$owner" "$repo"
+    local _snap_base="$x_"
+    local _snap_dir="$_snap_base/${version}/bin"
+
+    ___x_cmd mkdirp "$_snap_dir" 2>/dev/null || {
+        N=eget M="cache: cannot create $_snap_dir" log:ret:1; return 1;
+    }
+    cp "$bin_path" "$_snap_dir/$bin_name" && chmod +x "$_snap_dir/$bin_name" || {
+        N=eget M="cache: failed to write $_snap_dir/$bin_name" log:ret:1; return 1;
+    }
+    printf "%s" "$version" > "$_snap_base/.default-version"
+    x epoch get > "$_snap_base/.lastupdate" 2>/dev/null
+    x epoch get > "$_snap_base/.lastcheck" 2>/dev/null
+    x_="$_snap_dir/$bin_name"
+}
+
+# Total size of a directory tree (bytes). Sets x_ to the size.
+___x_cmd_eget_cache_dirsize_(){
+    local _d="$1"
+    if [ -d "$_d" ]; then
+        x_="$( du -sk "$_d" 2>/dev/null | awk '{print $1 * 1024}' )" || x_=0
+    else
+        x_=0
+    fi
+}
+
+# Owner--repo slug → owner/repo display name
+___x_cmd_eget_cache_slug_to_target_(){
+    local _slug="$1"
+    x_="${_slug%--*}/${_slug#*--}"
+}
+
+# x eget cache <op> dispatch
+___x_cmd_eget_cache(){
+    case "${1:-}" in -h|--help) ___x_cmd help -m eget cache; return 0 ;; esac
+    local op="${1:-ls}"; shift 2>/dev/null
+    case "$op" in
+        -h|--help)        ___x_cmd help -m eget cache; return 0 ;;
+        ls|list)          ___x_cmd_eget_cache_ls    "$@" ;;
+        info|path)        ___x_cmd_eget_cache_info  "$@" ;;
+        clear|clean)      ___x_cmd_eget_cache_clear "$@" ;;
+        purge)            ___x_cmd_eget_cache_purge "$@" ;;
+        rm|remove)        ___x_cmd_eget_cache_rm    "$@" ;;
+        *)                N=eget M="Usage: x eget cache [ls|info|clear [N]|purge|rm <target>]" log:ret:64 ;;
+    esac
+}
+
+# Callbacks for x eget cache ls. Defined at top level (not inside the
+# function) because `x fsiter --dfs` calls the callback by name, looking
+# it up in the current shell scope. The two paths are passed via env vars
+# so the callbacks don't need closure over local vars in ___x_cmd_eget_cache_ls.
+___x_cmd_eget_cache_ls_archive_cb(){
+    [ -f "$1" ] || return 0
+    local _archive_dir="${___X_CMD_EGET_CACHE_LS_ARCHIVE_DIR}"
+    local _rel="${1#"$_archive_dir"/}"
+    local _slug="${_rel%%/*}"
+    local _rest="${_rel#*/}"
+    local _ver="${_rest%%/*}"
+    local _size; _size="$( wc -c < "$1" 2>/dev/null | tr -d ' ' )"
+    [ -n "$_size" ] || _size=0
+    ___x_cmd_eget_cache_slug_to_target_ "$_slug"
+    local _tgt="$x_"
+    printf "archive\t%s\t%s\t%s\t%s\n" "$_tgt" "$_ver" "$_size" "$_rel"
+}
+
+___x_cmd_eget_cache_ls_snap_cb(){
+    [ -f "$1" ] || return 0
+    case "$1" in
+        */bin/*) : ;;
+        *) return 0 ;;
+    esac
+    local _snap_dir="${___X_CMD_EGET_CACHE_LS_SNAP_DIR}"
+    local _rel="${1#"$_snap_dir"/}"
+    local _slug="${_rel%%/*}"
+    local _rest="${_rel#*/}"
+    local _ver="${_rest%%/*}"
+    local _size; _size="$( wc -c < "$1" 2>/dev/null | tr -d ' ' )"
+    [ -n "$_size" ] || _size=0
+    ___x_cmd_eget_cache_slug_to_target_ "$_slug"
+    local _tgt="$x_"
+    ___x_cmd_eget_cache_snap_default_version_ "${_slug%--*}" "${_slug#*--}"
+    local _def="$x_"
+    local _mark=""
+    [ "$_def" = "$_ver" ] && _mark="*"
+    printf "snap%s\t%s\t%s\t%s\t%s\n" "$_mark" "$_tgt" "$_ver" "$_size" "$_rel"
+}
+
+# x eget cache ls — list archive + snap entries (TSV).
+___x_cmd_eget_cache_ls(){
+    case "${1:-}" in -h|--help) ___x_cmd help -m eget cache ls; return 0 ;; esac
+
+    printf "KIND\tREPO\tVERSION\tBYTES\tPATH\n"
+
+    if [ -d "$___X_CMD_EGET_DATA/cache" ]; then
+        # 0 3 = current dir + 3 levels (cache/<owner>--<repo>/<version>/<asset>)
+        ___X_CMD_EGET_CACHE_LS_ARCHIVE_DIR="$___X_CMD_EGET_DATA/cache" \
+            x fsiter --dfs "$___X_CMD_EGET_DATA/cache" 0 3 ___x_cmd_eget_cache_ls_archive_cb
+    fi
+    if [ -d "$___X_CMD_EGET_DATA/snap" ]; then
+        # 0 4 = max 4 directory levels deep (snap/<owner>--<repo>/<version>/bin/<binary>)
+        ___X_CMD_EGET_CACHE_LS_SNAP_DIR="$___X_CMD_EGET_DATA/snap" \
+            x fsiter --dfs "$___X_CMD_EGET_DATA/snap" 0 4 ___x_cmd_eget_cache_ls_snap_cb
+    fi
+}
+
+# x eget cache info — show paths + sizes
+___x_cmd_eget_cache_info(){
+    case "${1:-}" in -h|--help) ___x_cmd help -m eget cache info; return 0 ;; esac
+
+    local archive_dir="$___X_CMD_EGET_DATA/cache"
+    local snap_dir="$___X_CMD_EGET_DATA/snap"
+    local use_tsv="${HOME}/.local/data/x-eget/use.list.tsv"
+
+    local _a_size _s_size
+    ___x_cmd_eget_cache_dirsize_ "$archive_dir"; _a_size="$x_"
+    ___x_cmd_eget_cache_dirsize_ "$snap_dir";    _s_size="$x_"
+    local _use_count=0
+    [ -f "$use_tsv" ] && _use_count="$( wc -l < "$use_tsv" | tr -d ' ' )"
+    printf "archive: %s  (%s bytes)\n" "$archive_dir" "$_a_size"
+    printf "snap:    %s  (%s bytes)\n" "$snap_dir"    "$_s_size"
+    printf "use:     %s  (%s entries)\n" "$use_tsv"    "$_use_count"
+}
+
+# x eget cache clear [N]
+___x_cmd_eget_cache_clear(){
+    case "${1:-}" in -h|--help) ___x_cmd help -m eget cache clear; return 0 ;; esac
+
+    local keep="${1:-5}"
+    case "$keep" in ''|*[!0-9]*) N=eget M="cache clear: N must be a non-negative integer (got: $1)" log:ret:64; return ;; esac
+
+    local archive_dir="$___X_CMD_EGET_DATA/cache"
+    local snap_dir="$___X_CMD_EGET_DATA/snap"
+
+    # Archive cache: keep N most recent versions per repo. Uses find here
+    # (not x fsiter) because we need stable ordering + a way to drop the
+    # newest N entries. fsiter's bulk-return helper returns relative names
+    # + an unseen-char separator that's awkward to split with awk.
+    if [ -d "$archive_dir" ]; then
+        find "$archive_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while IFS= read -r repo_dir; do
+            local _count
+            _count="$( find "$repo_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ' )"
+            if [ "$_count" -gt "$keep" ]; then
+                # Sort version dirs oldest-first, drop the last $keep (newest),
+                # remove what's left. `head -n -0` is invalid on BSDs, so
+                # route through awk for the keep=0 case.
+                find "$repo_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null \
+                    | sort \
+                    | awk -v keep="$keep" 'NR > keep { print }' \
+                    | while IFS= read -r d; do
+                        ___x_cmd rmrf "$d"
+                    done
+            fi
+        done
+    fi
+
+    # Snap cache: keep the .default-version (active binary), drop the rest.
+    if [ -d "$snap_dir" ]; then
+        find "$snap_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | while IFS= read -r repo_dir; do
+            local _def=""
+            [ -f "$repo_dir/.default-version" ] && _def="$( cat "$repo_dir/.default-version" 2>/dev/null )"
+            find "$repo_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null \
+                | while IFS= read -r vdir; do
+                    local _v; _v="$( basename "$vdir" )"
+                    if [ "$_v" != "$_def" ]; then
+                        ___x_cmd rmrf "$vdir"
+                    fi
+                done
+        done
+    fi
+
+    eget:info "Cache cleared (archive: keep $keep per repo; snap: keep .default-version)"
+}
+
+# x eget cache purge — wipe both caches
+___x_cmd_eget_cache_purge(){
+    case "${1:-}" in -h|--help) ___x_cmd help -m eget cache purge; return 0 ;; esac
+
+    ___x_cmd rmrf "$___X_CMD_EGET_DATA/cache" "$___X_CMD_EGET_DATA/snap"
+    eget:info "All caches purged"
+}
+
+# x eget cache rm <target> — drop a single repo from both caches
+___x_cmd_eget_cache_rm(){
+    case "${1:-}" in -h|--help) ___x_cmd help -m eget cache rm; return 0 ;; esac
+
+    local _arg="${1:?usage: x eget cache rm <owner/repo | URL>}"
+    # Accept owner/repo or full URL/short prefix
+    ___x_cmd_eget_normalize_ "$_arg" "github" ""
+    local _norm="$x_"
+    local _t="${_norm%%
+*}"; local _rest="${_norm#*
+}"
+    case "$_t" in
+        */*) ;;
+        *)   N=eget M="cache rm: invalid target '$_arg' (expected owner/repo or URL)" log:ret:64; return ;;
+    esac
+    local _owner="${_t%%/*}" _repo="${_t#*/}"
+    local _slug="${_owner}--${_repo}"
+    local _hit=0
+    [ -d "$___X_CMD_EGET_DATA/cache/$_slug" ] && { ___x_cmd rmrf "$___X_CMD_EGET_DATA/cache/$_slug"; _hit=1; eget:info "Removed archive cache: $_owner/$_repo"; }
+    [ -d "$___X_CMD_EGET_DATA/snap/$_slug" ]    && { ___x_cmd rmrf "$___X_CMD_EGET_DATA/snap/$_slug";    _hit=1; eget:info "Removed snap cache: $_owner/$_repo"; }
+    [ "$_hit" = "1" ] || eget:info "No cache entries for $_owner/$_repo"
+}

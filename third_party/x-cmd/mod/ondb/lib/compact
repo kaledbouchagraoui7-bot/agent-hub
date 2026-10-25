@@ -1,0 +1,131 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_compact(){
+    local dir=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb compact "$@" ; return 0 ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    local input
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_read "$dir"
+        input="$x_"
+    else
+        input="cat 'ondb.tsv'"
+    fi
+
+    local ms; ms="$( x epoch ms )"
+
+    # Resolve backend explicitly
+    ___x_cmd_ondb_backend_resolve
+    local backend="$x_"
+
+    # ─── SQLite path: direct SELECT snapshot generation ─────────
+    # When db is up-to-date, generate snapshot directly from SQLite
+    # instead of re-parsing the TSV through AWK/JS/Python.
+    if [ "$backend" = "sqlite" ]; then
+        ___x_cmd_ondb_db_path "$dir"
+        if [ -n "$x_" ]; then
+            local dbfile="$x_"
+            local snapfile
+            if [ -n "$dir" ]; then
+                snapfile="$dir/snapshot.$ms"
+            else
+                local base="${file:-ondb.tsv}"
+                snapfile="${base}.snapshot.${ms}"
+            fi
+
+            # Generate snapshot directly from SQLite.
+            # Story 2 (lazy unescape): values are stored raw in SQLite.
+            # No escape needed on output — AWK path also outputs raw values.
+            sqlite3 "$dbfile" "
+WITH entity_props AS (
+  SELECT entity_id,
+    group_concat(key || char(9) || COALESCE(value,''), char(9)) AS kv
+  FROM (SELECT entity_id, key, value, rowid FROM props ORDER BY rowid)
+  GROUP BY entity_id
+)
+SELECT 'add' || char(9) || e.type || char(9) || e.id || char(9) || e.ctime ||
+       CASE WHEN ep.kv IS NOT NULL THEN char(9) || ep.kv ELSE '' END
+FROM entities e
+LEFT JOIN entity_props ep ON ep.entity_id = e.id
+ORDER BY e.ctime;
+
+SELECT 'set' || char(9) || id || char(9) || mtime
+FROM entities
+WHERE mtime != ctime;
+
+WITH link_props_agg AS (
+  SELECT from_id, rel, to_id,
+    group_concat(key || char(9) || COALESCE(value,''), char(9)) AS kv
+  FROM (SELECT from_id, rel, to_id, key, value, rowid FROM link_props ORDER BY rowid)
+  GROUP BY from_id, rel, to_id
+)
+SELECT 'link' || char(9) || l.from_id || char(9) || l.rel || char(9) || l.to_id || char(9) || l.epoch ||
+       CASE WHEN lp.kv IS NOT NULL THEN char(9) || lp.kv ELSE '' END
+FROM links l
+LEFT JOIN link_props_agg lp
+  ON lp.from_id = l.from_id AND lp.rel = l.rel AND lp.to_id = l.to_id;
+" > "$snapfile"
+
+            printf "db\t%s\n" "$dbfile"
+            printf "snapshot\t%s\n" "$snapfile"
+
+            local snap_lines; snap_lines="$( wc -l < "$snapfile" )"
+            sqlite3 "$dbfile" "UPDATE meta SET value='$snap_lines' WHERE key='last_lines';"
+            printf '%s\n' "$snap_lines" > "${dbfile%.db}.lines"
+
+            # Clean old snapshot.* and log.* files in ondb directory
+            if [ -n "$dir" ]; then
+                find "$dir" -maxdepth 1 -name 'snapshot.*' -type f 2>/dev/null | while read -r f; do
+                    [ "$f" = "$snapfile" ] && continue
+                    rm -f "$f"
+                done
+                find "$dir" -maxdepth 1 -name 'log.*' -type f 2>/dev/null | while read -r f; do
+                    rm -f "$f"
+                done
+                [ -f "$dir/ondb.tsv" ] && rm -f "$dir/ondb.tsv"
+            fi
+            return
+        fi
+    fi
+
+    # ─── AWK / JS / Python path: read TSV and generate snapshot ──
+    local snapfile
+    if [ -n "$dir" ]; then
+        snapfile="$dir/snapshot.$ms"
+    else
+        local base="${file:-ondb.tsv}"
+        snapfile="${base}.snapshot.${ms}"
+    fi
+
+    # Write to temp file first to avoid truncating input when filename collides
+    local tmpfile; tmpfile="$(mktemp)"
+    if [ "$backend" = "js" ] && command -v bun >/dev/null 2>&1; then
+        eval "$input" | bun run "$___X_CMD_ROOT_MOD/ondb/lib/js/compact.js" > "$tmpfile"
+    elif [ "$backend" = "python" ] && command -v python3 >/dev/null 2>&1; then
+        eval "$input" | python3 "$___X_CMD_ROOT_MOD/ondb/lib/py/compact.py" > "$tmpfile"
+    else
+        eval "$input" | ___x_cmd_ondb_cawk snapshot > "$tmpfile"
+    fi
+    mv "$tmpfile" "$snapfile"
+    printf "snapshot\t%s\n" "$snapfile"
+
+    # Clean old snapshot.* and log.* files in ondb directory
+    if [ -n "$dir" ]; then
+        find "$dir" -maxdepth 1 -name 'snapshot.*' -type f 2>/dev/null | while read -r f; do
+            [ "$f" = "$snapfile" ] && continue
+            rm -f "$f"
+        done
+        find "$dir" -maxdepth 1 -name 'log.*' -type f 2>/dev/null | while read -r f; do
+            rm -f "$f"
+        done
+        [ -f "$dir/ondb.tsv" ] && rm -f "$dir/ondb.tsv"
+    fi
+}

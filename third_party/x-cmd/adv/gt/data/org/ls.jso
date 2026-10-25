@@ -1,0 +1,106 @@
+{
+"--page"
+:
+{
+"#synopsis"
+:
+"<num>"
+,
+"#desc"
+:
+{
+"en"
+:
+"target page"
+,
+"zh"
+:
+"目标页码"
+}
+}
+,
+"--per_page"
+:
+{
+"#synopsis"
+:
+"<num>"
+,
+"#desc"
+:
+{
+"en"
+:
+"per_page data number"
+,
+"zh"
+:
+"每页数据量"
+}
+}
+,
+"--admin"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"List only authorized users managed org"
+,
+"zh"
+:
+"仅列出授权用户托管组织"
+}
+}
+,
+"--json|-j"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"output raw JSON data"
+,
+"zh"
+:
+"以 JSON 格式输出获取数据"
+}
+}
+,
+"--csv"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"output csv data"
+,
+"zh"
+:
+"以 csv 格式输出获取数据"
+}
+}
+,
+"--yml"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"output yml data"
+,
+"zh"
+:
+"以 yml 格式输出获取数据"
+}
+}
+}
+

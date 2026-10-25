@@ -1,0 +1,106 @@
+# shellcheck shell=dash
+
+xrc:mod:lib     ondb       db
+xrc:mod:lib     ondb       schema
+xrc:mod:lib     ondb       add
+xrc:mod:lib     ondb       get
+xrc:mod:lib     ondb       set
+xrc:mod:lib     ondb       rm
+xrc:mod:lib     ondb       link
+xrc:mod:lib     ondb       unlink
+xrc:mod:lib     ondb       linked
+xrc:mod:lib     ondb       related
+xrc:mod:lib     ondb       ls
+xrc:mod:lib     ondb       query
+xrc:mod:lib     ondb       validate
+xrc:mod:lib     ondb       compact
+xrc:mod:lib     ondb       dbpath
+xrc:mod:lib     ondb       libpath
+xrc:mod:lib     ondb       bench
+
+# Resolve effective backend for read operations.
+# Priority: explicit ___X_CMD_ONDB_BACKEND > auto-detect
+# Sets $x_ to: sqlite | python | awk
+___x_cmd_ondb_backend_resolve(){
+    local explicit="${___X_CMD_ONDB_BACKEND:-}"
+
+    case "$explicit" in
+        sqlite|python|awk|js)  x_="$explicit"; return ;;
+        auto|'')            ;;
+        *)                  N=ondb M="Invalid backend: $explicit. Use: sqlite, auto" log:ret:64; return ;;
+    esac
+
+    # Auto-detect
+    # 1. SQLite (if sqlite mode enabled and sqlite3 available)
+    ___x_cmd_ondb_db_ready
+    if [ "$x_" = "1" ]; then
+        x_="sqlite"; return
+    fi
+    # 2. Python (if PY_MODE enabled and python3 available)
+    if [ "${___X_CMD_ONDB_PY_MODE:-0}" = "1" ] && command -v python3 >/dev/null 2>&1; then
+        x_="python"; return
+    fi
+    # 3. AWK fallback
+    x_="awk"
+}
+
+___x_cmd_ondb___main(){
+    [ $# -gt 0 ]    ||      set -- --help
+
+    local op="$1" ;         shift
+    case "$op" in
+        -h|--help)          ___x_cmd help -m ondb "$@" ; return 0 ;;
+        add|get|set|rm|link|unlink|linked|related|ls|query|validate|compact|dbpath|libpath|bench)
+                            ___x_cmd_ondb_"$op" "$@" ;;
+        *)                  N=ondb M="Unknown subcmd -> $op" log:ret:64
+    esac
+}
+
+# Combine ontology.awk library + command awk file, pass as inline code to cawk
+___x_cmd_ondb_cawk(){
+    local cmd="$1"; shift
+    ___x_cmd_cmds awk "$@" -f "$___X_CMD_ROOT_MOD/ondb/lib/awk/ontology.awk" -f "$___X_CMD_ROOT_MOD/ondb/lib/awk/${cmd}.awk"
+}
+
+# Resolve the write target: where to append new log lines
+# Returns file path in $x_
+___x_cmd_ondb_logpath_write(){
+    local dir="${1:-.}"
+    local ondb_dir="$dir"
+    local snap
+    snap="$( find "$ondb_dir" -maxdepth 1 -name 'snapshot.*' -type f 2>/dev/null | sort -t. -k2 -rn | head -1 )"
+    if [ -n "$snap" ]; then
+        local ms="${snap##*.}"
+        x_="$ondb_dir/log.$ms"
+    else
+        x_="$ondb_dir/ondb.tsv"
+    fi
+}
+
+# Resolve the read source: snapshot + log combined
+# Returns a command string (e.g. "cat snap log") in $x_
+# Caller should use: eval "$x_" | cawk ...
+___x_cmd_ondb_logpath_read(){
+    local dir="${1:-.}"
+    local file="$dir/ondb.tsv"
+    local snap
+    snap="$( find "$dir" -maxdepth 1 -name 'snapshot.*' -type f 2>/dev/null | sort -t. -k2 -rn | head -1 )"
+    if [ -n "$snap" ]; then
+        local ms="${snap##*.}"
+        local logf="$dir/log.$ms"
+        if [ -f "$logf" ]; then
+            x_="cat '$snap' '$logf'"
+        else
+            x_="cat '$snap'"
+        fi
+    else
+        x_="cat '$file'"
+    fi
+}
+
+# Get attachment directory path
+# Returns path in $x_
+___x_cmd_ondb_attachment_dir(){
+    local dir="${1:-.}"
+    x_="$dir/ondb-attachment"
+}

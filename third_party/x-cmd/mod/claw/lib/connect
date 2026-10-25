@@ -1,0 +1,91 @@
+# shellcheck shell=dash
+
+___x_cmd_claw___advise_connect_candidate(){
+    printf "%s\n" "weixin" "telegram" "qywx" "feishu:groups"
+    ___x_cmd feishu group ls 2>/dev/null | {
+        local _="" chatid=""
+        IFS= read -r _
+        while IFS=, read -r chatid _; do
+            [ -n "$chatid" ] && printf "feishu:%s\n" "$chatid"
+        done
+    }
+}
+
+___x_cmd_claw_connect__check_feishu(){
+    local chatid="$1"
+    local feishu_dir="$___X_CMD_CLAW_BOT_CONNECT_DIR/feishu"
+    [ -d "$feishu_dir" ] || return 0
+
+    # Scenario 1: feishu:groups already active, connecting a specific oc_xxx is redundant
+    if [ "${chatid#oc}" != "$chatid" ] && [ -f "$feishu_dir/groups" ]; then
+        claw:warn "feishu:groups is already active, $chatid is already included -- skipping"
+        return 1
+    fi
+
+    # Scenario 2: specific oc_xxx already active, connecting feishu:groups will cover all
+    if [ "$chatid" = "groups" ]; then
+        local chat_file="" con_chatid="" has_specific=0
+        for chat_file in "$feishu_dir"/oc_*; do
+            [ -f "$chat_file" ] || continue
+            has_specific=1
+            con_chatid="${chat_file##*/}"
+            claw:info "Removing specific group connection $con_chatid -- feishu:groups covers all"
+            ___x_cmd_claw_disconnect "feishu:$con_chatid" || continue
+        done
+        if [ "$has_specific" -eq 1 ]; then
+            claw:info "All specific group connections removed, now connecting feishu:groups"
+        fi
+    fi
+}
+
+___x_cmd_claw_connect(){
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --help|-h)  ___x_cmd help -m claw connect "$@"; return 0 ;;
+            --ls|-l)    ___x_cmd_claw_run___list_activate; return ;;
+            *)          break ;;
+        esac
+    done
+
+    [ $# -gt 0 ] || N=claw M="Please provide IM platform name (e.g., weixin|telegram|feishu:oc_xxx)" log:ret:64
+
+    local item="" im="" chatid=""
+    while [ $# -gt 0 ]; do
+        item="$1"
+        case "$item" in
+            *:*)    im="${item%%:*}"; chatid="${item#*:}" ;;
+            *)      im="$item"; chatid="" ;;
+        esac
+
+        if [ "$im" = "feishu" ] && [ -n "$chatid" ]; then
+            ___x_cmd_claw_connect__check_feishu "$chatid" || { shift; continue; }
+        fi
+
+        ___x_cmd_claw_run___ensure_im_service "$im" "$chatid" || return $?
+        ___x_cmd_claw_run___activate_im "$im" "$chatid"
+        shift
+    done
+}
+
+___x_cmd_claw_disconnect(){
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --help|-h)  ___x_cmd help -m claw disconnect "$@"; return 0 ;;
+            *)          break ;;
+        esac
+    done
+
+    [ $# -gt 0 ] || N=claw M="Please provide IM platform name (e.g., weixin|telegram|feishu:oc_xxx)" log:ret:64
+
+    local item="" im="" chatid=""
+    while [ $# -gt 0 ]; do
+        item="$1"
+        case "$item" in
+            *:*)    im="${item%%:*}"; chatid="${item#*:}" ;;
+            *)      im="$item"; chatid="" ;;
+        esac
+        ___x_cmd_claw_run___deactivate_im "$im" "$chatid" || return $?
+        ___x_cmd_claw_run___stop_im_service "$im" "$chatid"
+        shift
+    done
+}

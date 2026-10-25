@@ -1,0 +1,350 @@
+{
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x hub rag ask <question>"
+,
+"zh"
+:
+"在知识库中搜索问题答案（默认搜索 mod + 个人知识库）。"
+,
+"en"
+:
+"Search the knowledge base for answers (defaults to mod + personal knowledge)."
+}
+,
+{
+"cmd"
+:
+"x hub rag ask <question> --scope mod"
+,
+"zh"
+:
+"仅搜索 x-cmd 官方模块文档。"
+,
+"en"
+:
+"Search only x-cmd official module docs."
+}
+,
+{
+"cmd"
+:
+"x hub rag upload <file>"
+,
+"zh"
+:
+"上传文件并加入 AI 检索索引（消耗 token）。"
+,
+"en"
+:
+"Upload a file and index it for AI search (charges tokens)."
+}
+,
+{
+"cmd"
+:
+"x hub rag list"
+,
+"zh"
+:
+"列出已上传的知识库文件。"
+,
+"en"
+:
+"List uploaded knowledge base files."
+}
+,
+{
+"cmd"
+:
+"x hub rag quota"
+,
+"zh"
+:
+"查看当月 RAG token 用量。"
+,
+"en"
+:
+"Show this month's RAG token usage."
+}
+]
+,
+"ask"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"在知识库中搜索问题答案。默认搜索 mod 和个人知识库，可通过 --scope 指定范围。"
+,
+"en"
+:
+"Search the knowledge base for answers. Defaults to mod and personal knowledge, scope can be specified via --scope."
+}
+,
+"--scope|-s"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定搜索范围，可选值为 mod、knowledge 或 skill。"
+,
+"en"
+:
+"Specify search scope, available values are mod, knowledge, skill."
+}
+,
+"#cand"
+:
+[
+"mod"
+,
+"knowledge"
+,
+"skill"
+]
+}
+,
+"--org"
+:
+{
+"#synopsis"
+:
+"<org>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"团队组织名（scope=knowledge 时改查团队共享知识库；须为该组织成员）"
+,
+"en"
+:
+"Team org name (with scope=knowledge, queries the team shared knowledge base; requires membership)"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"要搜索的问题。"
+,
+"en"
+:
+"The question to search for."
+}
+}
+}
+,
+"upload|put"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"上传文件并加入 AI 检索索引，按文件大小消耗 token（约 1 字节 = 1 token）。上传后需等 AutoRAG 下个同步周期（最长 1 小时）才能被搜到。token 配额不足时整个上传被拒绝。"
+,
+"en"
+:
+"Upload a file and index it for AI search. Charges tokens by file size (~1 byte = 1 token). Searchable after the next AutoRAG sync cycle (up to 1 hour). Upload is rejected entirely when token quota is insufficient."
+}
+,
+"--force|-f"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"覆盖已存在的同名文件（覆盖会重新索引并再扣一次 token）。"
+,
+"en"
+:
+"Overwrite an existing file with the same name (re-indexes and charges tokens again)."
+}
+}
+,
+"--org"
+:
+{
+"#synopsis"
+:
+"<org>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"上传到团队共享知识库（须为组织 member+，扣团队 token 配额）"
+,
+"en"
+:
+"Upload to the team shared knowledge base (requires org member+, charges the team token quota)"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"要上传的文件路径。"
+,
+"en"
+:
+"File path to upload."
+}
+,
+"#exec"
+:
+"___x_cmd_advise__file"
+}
+}
+,
+"list|ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出已上传的个人知识库文件（平铺展示所有文件）。"
+,
+"en"
+:
+"List uploaded personal knowledge base files (flat listing)."
+}
+,
+"--org"
+:
+{
+"#synopsis"
+:
+"<org>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"改为列出团队共享知识库文件（须为组织成员）"
+,
+"en"
+:
+"List the team shared knowledge base instead (requires org membership)"
+}
+}
+}
+,
+"delete|rm"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"删除知识库中的指定文件或目录（目录整体递归删除）。已消耗的索引 token 不退还。"
+,
+"en"
+:
+"Delete a file or directory from the knowledge base (directories are removed recursively). Tokens already spent on indexing are not refunded."
+}
+,
+"--org"
+:
+{
+"#synopsis"
+:
+"<org>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"从团队共享知识库删除（须为组织 member+）"
+,
+"en"
+:
+"Delete from the team shared knowledge base (requires org member+)"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"要删除的文件名或目录路径。"
+,
+"en"
+:
+"File name or directory path to delete."
+}
+}
+}
+,
+"quota"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看当月 RAG token 用量、剩余额度与重置时间。"
+,
+"en"
+:
+"Show this month's RAG token usage, remaining quota, and reset time."
+}
+,
+"--org"
+:
+{
+"#synopsis"
+:
+"<org>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"查看团队 RAG 配额（须为组织成员）"
+,
+"en"
+:
+"Show the team RAG quota (requires org membership)"
+}
+}
+}
+}
+

@@ -1,0 +1,79 @@
+# shellcheck shell=dash disable=2120
+
+# `x agent stat cross claude (--session-id <id1,id2,...> | --all) [--since <ts>] [--until <ts>] [--project <name>] [--format tsv|json]`
+#
+# Parse multiple Claude Code session JSONL files and emit per-turn statistics
+# with a session_id column.  The output is consumed by AI Agents for task-level
+# aggregation across sessions (group by human_message, not by session).
+#
+# Session selection (mutually exclusive, exactly one required):
+#   --session-id <ids>   -- comma-separated session UUIDs
+#   --all                -- all sessions under ~/.claude/projects/
+#
+# Filters (only meaningful with --all):
+#   --since <ts>         -- Unix epoch; only sessions with first turn >= ts
+#   --until <ts>         -- Unix epoch; only sessions with first turn < ts
+#   --project <name>     -- exact match on project directory name
+#
+# Output formats:
+#   tsv (default) -- header + rows, with session_id as the last column
+#   json          -- JSON array of turn objects
+#
+# Privacy:
+#   --no-human-message   -- suppress human_message (tsv: empty, json: null)
+
+___x_cmd_agent_stat_cross_claude(){
+    local session_ids=""
+    local all_sessions=0
+    local since=""
+    local until=""
+    local project=""
+    local format="tsv"
+    local no_human_message=0
+
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            -h|--help)              ___x_cmd help -m agent stat cross claude; return 0 ;;
+            --session-id)           session_ids="$2" ;          arg:2:shift ;;
+            --all)                  all_sessions=1 ;            shift ;;
+            --since)                since="$2" ;                arg:2:int ;  arg:2:shift ;;
+            --until)                until="$2" ;                arg:2:int ;  arg:2:shift ;;
+            --project)              project="$2" ;              arg:2:shift ;;
+            --project=*)            project="${1#*=}" ;         shift ;;
+            --format)               format="$2" ;               arg:2:shift ;;
+            --no-human-message)     no_human_message=1 ;        shift ;;
+            --)                     shift; break ;;
+            -*)                     N=agent M="Unknown flag -> $1" log:ret:64 ;;
+            *)                      N=agent M="Unexpected positional arg -> $1. Use --session-id or --all." log:ret:64 ;;
+        esac
+    done
+
+    if [ -n "$session_ids" ] && [ "$all_sessions" = "1" ]; then
+        N=agent M="--session-id and --all are mutually exclusive" log:ret:64
+    fi
+    if [ -z "$session_ids" ] && [ "$all_sessions" = "0" ]; then
+        N=agent M="Usage: x agent stat cross claude (--session-id <ids> | --all) [--since <ts>] [--until <ts>] [--project <name>] [--format tsv|json] [--no-human-message]" log:ret:64
+    fi
+
+    local script="$___X_CMD_ROOT_MOD/agent/lib/stat/cross/claude.py"
+    [ -f "$script" ] || N=agent M="Cross parser script not found -> $script" log:ret:1
+
+    # Build optional flags
+    local since_flag="" until_flag="" project_flag="" nm_flag=""
+    [ -n "$since" ]   && since_flag="--since $since"
+    [ -n "$until" ]   && until_flag="--until $until"
+    [ -n "$project" ] && project_flag="--project=$project"
+    [ "$no_human_message" = "1" ] && nm_flag="--no-human-message"
+
+    if [ -n "$session_ids" ]; then
+        ___x_cmd python "$script" \
+            --session-id "$session_ids" \
+            --format "$format" \
+            $nm_flag $since_flag $until_flag $project_flag
+    else
+        ___x_cmd python "$script" \
+            --all \
+            --format "$format" \
+            $nm_flag $since_flag $until_flag $project_flag
+    fi
+}

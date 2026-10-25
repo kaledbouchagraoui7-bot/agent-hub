@@ -1,0 +1,484 @@
+{
+"#name"
+:
+{
+"en"
+:
+"Command-line XML and HTML beautifier and content extractor"
+,
+"zh"
+:
+"命令行 XML 和 HTML 格式化工具和内容提取器"
+,
+"#desc"
+:
+{
+"en"
+:
+"xq is a command-line tool for formatting and extracting content from XML and HTML. It supports various output formats like JSON and can be used with CSS or XPath queries to select specific nodes."
+,
+"zh"
+:
+"xq 是一个命令行工具，用于格式化和提取 XML 和 HTML 中的内容。它支持各种输出格式，例如 JSON，并可以使用 CSS 或 XPath 查询来选择特定的节点。"
+}
+}
+,
+"-a|--attr"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Extract an attribute value instead of node content for provided CSS query."
+,
+"zh"
+:
+"为提供的 CSS 查询提取属性值而不是节点内容。"
+}
+,
+"#1"
+:
+{
+"en"
+:
+"The attribute name to extract."
+,
+"zh"
+:
+"要提取的属性名称。"
+}
+}
+,
+"-c|--color"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Force colorful output."
+,
+"zh"
+:
+"强制彩色输出。"
+}
+}
+,
+"--compact"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Compact JSON output (no indentation)."
+,
+"zh"
+:
+"紧凑的 JSON 输出（无缩进）。"
+}
+}
+,
+"-d|--depth"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Maximum nesting depth for JSON output. -1 for unlimited."
+,
+"zh"
+:
+"JSON 输出的最大嵌套深度。-1 表示无限制。"
+}
+,
+"#1"
+:
+{
+"en"
+:
+"The maximum depth."
+,
+"zh"
+:
+"最大深度。"
+}
+}
+,
+"-e|--extract"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Extract a single node from XML."
+,
+"zh"
+:
+"从 XML 中提取单个节点。"
+}
+,
+"#1"
+:
+{
+"en"
+:
+"The CSS selector or XPath expression to identify the node to extract."
+,
+"zh"
+:
+"用于标识要提取的节点的 CSS 选择器或 XPath 表达式。"
+}
+}
+,
+"-h|--help"
+:
+{
+"#subcmd"
+:
+true
+,
+"en"
+:
+"Print this help message."
+,
+"zh"
+:
+"打印此帮助消息。"
+,
+"#desc"
+:
+{
+"en"
+:
+"Display detailed information about the xq command and its options."
+,
+"zh"
+:
+"显示关于 xq 命令及其选项的详细信息。"
+}
+}
+,
+"-m|--html"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Use HTML formatter."
+,
+"zh"
+:
+"使用 HTML 格式化工具。"
+}
+}
+,
+"--indent"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Use the given number of spaces for indentation."
+,
+"zh"
+:
+"使用给定的空格数进行缩进。"
+}
+,
+"#1"
+:
+{
+"en"
+:
+"The number of spaces for indentation."
+,
+"zh"
+:
+"用于缩进的空格数。"
+}
+}
+,
+"-j|--json"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Output the result as JSON."
+,
+"zh"
+:
+"将结果以 JSON 格式输出。"
+}
+}
+,
+"--no-color"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Disable colorful output."
+,
+"zh"
+:
+"禁用彩色输出。"
+}
+}
+,
+"-n|--node"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Return the node content instead of text."
+,
+"zh"
+:
+"返回节点内容而不是文本。"
+}
+}
+,
+"-q|--query"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Extract the node(s) using CSS selector."
+,
+"zh"
+:
+"使用 CSS 选择器提取节点。"
+}
+,
+"#1"
+:
+{
+"en"
+:
+"The CSS selector to use for extracting nodes."
+,
+"zh"
+:
+"用于提取节点的 CSS 选择器。"
+}
+}
+,
+"--tab"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Use tabs for indentation."
+,
+"zh"
+:
+"使用制表符进行缩进。"
+}
+}
+,
+"-v|--version"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Print version information."
+,
+"zh"
+:
+"打印版本信息。"
+}
+}
+,
+"-x|--xpath"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Extract the node(s) from XML using XPath expression."
+,
+"zh"
+:
+"使用 XPath 表达式从 XML 中提取节点。"
+}
+,
+"#1"
+:
+{
+"en"
+:
+"The XPath expression to use for extracting nodes."
+,
+"zh"
+:
+"用于提取节点的 XPath 表达式。"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x xq <local-file-path>"
+,
+"en"
+:
+"Format an XML file, highlighting syntax."
+,
+"zh"
+:
+"格式化 XML 文件，高亮显示语法。"
+}
+,
+{
+"cmd"
+:
+"x html testdata 301 | x xq"
+,
+"en"
+:
+"Format XML data piped from another command."
+,
+"zh"
+:
+"格式化来自管道的 XML 数据。"
+}
+,
+{
+"cmd"
+:
+"x xq -m <local-file-path>"
+,
+"en"
+:
+"Format an HTML file, highlighting syntax."
+,
+"zh"
+:
+"格式化 HTML 文件，高亮显示语法。"
+}
+,
+{
+"cmd"
+:
+"x html testdata 301 | x xq -x \"//body\""
+,
+"en"
+:
+"Extract the text content of all nodes with the name \"body\" using XPath."
+,
+"zh"
+:
+"使用 XPath 提取所有名为 \"body\" 的节点的文本内容。"
+}
+,
+{
+"cmd"
+:
+"x html testdata 301 | x xq -x \"//h1/@code\""
+,
+"en"
+:
+"Extract the value of the \"code\" attribute from all \"h1\" nodes using XPath."
+,
+"zh"
+:
+"使用 XPath 提取所有 \"h1\" 节点的 \"code\" 属性值。"
+}
+,
+{
+"cmd"
+:
+"x html testdata 301 | x xq -q \"body > center\""
+,
+"en"
+:
+"Extract content using the CSS selector \"body > center\"."
+,
+"zh"
+:
+"使用 CSS 选择器 \"body > center\" 提取内容。"
+}
+,
+{
+"cmd"
+:
+"x html testdata 301 | x xq -q \"body > center > h1\" -a code"
+,
+"en"
+:
+"Extract the value of the \"code\" attribute from nodes matching the CSS selector \"body > center > h1\"."
+,
+"zh"
+:
+"从匹配 CSS 选择器 \"body > center > h1\" 的节点中提取 \"code\" 属性的值。"
+}
+,
+{
+"cmd"
+:
+"x html testdata 301 | x xq -n -q \"head\""
+,
+"en"
+:
+"Extract the \"head\" node content (including tags) using a CSS selector."
+,
+"zh"
+:
+"使用 CSS 选择器提取 \"head\" 节点内容（包括标签）。"
+}
+,
+{
+"cmd"
+:
+"x html testdata 301 | x xq -j"
+,
+"en"
+:
+"Output the processed XML/HTML as JSON."
+,
+"zh"
+:
+"将处理后的 XML/HTML 输出为 JSON 格式。"
+}
+]
+}
+

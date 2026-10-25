@@ -1,0 +1,68 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_linked(){
+    local id="" rel="" direction="outgoing" dir="" fmt="tsv"
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb linked "$@" ; return 0 ;;
+            --id)       id="$2"; arg:2:shift ;;
+            --rel)      rel="$2"; arg:2:shift ;;
+            --direction) direction="$2"; arg:2:shift ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --tsv)      fmt="tsv"; shift ;;
+            --json)     fmt="json"; shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    [ -n "$id" ] || { N=ondb M="--id is required" log:ret:64; return; }
+
+    # SQLite path
+    ___x_cmd_ondb_db_path "$dir"
+    if [ -n "$x_" ]; then
+        local db="$x_" where="" relfilter="" eid="$id" erel="$rel"
+        ___x_cmd_ondb_db_esc eid; ___x_cmd_ondb_db_esc erel
+        [ -n "$rel" ] && relfilter=" AND l.rel='$erel'"
+
+        if [ "$direction" = "outgoing" ]; then
+            if [ "$fmt" = "json" ]; then
+                sqlite3 "$db" "SELECT json_group_array(json_object('rel', l.rel, 'id', l.to_id, 'type', e.type, 'link_props', COALESCE((SELECT json_group_object(lp.key, lp.value) FROM link_props lp WHERE lp.from_id=l.from_id AND lp.rel=l.rel AND lp.to_id=l.to_id),'{}'))) FROM links l JOIN entities e ON e.id=l.to_id WHERE l.from_id='$eid'${relfilter};"
+            else
+                sqlite3 -separator '	' "$db" "SELECT l.rel, l.to_id, e.type || COALESCE(char(9) || (SELECT group_concat(lp.key || '=' || lp.value, char(9)) FROM link_props lp WHERE lp.from_id=l.from_id AND lp.rel=l.rel AND lp.to_id=l.to_id), '') FROM links l JOIN entities e ON e.id=l.to_id WHERE l.from_id='$eid'${relfilter};"
+            fi
+        elif [ "$direction" = "incoming" ]; then
+            if [ "$fmt" = "json" ]; then
+                sqlite3 "$db" "SELECT json_group_array(json_object('rel', l.rel, 'id', l.from_id, 'type', e.type, 'link_props', COALESCE((SELECT json_group_object(lp.key, lp.value) FROM link_props lp WHERE lp.from_id=l.from_id AND lp.rel=l.rel AND lp.to_id=l.to_id),'{}'))) FROM links l JOIN entities e ON e.id=l.from_id WHERE l.to_id='$eid'${relfilter};"
+            else
+                sqlite3 -separator '	' "$db" "SELECT l.rel, l.from_id, e.type || COALESCE(char(9) || (SELECT group_concat(lp.key || '=' || lp.value, char(9)) FROM link_props lp WHERE lp.from_id=l.from_id AND lp.rel=l.rel AND lp.to_id=l.to_id), '') FROM links l JOIN entities e ON e.id=l.from_id WHERE l.to_id='$eid'${relfilter};"
+            fi
+        else
+            # both
+            if [ "$fmt" = "json" ]; then
+                sqlite3 "$db" "SELECT json_group_array(json_object('direction', CASE WHEN l.from_id='$eid' THEN 'outgoing' ELSE 'incoming' END, 'rel', l.rel, 'id', CASE WHEN l.from_id='$eid' THEN l.to_id ELSE l.from_id END, 'type', CASE WHEN l.from_id='$eid' THEN (SELECT e2.type FROM entities e2 WHERE e2.id=l.to_id) ELSE (SELECT e2.type FROM entities e2 WHERE e2.id=l.from_id) END, 'link_props', COALESCE((SELECT json_group_object(lp.key, lp.value) FROM link_props lp WHERE lp.from_id=l.from_id AND lp.rel=l.rel AND lp.to_id=l.to_id),'{}'))) FROM links l WHERE (l.from_id='$eid' OR l.to_id='$eid')${relfilter};"
+            else
+                sqlite3 -separator '	' "$db" "SELECT CASE WHEN l.from_id='$eid' THEN 'out' ELSE 'in' END, l.rel, CASE WHEN l.from_id='$eid' THEN l.to_id ELSE l.from_id END, CASE WHEN l.from_id='$eid' THEN (SELECT e2.type FROM entities e2 WHERE e2.id=l.to_id) ELSE (SELECT e2.type FROM entities e2 WHERE e2.id=l.from_id) END || COALESCE(char(9) || (SELECT group_concat(lp.key || '=' || lp.value, char(9)) FROM link_props lp WHERE lp.from_id=l.from_id AND lp.rel=l.rel AND lp.to_id=l.to_id), '') FROM links l WHERE (l.from_id='$eid' OR l.to_id='$eid')${relfilter};"
+            fi
+        fi
+        return
+    fi
+
+    # Python or AWK fallback
+    local input
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_read "$dir"
+        input="$x_"
+    else
+        input="cat 'ondb.tsv'"
+    fi
+
+    if [ "${___X_CMD_ONDB_PY_MODE:-0}" = "1" ] && command -v python3 >/dev/null 2>&1; then
+        eval "$input" | python3 "$___X_CMD_ROOT_MOD/ondb/lib/py/linked.py" \
+            --id="$id" --rel="${rel:-}" --direction="$direction"
+    else
+        eval "$input" | ___x_cmd_ondb_cawk linked \
+            -v ONTO_ID="$id" -v ONTO_REL="${rel:-}" -v ONTO_DIR="$direction" -v ONTO_FMT="$fmt"
+    fi
+}

@@ -1,0 +1,82 @@
+{
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x termux vibrate <number>"
+,
+"zh"
+:
+"让手机震动指定时长（单位毫秒，默认 200 毫秒"
+,
+"en"
+:
+"Vibrates the device for a specified duration in milliseconds (default 200ms)."
+}
+,
+{
+"cmd"
+:
+"x termux vibrate -f <number>"
+,
+"zh"
+:
+"强制振动指定时间。"
+,
+"en"
+:
+"Force vibration for a specified time."
+}
+]
+,
+"-f"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"force vibration even in silent mode"
+,
+"zh"
+:
+"强制振动，即使在静音模式下"
+}
+}
+,
+"--duration|-d"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"-d duration  the duration to vibrate in ms (default:1000)"
+,
+"zh"
+:
+"持续振动的时间，单位为毫秒（默认：1000）"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"持续时间"
+,
+"en"
+:
+"duration, unit: ms"
+}
+}
+}
+}
+

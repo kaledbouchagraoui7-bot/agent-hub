@@ -1,0 +1,756 @@
+{
+"#name"
+:
+{
+"mac"
+:
+null
+,
+"en"
+:
+"utilities for MacOs"
+,
+"zh"
+:
+"MacOS 实用功能"
+}
+,
+"#desc"
+:
+{
+"en"
+:
+"The Mac module is a collection of handy tools designed specifically for macOS users. Its goal is to make it easier for users to automate tasks with scripts or manage their Macs remotely."
+,
+"zh"
+:
+"mac 模块集成了 MacOS 用户需要的各种实用功能，目标是方便用户使用脚本自动化或者远程管理 MacOS。"
+}
+,
+"#subcmd:Desktop"
+:
+[
+"dock"
+,
+"launchpad"
+,
+"trash"
+,
+"wallpaper"
+,
+"appid"
+,
+"note"
+,
+"re"
+,
+"as|a"
+]
+,
+"#subcmd:Device"
+:
+[
+"battery|b"
+,
+"disk"
+,
+"vol"
+,
+"sysctl|sy"
+]
+,
+"#subcmd:Session"
+:
+[
+"lock"
+,
+"logout"
+,
+"restart"
+,
+"shutdown"
+,
+"screensave"
+,
+"sleep"
+]
+,
+"#subcmd:Network"
+:
+[
+"bluetooth|bt"
+,
+"net"
+,
+"wifi"
+,
+"fw"
+,
+"vpn"
+,
+"ntp"
+,
+"airdrop"
+,
+"sshd"
+]
+,
+"#subcmd:System"
+:
+[
+"info"
+,
+"mem"
+,
+"tidsudo"
+,
+"systemsetup|ss"
+,
+"alias"
+,
+"name"
+,
+"lang"
+,
+"sandbox|sb"
+]
+,
+"info"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示系统信息"
+,
+"en"
+:
+"Display System Information"
+}
+}
+,
+"mem"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示系统内存使用情况 (基于 vm_stat)"
+,
+"en"
+:
+"Display system memory usage (based on vm_stat)"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x mac mem"
+,
+"zh"
+:
+"显示系统内存使用统计"
+,
+"en"
+:
+"Display system memory usage statistics"
+}
+,
+{
+"cmd"
+:
+"x mac mem -h"
+,
+"zh"
+:
+"显示内存命令的帮助信息"
+,
+"en"
+:
+"Show help for memory command"
+}
+]
+}
+,
+"battery|b"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Get battery information"
+,
+"zh"
+:
+"获取电池信息"
+}
+}
+,
+"alias"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"设置 `x mac` 命令的别名"
+,
+"en"
+:
+"Set an alias for the `x mac` command"
+}
+,
+"status"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看当前 `x mac` 命令的别名状态"
+,
+"en"
+:
+"Check the current alias status of the `x mac` command"
+}
+}
+,
+"enable"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"为 `x mac` 命令设置别名并启用设置的别名"
+,
+"en"
+:
+"Set and enable an alias for the `x mac` command"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"别名"
+,
+"en"
+:
+"alias"
+}
+}
+}
+,
+"disable"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"禁用设置的别名"
+,
+"en"
+:
+"Disable the set alias"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x mac alias enable mcli"
+,
+"zh"
+:
+"启用别名功能, 设为 mcli, 以后可以使用 mcli 代替 x mac"
+,
+"en"
+:
+"Enable the alias feature, set it to mcli, and use mcli instead of x mac in the future"
+}
+,
+{
+"cmd"
+:
+"x mac alias enable"
+,
+"zh"
+:
+"启用别名功能, 不提供参数, 则默认为 m, 以后可以使用 m 代替 x mac"
+,
+"en"
+:
+"Enable the alias feature, if no parameter is provided, it defaults to m, and you can use m instead of x mac in the future"
+}
+]
+}
+,
+"$ref"
+:
+[
+"x-advise://mac/data/_exit.jso"
+,
+"x-advise://mac/data/_device.jso"
+,
+"x-advise://mac/data/_network.jso"
+,
+"x-advise://mac/data/_desktop.jso"
+,
+"x-advise://mac/data/_pref.jso"
+,
+"x-advise://mac/data/_sb.jso"
+]
+,
+"note"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Apple Notes 的 CLI"
+,
+"en"
+:
+"Command Line Interface for Apple Notes"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"若首次运行出现权限问题，可前往系统设置的【隐私与安全性】>【自动化】，将终端（Terminal）或所使用的运行环境（如 iTerm、x、Alfred 等）勾选允许访问“备忘录”。"
+,
+"en"
+:
+"If you encounter permission issues when running for the first time, go to [System Settings] > [Privacy & Security] > [Automation] and grant your terminal app (e.g., Terminal, iTerm, x, Alfred) permission to access the Notes app."
+}
+]
+,
+"$ref"
+:
+"x-advise://mac/data/note.jso"
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x mac note add note1"
+,
+"zh"
+:
+"添加一个名为 note1 的备忘录"
+,
+"en"
+:
+"Add a memo with the name note1"
+}
+,
+{
+"cmd"
+:
+"x mac note open note1"
+,
+"zh"
+:
+"打开名为 note1 的备忘录"
+,
+"en"
+:
+"Open the memo named note1"
+}
+,
+{
+"cmd"
+:
+"x mac note rm note1"
+,
+"zh"
+:
+"删除名为 note1 的备忘录"
+,
+"en"
+:
+"Delete the memo named note1"
+}
+,
+{
+"cmd"
+:
+"x mac note ls"
+,
+"zh"
+:
+"列出所有 Apple Notes 的备忘录"
+,
+"en"
+:
+"List all Apple Notes memos"
+}
+]
+}
+,
+"re"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Apple Reminders 的 CLI"
+,
+"en"
+:
+"A CLI for managing Apple Reminders"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"若首次运行出现权限问题，可前往系统设置的【隐私与安全性】>【自动化】，将终端（Terminal）或所使用的运行环境（如 iTerm、x、Alfred 等）勾选允许访问“提醒事项”。"
+,
+"en"
+:
+"If you encounter permission issues when running for the first time, go to [System Settings] > [Privacy & Security] > [Automation] and grant your terminal app (e.g., Terminal, iTerm, x, Alfred) permission to access the Reminders app."
+}
+]
+,
+"$ref"
+:
+"x-advise://mac/data/re.jso"
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x mac re add \"Buy milk\" \"2025-06-25\" \"18:00\""
+,
+"zh"
+:
+"添加一个提醒事项 “Buy milk”，时间为 2025 年 6 月 25 日 18:00"
+,
+"en"
+:
+"Add a reminder titled \"Buy milk\" at 6:00 PM on June 25, 2025"
+}
+,
+{
+"cmd"
+:
+"x mac re comp \"Buy milk\""
+,
+"zh"
+:
+"将名称为 “Buy milk” 的提醒事项标记为已完成"
+,
+"en"
+:
+"Mark the reminder titled \"Buy milk\" as completed"
+}
+,
+{
+"cmd"
+:
+"x mac re update \"Buy milk\" \"Buy milk,egg\" \"2025-06-25 19:00\""
+,
+"zh"
+:
+"将提醒事项 “Buy milk” 修改为 “Buy milk,egg”，时间改为 2025 年 6 月 25 日 19:00"
+,
+"en"
+:
+"Update the reminder \"Buy milk\" to \"Buy milk,egg\" and change the time to 7:00 PM on June 25, 2025"
+}
+,
+{
+"cmd"
+:
+"x mac re ls"
+,
+"zh"
+:
+"列出所有提醒事项"
+,
+"en"
+:
+"List all reminders"
+}
+,
+{
+"cmd"
+:
+"x mac re get \"Buy milk\""
+,
+"zh"
+:
+"获取名称为 “Buy milk” 提醒事项的详细信息"
+,
+"en"
+:
+"Retrieve the detailed information for the reminder named \"Buy milk\""
+}
+,
+{
+"cmd"
+:
+"x mac re rm \"Buy milk\""
+,
+"zh"
+:
+"删除名称为 “Buy milk” 的提醒事项"
+,
+"en"
+:
+"Remove the reminder titled \"Buy milk\""
+}
+]
+}
+,
+"exp"
+:
+{
+"#tag"
+:
+[
+"inner"
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"使用处于测试阶段的功能"
+,
+"en"
+:
+"Using features that are still under testing"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x mac tidsudo enable"
+,
+"zh"
+:
+"使用指纹( touchid ) 进行 sudo 验证, 失败时将重启密码验证"
+,
+"en"
+:
+"Use fingerprint (touchid) for sudo verification, and restart password verification when failed"
+}
+,
+{
+"cmd"
+:
+"x mac sb -9 -d \"$HOME/.bitcoin\" -d \"$HOME/.ssh\" -d \"$HOME/Library\" claude"
+,
+"zh"
+:
+"打开 claudecode，但禁止访问 \"$HOME/.bitcoin\"、 \"$HOME/.ssh\"、 \"$HOME/Library\""
+,
+"en"
+:
+"Open claudecode, deny access to: $HOME/.bitcoin, $HOME/.ssh, $HOME/Library"
+}
+,
+{
+"cmd"
+:
+"x mac alias enable"
+,
+"zh"
+:
+"启用别名功能, 不提供参数, 则默认为 m, 以后可以使用 m 代替 x mac"
+,
+"en"
+:
+"Enable the alias feature, if no parameter is provided, it defaults to m, and you can use m instead of x mac in the future"
+}
+,
+{
+"cmd"
+:
+"x mac info"
+,
+"zh"
+:
+"显示系统信息"
+,
+"en"
+:
+"Display System Information"
+}
+,
+{
+"cmd"
+:
+"x mac b"
+,
+"zh"
+:
+"获取电池信息"
+,
+"en"
+:
+"Get battery information"
+}
+,
+{
+"cmd"
+:
+"x mac vol set 24"
+,
+"zh"
+:
+"将输出音量调整为 24%"
+,
+"en"
+:
+"Adjust the output volume to 24%"
+}
+,
+{
+"cmd"
+:
+"x mac net test"
+,
+"zh"
+:
+"测试网络质量"
+,
+"en"
+:
+"Test network quality"
+}
+,
+{
+"cmd"
+:
+"x mac lock"
+,
+"zh"
+:
+"桌面锁屏"
+,
+"en"
+:
+"Desktop Lock Screen"
+}
+,
+{
+"cmd"
+:
+"x mac sleep"
+,
+"zh"
+:
+"进入睡眠模式"
+,
+"en"
+:
+"Entering sleep mode"
+}
+,
+{
+"cmd"
+:
+"x mac shutdown -y"
+,
+"zh"
+:
+"忽略警告，强制关机"
+,
+"en"
+:
+"Ignoring the warnings, the computer was forcefully shut down"
+}
+,
+{
+"cmd"
+:
+"x mac trash empty"
+,
+"zh"
+:
+"清空废纸篓"
+,
+"en"
+:
+"Empty the Trash"
+}
+,
+{
+"cmd"
+:
+"x mac disk ls"
+,
+"zh"
+:
+"显示磁盘列表"
+,
+"en"
+:
+"Show the list of disks"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

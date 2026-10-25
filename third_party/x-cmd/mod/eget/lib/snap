@@ -1,0 +1,273 @@
+# shellcheck shell=dash
+
+# snap: download to cache and run directly
+# Similar to npx — run a tool without installing it to PATH
+#
+# Cache layout:
+#   $___X_CMD_EGET_DATA/snap/<owner>--<repo>/<version>/bin/<binary>
+#   $___X_CMD_EGET_DATA/snap/<owner>--<repo>/.default-version
+#   $___X_CMD_EGET_DATA/snap/<owner>--<repo>/.lastupdate
+#   $___X_CMD_EGET_DATA/snap/<owner>--<repo>/.lastcheck
+#
+# On cache hit: no subshells, no external processes — just run
+
+# ___x_cmd_eget_snap_cache_: ensure snap cache exists, return binary path in x_
+# Args: owner repo [options passed from caller]
+# Uses globals: ___X_CMD_EGET_QUIET, ___X_CMD_EGET_UPDATE, etc.
+___x_cmd_eget_snap_cache_(){
+    local owner="$1" repo="$2"
+    local _tag="$3" _system="$4" _asset_filters="$5" _forge="$6" _auto_check="$7"
+
+    local snap_base="$___X_CMD_EGET_DATA/snap/${owner}--${repo}"
+
+    # --- Cache hit path ---
+    if [ "$___X_CMD_EGET_UPDATE" = "0" ] && [ -f "$snap_base/.default-version" ]; then
+        local cached_ver
+        cached_ver="$( cat "$snap_base/.default-version" 2>/dev/null )" || cached_ver=""
+        # If user requested a specific tag, only honor cache when it matches.
+        # Otherwise we'd silently return the default version and ignore --tag.
+        if [ -n "$_tag" ] && [ "$cached_ver" != "$_tag" ]; then
+            cached_ver=""
+        fi
+        if [ -n "$cached_ver" ] && [ -d "$snap_base/$cached_ver/bin" ]; then
+            local cached_bin=""
+            for f in "$snap_base/$cached_ver/bin/"*; do
+                [ -f "$f" ] && [ -x "$f" ] && { cached_bin="$f"; break; }
+            done
+
+            if [ -n "$cached_bin" ]; then
+                # No auto-check → use cache, no API
+                if [ -z "$_auto_check" ]; then
+                    [ "$___X_CMD_EGET_QUIET" = "0" ] && eget:info "Using cached $owner/$repo ($cached_ver)"
+                    x_="$cached_bin"; return 0
+                fi
+
+                # Has auto-check → check .lastupdate
+                if [ -f "$snap_base/.lastupdate" ] && x epoch now --le "$_auto_check" -f "$snap_base/.lastupdate" 2>/dev/null; then
+                    [ "$___X_CMD_EGET_QUIET" = "0" ] && eget:info "Using cached $owner/$repo ($cached_ver)"
+                    x_="$cached_bin"; return 0
+                fi
+
+                # .lastupdate expired → check .lastcheck (minimum 5m retry)
+                if [ -f "$snap_base/.lastcheck" ] && ! x epoch now --le 5m -f "$snap_base/.lastcheck" 2>/dev/null; then
+                    [ "$___X_CMD_EGET_QUIET" = "0" ] && eget:info "Using cached $owner/$repo ($cached_ver, retry within 5m)"
+                    x_="$cached_bin"; return 0
+                fi
+
+                # Attempt API check (3 retries)
+                x epoch get > "$snap_base/.lastcheck" 2>/dev/null
+                local _api_ok=0 _new_version=""
+                local _i=1
+                while [ "$_i" -le 3 ]; do
+                    ___x_cmd_eget___select_ "$_forge" "$owner" "$repo" "$_tag" "$_system" "$_asset_filters" "0" "0" && {
+                        _api_ok=1; break
+                    }
+                    _i=$(( _i + 1 ))
+                    [ "$_i" -le 3 ] && sleep 1
+                done
+
+                if [ "$_api_ok" = "1" ]; then
+                    local _pick="$x_"
+                    local _pick_rest="${_pick#*
+}"
+                    _pick_rest="${_pick_rest#*
+}"
+                    _new_version="${_pick_rest%%
+*}"
+
+                    x epoch get > "$snap_base/.lastupdate" 2>/dev/null
+                    x epoch get > "$snap_base/.lastcheck" 2>/dev/null
+
+                    if [ "$_new_version" = "$cached_ver" ]; then
+                        [ "$___X_CMD_EGET_QUIET" = "0" ] && eget:info "Using cached $owner/$repo ($cached_ver, up to date)"
+                        x_="$cached_bin"; return 0
+                    fi
+
+                    # New version — fall through to download
+                    [ "$___X_CMD_EGET_QUIET" = "0" ] && eget:info "New version available: $_new_version (was $cached_ver)"
+                else
+                    x epoch get > "$snap_base/.lastcheck" 2>/dev/null
+                    [ "$___X_CMD_EGET_QUIET" = "0" ] && eget:info "Using cached $owner/$repo ($cached_ver, API check failed)"
+                    x_="$cached_bin"; return 0
+                fi
+            fi
+        fi
+    fi
+
+    # --- Fetch: API + download (___fetch handles its own cache) ---
+    ___x_cmd_eget___fetch "$_forge" "$owner" "$repo" "$_tag" "$_system" "$_asset_filters" "0" "0" || return 1
+    local _fetch="$x_"
+    local tmpfile="${_fetch%%
+*}"
+    local version="${_fetch#*
+}"
+
+    ___x_cmd_eget_snap_extract_to_cache "$owner" "$repo" "$version" "$tmpfile" || return 1
+    [ "$___X_CMD_EGET_QUIET" = "0" ] && eget:info "Cached $owner/$repo ($version)"
+}
+
+# Extract archive and populate snap cache dir, return binary path in x_
+___x_cmd_eget_snap_extract_to_cache(){
+    local owner="$1" repo="$2" version="$3" archive="$4"
+
+    local tmpdir="$___X_CMD_EGET_TMP/snap_$$"
+    ___x_cmd mkdirp "$tmpdir"
+    ___x_cmd_eget_extract "$archive" "" "0" "$tmpdir" "$repo" || {
+        N=eget M="Extraction failed" log:ret:1; return 1;
+    }
+
+    local found_bin=""
+    found_bin="$( ___x_cmd_eget_snap_find_bin "$tmpdir" )" || true
+    [ -z "$found_bin" ] && {
+        # Recovery hints: list the archive's members and point to the cached
+        # archive, so the user can pick the right binary (--file) or extract it
+        # manually. Listed straight from the archive file (not the tmpdir,
+        # which extract already cleaned) so even +x-less binaries show up.
+        local _asset; _asset="$( basename "$archive" )"
+        local _acache="$___X_CMD_EGET_DATA/cache/${owner}--${repo}/${version}/${_asset}"
+        local _members=""
+        case "$archive" in
+            *.tar.gz|*.tgz)  _members="$( ___x_cmd_cmds tar -tzf "$archive" 2>/dev/null )" ;;
+            *.tar.bz2)       _members="$( ___x_cmd_cmds tar -tjf "$archive" 2>/dev/null )" ;;
+            *.tar.xz)        _members="$( ___x_cmd_cmds tar -tJf "$archive" 2>/dev/null )" ;;
+            *.tar)           _members="$( ___x_cmd_cmds tar -tf "$archive" 2>/dev/null )" ;;
+            *.zip)           _members="$( ___x_cmd_cmds unzip -Z1 "$archive" 2>/dev/null )" ;;
+        esac
+        if [ -n "$_members" ]; then
+            eget:warn "No binary auto-selected from '$_asset'. Archive members:"
+            printf "%s\n" "$_members" | sed 's/^/  /' >&2
+        else
+            eget:warn "No binary auto-selected from '$_asset'."
+        fi
+        [ -f "$_acache" ] && eget:info "Archive cached at: $_acache"
+        eget:info "Pick a specific file with: x eget <owner/repo> --file '<pattern>'"
+        ___x_cmd rmrf "$tmpdir"
+        N=eget M="No executable found after extraction" log:ret:1; return 1;
+    }
+
+    local bin_name; bin_name="$( basename "$found_bin" )"
+    # Delegate the cache write to lib/cache so cache introspects the same layout.
+    ___x_cmd_eget_cache_snap_write_ "$owner" "$repo" "$version" "$bin_name" "$found_bin" || {
+        ___x_cmd rmrf "$tmpdir"; return 1;
+    }
+    ___x_cmd rmrf "$tmpdir"
+    # x_ is set by ___x_cmd_eget_cache_snap_write_
+}
+
+___x_cmd_eget_snap(){
+    local _tag="" _system="" _asset_filters="" _forge="github" _quiet=0 _disable_ssl=0 _update=0 _no_ccmd=0
+    local _auto_check=""
+    local target=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)              ___x_cmd help -m eget snap; return 0 ;;
+            -t|--tag)               shift; _tag="$1" ;;
+            -s|--system)            shift; _system="$1" ;;
+            -a|--asset)             shift; _asset_filters="${_asset_filters}${_asset_filters:+|}$1" ;;
+            --forge)                shift; _forge="$1" ;;
+            -q|--quiet)             _quiet=1 ;;
+            -k|--disable-ssl)       _disable_ssl=1 ;;
+            --update)               _update=1 ;;
+            --no-ccmd)              _no_ccmd=1 ;;
+            --auto-check-update)    shift; _auto_check="$1" ;;
+            --)                     shift; break ;;
+            *)                      target="$1"; shift; break ;;
+        esac
+        shift
+    done
+
+    [ -z "$target" ] && { N=eget M="snap: missing target (user/repo)" log:ret:64; return; }
+
+    # Validate --auto-check-update minimum 5m
+    if [ -n "$_auto_check" ]; then
+        case "$_auto_check" in
+            *[0-9]s)  N=eget M="--auto-check-update: minimum interval is 5m, got $_auto_check" log:ret:64; return ;;
+            *[0-9]m)
+                local mins="${_auto_check%m}"
+                mins="${mins##* }"
+                [ "$mins" -lt 5 ] 2>/dev/null && {
+                    N=eget M="--auto-check-update: minimum interval is 5m, got $_auto_check" log:ret:64; return
+                }
+                ;;
+        esac
+    fi
+
+    [ $# -gt 0 ] && [ "$1" = "--" ] && shift
+    local bin_args="$*"
+
+    # Normalize target
+    ___x_cmd_eget_normalize_ "$target" "$_forge" "$_tag"
+    local _norm="$x_"
+    target="${_norm%%
+*}"; local _rest="${_norm#*
+}"
+    _forge="${_rest%%
+*}"; _tag="${_rest#*
+}"
+
+    # Bare name — resolve to owner/repo
+    case "$target" in
+        */*) ;;
+        *)
+            local _resolved
+            _resolved="$( ___x_cmd_eget_resolve_bare "$target" )" && [ -n "$_resolved" ] && {
+                [ "$_quiet" = "0" ] && eget:info "Resolved $target → $_resolved"
+                target="$_resolved"
+            }
+            ;;
+    esac
+
+    case "$target" in
+        */*) ;;
+        *)   N=eget M="Invalid target: $target (expected owner/repo)" log:ret:64; return ;;
+    esac
+
+    local owner="${target%%/*}"
+    local repo="${target#*/}"
+    [ -n "$owner" ] && [ -n "$repo" ] || {
+        N=eget M="Invalid target: $target (expected user/repo)" log:ret:64; return;
+    }
+
+    if [ -z "$_system" ]; then
+        local x_=""
+        ___x_cmd os name_;  local osname="$x_"
+        ___x_cmd os arch_;  local osarch="$x_"
+        _system="${osname}/${osarch}"
+    fi
+
+    ___X_CMD_EGET_QUIET="$_quiet"
+    ___X_CMD_EGET_DISABLE_SSL="$_disable_ssl"
+    ___X_CMD_EGET_UPDATE="$_update"
+    ___X_CMD_EGET_NO_CCMD="$_no_ccmd"
+
+    # Ensure cache, get binary path
+    ___x_cmd_eget_snap_cache_ "$owner" "$repo" "$_tag" "$_system" "$_asset_filters" "$_forge" "$_auto_check" || return
+    local cached_bin="$x_"
+
+    # Run
+    ___x_cmd_eget_snap_run "$cached_bin" $bin_args
+}
+
+# Find executable binary in extracted directory
+___x_cmd_eget_snap_find_bin(){
+    local dir="$1"
+    # Try direct file
+    ___x_cmd_fsiter___file1_ "$dir" 2>/dev/null && [ -n "$x_" ] && [ -x "$dir/$x_" ] && {
+        printf "%s" "$dir/$x_"; return;
+    }
+    # Try subdirectory
+    local _subdir=""
+    ___x_cmd_fsiter___dir1_ "$dir" 2>/dev/null && _subdir="$x_"
+    if [ -n "$_subdir" ]; then
+        ___x_cmd_fsiter___file1_ "$dir/$_subdir" 2>/dev/null && [ -n "$x_" ] && [ -x "$dir/$_subdir/$x_" ] && {
+            printf "%s" "$dir/$_subdir/$x_"; return;
+        }
+    fi
+    return 1
+}
+
+___x_cmd_eget_snap_run(){
+    local bin="$1"; shift
+    "$bin" "$@"
+}

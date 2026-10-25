@@ -1,0 +1,19 @@
+# shellcheck shell=dash
+
+xrc:mod:lib     fresh   __runcmd
+
+___x_cmd_fresh___main(){
+    [ "$#" -gt 0 ] ||   set -- --help
+
+    local op="$1";      shift
+    case "$op" in
+        -h|--help)      ___x_cmd help -m fresh          "$@";    return 0 ;;
+
+        --runmain|--)   ___x_cmd_fresh___runmain        "$@" ;;
+        *)              ___x_cmd_fresh___runmain "$op"  "$@" ;;
+    esac
+}
+
+# setup shell for ...
+# setup linter for ...
+

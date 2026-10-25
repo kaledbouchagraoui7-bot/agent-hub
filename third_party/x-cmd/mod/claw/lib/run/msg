@@ -1,0 +1,146 @@
+# shellcheck shell=dash
+
+
+___x_cmd_claw_run___mq___dispatch_chat(){
+
+    if [ -n "$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR" ]; then
+        local logfp="$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR/chat_worker.log"
+        ___x_cmd ensurefp "$logfp"
+        exec >>"$logfp" 2>&1
+    fi
+
+
+    local msg="$1"
+    local source="${2:-user}"
+
+    local chatid
+    case "$msg" in
+        weixin:*)
+                chatid="${msg#*:}"
+                if ! ___x_cmd worker isalive --ns x-claw-default-worker --name "chat-weixin-${chatid}"; then
+                    ___x_cmd worker run --ns x-claw-default-worker --name "chat-weixin-${chatid}" -- ___x_cmd_claw_run___chat_worker___weixin "${chatid}" "$source"
+                fi
+                ;;
+        telegram:*)
+                chatid="${msg#*:}"
+                if ! ___x_cmd worker isalive --ns x-claw-default-worker --name "chat-telegram-${chatid}"; then
+                    ___x_cmd worker run --ns x-claw-default-worker --name "chat-telegram-${chatid}" -- ___x_cmd_claw_run___chat_worker___telegram "${chatid}" "$source"
+                fi
+                ;;
+        feishu:*)
+                chatid="${msg#*:}"
+                if ! ___x_cmd worker isalive --ns x-claw-default-worker --name "chat-feishu-${chatid}"; then
+                    ___x_cmd worker run --ns x-claw-default-worker --name "chat-feishu-${chatid}" -- ___x_cmd_claw_run___chat_worker___feishu "${chatid}" "$source"
+                fi
+                ;;
+        qywx:*)
+                chatid="${msg#*:}"
+                if ! ___x_cmd worker isalive --ns x-claw-default-worker --name "chat-qywx-${chatid}"; then
+                    ___x_cmd worker run --ns x-claw-default-worker --name "chat-qywx-${chatid}" -- ___x_cmd_claw_run___chat_worker___qywx "${chatid}" "$source"
+                fi
+                ;;
+    esac
+}
+
+___x_cmd_claw_run___chat_worker___weixin(){
+    if [ -n "$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR" ]; then
+        local logfp="$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR/chat_worker.log"
+        ___x_cmd ensurefp "$logfp"
+        exec >>"$logfp" 2>&1
+    fi
+
+    local chatid="${1:-}"
+    local source="${2:-user}"
+    [ -n "$chatid" ] || {
+        claw:error "[MSG] [weixin] No chatid provided for weixin chat worker. Exiting."
+        return 1
+    }
+
+    ___x_cmd_claw_run___activate_im "weixin" "$chatid" || return $?
+
+    # Only clear the session-reminder marker on a genuine user message
+    # (source=user). Heartbeat-driven polls should not reset it, otherwise
+    # the reminder could be suppressed repeatedly while the agent is in cooldown.
+    if [ "$source" = "user" ]; then
+        ___x_cmd rmrf "$___X_CMD_CLAW_WEIXIN_REMIND_MARKER/$chatid" 2>/dev/null || true
+    fi
+
+    ___x_cmd_claw_weixin_has_unread "$chatid" || return 0
+    if ___x_cmd_claw_run___slash___try_handle "weixin" "$chatid" "$source"; then
+        return 0
+    fi
+    claw:info "[MSG] [weixin:$chatid] Unread messages detected, launching agent request"
+    ___x_cmd_claw_run___agent___exec_chat "weixin" "$chatid" "$( ___x_cmd_claw_weixin_get_unread "$chatid" )" "$source"
+}
+
+___x_cmd_claw_run___chat_worker___telegram(){
+    if [ -n "$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR" ]; then
+        local logfp="$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR/chat_worker.log"
+        ___x_cmd ensurefp "$logfp"
+        exec >>"$logfp" 2>&1
+    fi
+
+    local chatid="$1"
+    local source="${2:-user}"
+    [ -n "$chatid" ] || {
+        claw:error "[MSG] [telegram] No chatid provided for telegram chat worker. Exiting."
+        return 1
+    }
+
+    ___x_cmd_claw_run___activate_im "telegram" "$chatid" || return $?
+
+    ___x_cmd_claw_telegram_has_unread "$chatid" || return 0
+    if ___x_cmd_claw_run___slash___try_handle "telegram" "$chatid" "$source"; then
+        return 0
+    fi
+    claw:info "[MSG] [telegram:$chatid] Unread messages detected, launching agent request"
+    ___x_cmd_claw_run___agent___exec_chat "telegram" "$chatid" "$( ___x_cmd_claw_telegram_get_unread "$chatid" )" "$source"
+}
+
+___x_cmd_claw_run___chat_worker___feishu(){
+    if [ -n "$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR" ]; then
+        local logfp="$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR/chat_worker.log"
+        ___x_cmd ensurefp "$logfp"
+        exec >>"$logfp" 2>&1
+    fi
+
+    local chatid="$1"
+    local source="${2:-user}"
+    [ -n "$chatid" ] || {
+        claw:error "[MSG] [feishu] No chatid provided for feishu chat worker. Exiting."
+        return 1
+    }
+
+    ___x_cmd_claw_run___activate_im "feishu" "$chatid" || return $?
+
+    ___x_cmd_claw_feishu_has_unread "$chatid" || return 0
+    if ___x_cmd_claw_run___slash___try_handle "feishu" "$chatid" "$source"; then
+        return 0
+    fi
+    claw:info "[MSG] [feishu:$chatid] Unread messages detected, launching agent request"
+    ___x_cmd_claw_run___agent___exec_chat "feishu" "$chatid" "$( ___x_cmd_claw_feishu_get_unread "$chatid" )" "$source"
+}
+
+___x_cmd_claw_run___chat_worker___qywx(){
+    if [ -n "$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR" ]; then
+        local logfp="$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR/chat_worker.log"
+        ___x_cmd ensurefp "$logfp"
+        exec >>"$logfp" 2>&1
+    fi
+
+    local chatid="$1"
+    local source="${2:-user}"
+    [ -n "$chatid" ] || {
+        claw:error "[MSG] [qywx] No chatid provided for qywx chat worker. Exiting."
+        return 1
+    }
+
+    ___x_cmd_claw_run___activate_im "qywx" "$chatid" || return $?
+
+    ___x_cmd_claw_qywx_has_unread "$chatid" || return 0
+    if ___x_cmd_claw_run___slash___try_handle "qywx" "$chatid" "$source"; then
+        return 0
+    fi
+    claw:info "[MSG] [qywx:$chatid] Unread messages detected, launching agent request"
+    ___x_cmd_claw_run___agent___exec_chat "qywx" "$chatid" "$( ___x_cmd_claw_qywx_get_unread "$chatid" )" "$source"
+}

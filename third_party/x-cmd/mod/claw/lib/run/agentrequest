@@ -1,0 +1,265 @@
+# shellcheck shell=dash
+
+___x_cmd_claw_agentrequest(){
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --help|-h)              ___x_cmd help -m claw agentrequest; return 0 ;;
+            *)                      break ;;
+        esac
+    done
+
+    if [ -z "$___X_CMD_CLAW_AGENT_REFERENCE_WS" ]; then
+        ___X_CMD_CLAW_AGENT_REFERENCE_WS="$HOME/.openclaw/workspace"
+    fi
+
+    local im="$1";      [ -n "$im" ] || N=claw M="Please provide IM platform name (e.g., weixin|telegram)" log:ret:64
+    local chatid="$2";  [ -n "$chatid" ] || N=claw M="Please provide chatid" log:ret:64
+    local msg="$3";     [ -n "$msg" ] || N=claw M="Please provide message" log:ret:64
+
+    ___x_cmd_claw_run___ensure_im_service "$im" "$chatid" || return $?
+    ___x_cmd_claw_run___agent___exec_chat "$im" "$chatid" "$msg" "agentrequest"
+}
+
+___x_cmd_claw_run___agent___exec_chat(){
+    local im="$1";      [ -n "$im" ] || N=claw M="Please provide IM platform name (e.g., weixin|telegram)" log:ret:64
+    local chatid="$2";  [ -n "$chatid" ] || N=claw M="Please provide chatid" log:ret:64
+    local msg="$3";     [ -n "$msg" ] || N=claw M="Please provide message" log:ret:64
+    local source="${4:-agentrequest}"
+
+    if [ -n "$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR" ]; then
+        local logfp="$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR/${im}-${chatid}.log"
+        ___x_cmd ensurefp "$logfp"
+        exec >>"$logfp" 2>&1
+    fi
+
+    case "$source" in
+        user|agentrequest|manager)
+            ___x_cmd_claw_run___state___reset_unavailable "$im" "$chatid"
+            ;;
+        hb)
+            ___x_cmd_claw_run___state___check_unavailable "$im" "$chatid" "msg" || return 0
+            ;;
+        *)
+            claw:warn "[AGENT] Unknown agent exec source '$source' for $im:$chatid, defaulting to reset failure state"
+            ___x_cmd_claw_run___state___reset_unavailable "$im" "$chatid"
+            ;;
+    esac
+
+    # Genuine user activity: reset idle state so heartbeat keeps probing.
+    ___x_cmd_claw_run___session___mark_active
+
+    local workspace_dir="$___X_CMD_CLAW_BOT_WS/${im}-${chatid}"
+    local x_=""; ___x_cmd_claw_run___prompt___build_chat_ "$im" "$chatid" "$msg" || return $?
+    local prompt="$x_"
+
+    local exitcode=0
+    log:sub:init -i "$im:$chatid" claw "[AGENT] Sending request to agent request"
+
+    local x_=""
+    ___x_cmd date timestamp_
+    local agent_start_ts="$x_"
+    local worker_name="chat-${im}-${chatid}"
+
+    # Pending ack is only meaningful for user-driven chat requests.
+    case "$source" in
+        user|agentrequest)
+            ___x_cmd_claw_run___pending_ack___start "$im" "$chatid" "$agent_start_ts" "$worker_name" "user"
+            ;;
+        hb)
+            ___x_cmd_claw_run___pending_ack___start "$im" "$chatid" "$agent_start_ts" "$worker_name" "hb"
+            ;;
+        manager)
+            # Manager is not an IM chat; pending ack does not apply.
+            ;;
+    esac
+
+    local debug_flag="--debug"
+    case "$source" in
+        manager)    debug_flag="" ;;
+    esac
+    ___x_cmd agent request  \
+        --timeout 1800 \
+        ${debug_flag:+$debug_flag} \
+        --workspace "$workspace_dir"  \
+        --reference-workspace "$___X_CMD_CLAW_AGENT_REFERENCE_WS" \
+        "$prompt" || exitcode="$?"
+
+    log:sub:fini
+    if [ "$exitcode" -eq 0 ]; then
+        claw:info "[AGENT] Successfully processed agent request for $im:$chatid"
+        x_=""
+        ___x_cmd_claw_run___state___file_ "$im" "$chatid" "msg"
+        ___x_cmd rmrf "$x_"
+    else
+        local agent_request_stderr_file="$workspace_dir/.x-cmd/agent/request/session/metadata/stderr.txt"
+        ___x_cmd_claw_run___notify___error "$im" "$chatid" "$exitcode" "$agent_request_stderr_file" "msg"
+
+        claw:error "[AGENT] Failed to process agent request for $im:$chatid exitcode=$exitcode - marking agent as unavailable"
+        ___x_cmd_claw_run___state___mark_unavailable "$im" "$chatid" "msg"
+        return "$exitcode"
+    fi
+}
+
+___x_cmd_claw_run___agent___exec_heartbeat(){
+    if [ -n "$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR" ]; then
+        local logfp="$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR/heartbeat.log"
+        ___x_cmd ensurefp "$logfp"
+        exec >>"$logfp" 2>&1
+    fi
+
+    ___x_cmd_claw_run___state___check_unavailable "hb" "global" "hb" || return 0
+
+    local imdir="$___X_CMD_CLAW_BOT_CONNECT_DIR"
+    [ -d "$imdir" ] || {
+        claw:warn "[HB] No connect directory found. Skipping heartbeat."
+        return 0
+    }
+
+    local active_platforms=""
+    local reply_methods=""
+    local default_reply_im=""
+    local default_reply_chatid=""
+    local max_ts=0
+    local im_count=0
+    local exitcode=0
+
+    local i j active_im active_chatid active_ts x_
+    for i in "$imdir"/*; do
+        [ -d "$i" ] || continue
+        active_im="${i##*/}"
+
+        # Build reply method hints for this platform (once per IM)
+        case "$active_im" in
+            weixin)
+                reply_methods="$reply_methods
+  * weixin:   x claw weixin send --chatid <CHATID> --text '<msg>'" ;;
+            telegram)
+                reply_methods="$reply_methods
+  * telegram: x claw telegram send --chatid <CHATID> --text '<msg>'" ;;
+            feishu)
+                reply_methods="$reply_methods
+  * feishu:   x claw feishu send --chatid <CHATID> --text '<msg>'" ;;
+            qywx)
+                reply_methods="$reply_methods
+  * qywx:     x claw qywx send --chatid <CHATID> --text '<msg>'" ;;
+            *)  continue ;;
+        esac
+
+        for j in "$i"/*; do
+            [ -f "$j" ] || continue
+            active_chatid="${j##*/}"
+            read -r active_ts < "$j"
+            [ -n "$active_chatid" ] || continue
+            [ -n "$active_ts" ] || continue
+
+            im_count=$((im_count + 1))
+
+            x_=""; ___x_cmd epoch minus_ -H "$active_ts"
+            active_platforms="$active_platforms
+  - $active_im (chatid: $active_chatid, last_active: $x_)"
+
+            # Find the most recently active platform
+            if [ "$active_ts" -gt "$max_ts" ]; then
+                max_ts="$active_ts"
+                default_reply_im="$active_im"
+                default_reply_chatid="$active_chatid"
+            fi
+        done
+    done
+
+    [ "$im_count" -gt 0 ] || {
+        claw:warn "[HB] No active platforms found. Skipping heartbeat."
+        return 0
+    }
+
+    local workspace_dir="$___X_CMD_CLAW_BOT_WS"
+
+    # Check long idle state and add HEARTBEAT_OK guidance if needed
+    local idle_count=0
+    local heartbeat_idle_prompt=""
+    local idle_file="$___X_CMD_CLAW_BOT_HEARTBEAT/idle_count"
+    [ ! -f "$idle_file" ] || read -r idle_count < "$idle_file"
+    local heartbeat_ok_ttl="${___X_CMD_CLAW_HEARTBEAT_OK_TTL:-4h}"
+    if [ "${idle_count:-0}" -ge 30 ]; then
+        heartbeat_idle_prompt="
+LONG IDLE DETECTED — HEARTBEAT_OK MECHANISM:
+This heartbeat was triggered after $idle_count minutes of inactivity. If you find there is genuinely nothing that requires the user's attention, you can silence the next heartbeat check by creating the marker file:
+  \`touch $___X_CMD_CLAW_BOT_WS/HEARTBEAT_OK\`
+The marker expires automatically after $heartbeat_ok_ttl (default 4 hours), after which heartbeat will resume even if no new message arrives. Only create it if you are confident there are no pending tasks, reminders, or proactive insights to share."
+    fi
+
+
+    x_=""; ___x_cmd agent default_harness_ || {
+        claw:error "[AGENT] Failed to get default agent harness"
+        return 1
+    }
+    local harness="$x_"
+
+    local agents_file="AGENTS.md"
+    case "$harness" in
+        claude*)    agents_file="CLAUDE.md" ;;
+    esac
+
+    # Initialize global workspace from heartbeat template if first run
+    ___x_cmd_claw_run___workspace___sync "$workspace_dir" "$___X_CMD_ROOT_MOD/claw/lib/data/workspace/hb" "$harness"
+    ___x_cmd_claw_run___workspace___check_update "$workspace_dir" "$___X_CMD_ROOT_MOD/claw/lib/data/workspace/hb" "$harness"
+
+    local prompt
+    prompt="$(___x_cmd_cmds cat "$___X_CMD_ROOT_MOD/claw/lib/data/prompt/heartbeat.md" 2>/dev/null)" || {
+        claw:error "[HB] Failed to read heartbeat prompt template"
+        return 1
+    }
+
+    prompt="$prompt
+<variables>
+<variable name='AGENTS_FILE'>${agents_file}
+</variable>
+<variable name='ACTIVE_PLATFORMS'>${active_platforms}
+</variable>
+
+<variable name='DEFAULT_REPLY_IM'>${default_reply_im}
+</variable>
+
+<variable name='REPLY_METHODS'>${reply_methods}
+</variable>
+
+<variable name='WORKSPACE_DIR'>${workspace_dir}
+</variable>
+
+<variable name='CURRENT_TIME'>$(___x_cmd_claw_run___util___current_time)
+</variable>
+<variable name='HEARTBEAT_IDLE_PROMPT'>${heartbeat_idle_prompt}
+</variable>
+<variable name='HEARTBEAT_OK_TTL'>${heartbeat_ok_ttl}
+</variable>
+</variables>"
+
+    log:sub:init -i "$im_count platform(s)" claw "[HB] Processing global heartbeat, default reply to $default_reply_im"
+    ___x_cmd agent request \
+        --timeout 1800 \
+        --debug \
+        --workspace "$workspace_dir"  \
+        --reference-workspace "$___X_CMD_CLAW_AGENT_REFERENCE_WS" \
+        "$prompt" || exitcode="$?"
+
+    log:sub:fini
+    if [ "$exitcode" -eq 0 ]; then
+        # Heartbeat agent succeeded — clear unavailable status
+        claw:debug "[HB] Heartbeat agent completed successfully"
+        x_=""
+        ___x_cmd_claw_run___state___file_ "hb" "global" "hb"
+        ___x_cmd rmrf "$x_"
+    else
+        claw:error "[HB] Global heartbeat agent request failed for $im_count platform(s)"
+
+        # Route heartbeat failures through the same notification pipeline as message failures.
+        # Notifications are suppressed by default unless ___X_CMD_CLAW_NOTIFY_HB_ERROR=1.
+        if [ -n "$default_reply_im" ] && [ -n "$default_reply_chatid" ]; then
+            local agent_request_stderr_file="$workspace_dir/.x-cmd/agent/request/session/metadata/stderr.txt"
+            ___x_cmd_claw_run___notify___error "$default_reply_im" "$default_reply_chatid" "$exitcode" "$agent_request_stderr_file" "hb"
+        fi
+
+        ___x_cmd_claw_run___state___mark_unavailable "hb" "global" "hb"
+        return 1
+    fi
+}

@@ -1,0 +1,50 @@
+# shellcheck shell=dash
+
+# x repo fuzzywhich owner/name  -> local clone path; never touches the network.
+___x_cmd_repo_fuzzywhich(){
+    local q="${1-}"
+    case "$q" in
+        -h|--help)  ___x_cmd help -m repo fuzzywhich "$@" ; return 0 ;;
+    esac
+
+    local owner_q="${q%%/*}"
+    local name_q="${q#*/}"
+
+    if [ -z "$owner_q" ] && [ -z "$name_q" ]; then
+        printf "fuzzywhich: at least one of owner/name is required\n" >&2
+        return 2
+    fi
+
+    local line abs rest owner name provider
+    local buf="" sep="" first_abs=""
+    local n_matches=0
+
+    for line in $(___x_cmd fsiter --glob "$___X_CMD_REPO_ROOT" "*/*/*"); do
+        [ -n "$line" ] || continue
+        abs="$___X_CMD_REPO_ROOT/$line"
+        [ -d "$abs" ] || continue
+
+        rest="${line#*/}"
+        owner="${rest%%/*}"
+        name="${rest#*/}"
+        provider="${line%%/*}"
+
+        case "$owner" in *"$owner_q"*) ;; *) continue ;; esac
+        case "$name"  in *"$name_q"*)  ;; *) continue ;; esac
+
+        n_matches=$((n_matches + 1))
+        [ -z "$first_abs" ] && first_abs="$abs"
+        buf="${buf}${sep}${provider}${___X_CMD_UNSEENCHAR_HT}${owner}${___X_CMD_UNSEENCHAR_HT}${name}${___X_CMD_UNSEENCHAR_HT}${abs}"
+        sep="$___X_CMD_UNSEENCHAR_NEWLINE"
+    done
+
+    if [ "$n_matches" -eq 0 ]; then
+        return 1
+    elif [ "$n_matches" -eq 1 ]; then
+        printf "%s\n" "$first_abs"
+    else
+        printf "provider\towner\tname\tfilepath\n"
+        printf "%s\n" "$buf"
+        return 1
+    fi
+}

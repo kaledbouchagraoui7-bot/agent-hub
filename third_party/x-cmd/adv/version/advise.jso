@@ -1,0 +1,612 @@
+{
+"#name"
+:
+{
+"version"
+:
+null
+,
+"zh"
+:
+"查看 x-cmd 版本或校验 x-cmd"
+,
+"en"
+:
+"View the x-cmd version or verify x-cmd"
+}
+,
+"current"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看当前版本信息"
+,
+"en"
+:
+"View current version information"
+}
+}
+,
+"sum"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"打印当前版本的校验和"
+,
+"en"
+:
+"Print the checksum of the current version"
+}
+}
+,
+"calsum"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"重新计算校验和"
+,
+"en"
+:
+"Recalculate checksum"
+}
+}
+,
+"verify"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"校验 x-cmd（仅校验当前版本）"
+,
+"en"
+:
+"Validate x-cmd (only validate current version)"
+}
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出所有版本信息"
+,
+"en"
+:
+"List all versions info"
+}
+,
+"--nv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"使用交互式 app"
+,
+"en"
+:
+"Use an interactive app"
+}
+}
+,
+"--yml"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 YML 格式输出"
+,
+"en"
+:
+"Output in YML"
+}
+}
+,
+"--json"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 JSON 格式输出"
+,
+"en"
+:
+"Output in JSON"
+}
+}
+}
+,
+"system"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"管理系统目录下的 X-CMD (/usr/local/share/x-cmd)"
+,
+"en"
+:
+"Manage X-CMD in the system directory (/usr/local/share/x-cmd)"
+}
+,
+"install|i"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"安装指定版本的 X-CMD到系统目录下，需要用到 sudo 权限"
+,
+"en"
+:
+"Install the specified version of X-CMD into the system directory, requires sudo privileges"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定的版本号，默认为 latest"
+,
+"en"
+:
+"Specified version number, default latest"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"执行的命令名称，默认为 `x-cmd`"
+,
+"en"
+:
+"Command name to execute, default `x-cmd`"
+}
+}
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出系统目录下的 X-CMD"
+,
+"en"
+:
+"List X-CMD in the system directory"
+}
+}
+}
+,
+"build"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"构建 x-cmd 安装包（支持 deb/rpm/apk/archlinux）"
+,
+"en"
+:
+"Build x-cmd packages (deb/rpm/apk/archlinux supported)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"包类型：deb（Debian/Ubuntu）、rpm（Fedora/RHEL）、apk（Alpine）、arch（Arch）"
+,
+"en"
+:
+"Package types: deb (Debian/Ubuntu), rpm (Fedora/RHEL), apk (Alpine), arch (Arch)"
+}
+,
+{
+"zh"
+:
+"--docker 会在对应 Linux 发行版的容器中构建，确保环境一致"
+,
+"en"
+:
+"--docker builds in the corresponding Linux distribution container for consistent environment"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x version build arch --version v0.9.5 --versum .94fb5c68 --docker"
+,
+"zh"
+:
+"示例: 在 Docker 中构建 arch 包"
+,
+"en"
+:
+"Example: Build arch package in Docker"
+}
+,
+{
+"cmd"
+:
+"x version build deb --version v0.9.5 --versum .94fb5c68"
+,
+"zh"
+:
+"示例: 本地构建 deb 包"
+,
+"en"
+:
+"Example: Build deb package locally"
+}
+,
+{
+"cmd"
+:
+"x version build rpm --version v0.9.5 --versum .94fb5c68 --docker"
+,
+"zh"
+:
+"示例: 在 Docker 中构建 rpm 包"
+,
+"en"
+:
+"Example: Build rpm package in Docker"
+}
+,
+{
+"cmd"
+:
+"x version build rpm --dist ~/.x-cmd.root/v/x6 --version x6 --versum x6 --docker"
+,
+"zh"
+:
+"示例: 从本地 x-cmd 目录在 Docker 中构建 rpm 包"
+,
+"en"
+:
+"Example: Build rpm package in Docker from local x-cmd directory"
+}
+,
+{
+"cmd"
+:
+"x version build apk --version v0.9.5 --versum .94fb5c68 --docker"
+,
+"zh"
+:
+"示例: 在 Docker 中构建 apk 包"
+,
+"en"
+:
+"Example: Build apk package in Docker"
+}
+,
+{
+"cmd"
+:
+"x version build which rpm v0.9.5"
+,
+"zh"
+:
+"示例: 查找已构建的 rpm 包路径"
+,
+"en"
+:
+"Example: Find built rpm package path"
+}
+]
+,
+"which"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查找已构建的安装包路径"
+,
+"en"
+:
+"Find the path of built package"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"包类型（deb/rpm/apk/archlinux）"
+,
+"en"
+:
+"Package type (deb/rpm/apk/archlinux)"
+}
+,
+"#cand"
+:
+[
+"deb"
+,
+"rpm"
+,
+"apk"
+,
+"arch"
+]
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"版本号"
+,
+"en"
+:
+"Version number"
+}
+}
+}
+,
+"--version"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 x-cmd 版本号（如 v0.9.5）"
+,
+"en"
+:
+"Specify x-cmd version (e.g. v0.9.5)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"版本号"
+,
+"en"
+:
+"Version number"
+}
+}
+}
+,
+"--versum"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定版本摘要（唯一标识）"
+,
+"en"
+:
+"Specify version checksum (unique identifier)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"版本摘要"
+,
+"en"
+:
+"Version checksum"
+}
+}
+}
+,
+"--tgzfile"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"使用本地 tgz 文件而非下载"
+,
+"en"
+:
+"Use local tgz file instead of downloading"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"本地 tgz 文件路径"
+,
+"en"
+:
+"Local tgz file path"
+}
+}
+}
+,
+"--dist"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"使用本地 x-cmd 代码目录打包构建（可与 --docker 配合使用）"
+,
+"en"
+:
+"Build from a local x-cmd code directory (can be used with --docker)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"本地 x-cmd 代码目录路径"
+,
+"en"
+:
+"Local x-cmd code directory path"
+}
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"包类型（deb/rpm/apk/arch"
+,
+"en"
+:
+"Package type (deb/rpm/apk/arch)"
+}
+,
+"#cand"
+:
+[
+"deb"
+,
+"rpm"
+,
+"apk"
+,
+"arch"
+]
+}
+,
+"--docker"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"使用 Docker 模式构建包"
+,
+"en"
+:
+"Build packages in Docker mode"
+}
+}
+}
+,
+"#subcmd:Enhancement"
+:
+[
+"system"
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

@@ -1,0 +1,16 @@
+# --- python / editor noise, anywhere in the tree ---
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
+# --- runtime artifacts of OUR tools, anchored to the repo root only ---
+# (unanchored patterns like `trader/` would silently swallow a same-named
+#  directory inside vendored third-party code, which is how files go missing)
+/trader/
+/trader-console/work/
+/trader-console/console-log.jsonl
+*.json.gz.tmp
+
+# --- but DO keep the checked-in demo outputs, they are documentation ---
+!obsidian-datafarm/starter-vault/.datafarm/

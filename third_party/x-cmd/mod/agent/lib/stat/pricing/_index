@@ -1,0 +1,25 @@
+# shellcheck shell=dash disable=2120
+
+# `x agent stat pricing [--format tsv|json]`
+#
+# Output the built-in model pricing table used for cost estimation.
+# AI Agents read this to calculate costs when aggregating token usage
+# across sessions.
+
+___x_cmd_agent_stat_pricing(){
+    local format="tsv"
+
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m agent stat pricing "$@" ;      return 0 ;;
+            --format)       format="$2" ;               arg:2:shift ;;
+            --)             shift; break ;;
+            -*)             N=agent M="Unknown flag -> $1" log:ret:64 ;;
+            *)              N=agent M="Unexpected arg -> $1" log:ret:64 ;;
+        esac
+    done
+
+    local script="$___X_CMD_ROOT_MOD/agent/lib/stat/pricing/claude.py"
+    [ -f "$script" ] || N=agent M="Pricing script not found -> $script" log:ret:1
+    ___x_cmd python "$script" --format "$format"
+}

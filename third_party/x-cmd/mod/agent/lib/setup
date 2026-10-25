@@ -1,0 +1,180 @@
+# shellcheck shell=dash disable=SC2120,SC2016
+
+___x_cmd_agent_setup_addprompt(){
+    local dir="$1"
+    local fp="$2"
+    local pattern="$3"
+    local prompt="$4"
+    [ -e "${dir}" ]   ||  {
+        local dir_tilde="~${dir#$HOME}"
+        local fp_tilde="~${fp#"$HOME"}"
+        agent:info "Skip adding prompt to [file=$fp_tilde] because [dir=$dir_tilde] does not exist."
+        return 1
+    }
+
+    ___x_cmd_agent_setup_addprompt_removeline_then_append_ "$fp" "$pattern" "$prompt"
+}
+
+___x_cmd_agent_setup_addprompt_removeline_then_append_(){
+    local fp="$1"
+    local pattern="$2"
+    local prompt="$3"
+
+    local data=""
+    if [ -e "$fp" ]; then
+        data="$(___x_cmd_cmds cat "$fp")" 2>/dev/null || N=agent M="Fail to read data from $fp" log:ret:1
+    fi
+
+    data="$data" prompt="$prompt" pattern="$pattern" ___x_cmd_cmds awk '
+        BEGIN{
+            data    = ENVIRON["data"]
+            prompt  = ENVIRON["prompt"]
+            pattern = ENVIRON["pattern"]
+
+            gsub( /[\n]+$/, "", data )
+            l = split(data, arr, "\n")
+
+            for (i=1; i<=l; ++i) {
+                if (index( arr[i], pattern ) <= 0) {
+                    print arr[i]
+                }
+            }
+
+            print prompt
+        }
+    '>"$fp"
+}
+
+___x_cmd_agent_setup(){
+    local all=
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m agent setup "$@" ; return 0 ;;
+            --all)          all=1; shift ;;
+            *)              break ;;
+        esac
+    done
+
+    # local prompt='Use x-cmd skill to access 300+ shell utilities, 1000+ packages—all without sudo, and discover various safe, human-vetted skills. Learn more: https://www.x-cmd.com/llms.txt'
+    local nosetupfp="$___X_CMD_ROOT_DATA/agent/preference/no-setup"
+    [ ! -f "$nosetupfp" ] || ___x_cmd rmrf "$nosetupfp" || N=agent M="Fail to remove $nosetupfp" log:ret:1
+
+    local x_=""
+    ___x_cmd_agent_setup___prepare_prompt_
+    local prompt="$x_"
+
+    local pattern='https://www.x-cmd.com/llms.txt'
+
+    local dir fp
+    while read -r dir fp; do
+        [ -n "$all" ] && ___x_cmd mkdirp "$dir"
+        ___x_cmd_agent_setup_addprompt "$dir" "$fp" "$pattern" "$prompt"
+    done <<A
+$HOME/.agents $HOME/.agents/AGENTS.md
+$HOME/.claude $HOME/CLAUDE.md
+$HOME/.codex $HOME/.codex/AGENTS.md
+$HOME/.gemini $HOME/.gemini/GEMINI.md
+$HOME/.config/opencode $HOME/.config/opencode/AGENTS.md
+A
+
+    agent:info "Add x-cmd skills to ~/.agents and other agent directories"
+    ___x_cmd_agent_setup___addskill_ln "$HOME/.agents"
+    while read -r dir; do
+        [ -d "$dir" ] || [ -n "$all" ] || {
+            local dir_tilde="~${dir#"$HOME"}"
+            agent:info \
+                --tip-1 "To create missing directories automatically -> x agent setup --all" \
+                --tip-1 "Or create the folder manually, then run again -> x mkdirp $dir_tilde && x agent setup" \
+                "Skip skill link because agent directory does not exist -> $dir_tilde"
+            continue
+        }
+        ___x_cmd_agent_setup___addskill_ln "$dir"
+    done<<A
+$HOME/.claude
+$HOME/.codex
+$HOME/.config/opencode
+$HOME/.openclaw
+A
+
+    local unify_list=
+    for fp in "$HOME/CLAUDE.md" "$HOME/.codex/AGENTS.md" "$HOME/.gemini/GEMINI.md" "$HOME/.config/opencode/AGENTS.md"; do
+        [ -e "$fp" ] || continue
+        local fp_tilde="~${fp#"$HOME"}"
+        unify_list="${unify_list:+$unify_list }$fp_tilde"
+    done
+
+    [ -n "$unify_list" ] && agent:info  \
+        --tip   "x agent unify"         \
+        "Consider unifying the $unify_list into one file."
+}
+
+___x_cmd_agent_is_setup(){
+    local pattern='https://www.x-cmd.com/llms.txt'
+    local dir fp
+
+    while read -r dir fp; do
+        [ -d "$dir" ] || continue
+        [ -f "$fp" ] && ___x_cmd_cmds grep -qF "$pattern" "$fp" 2>/dev/null || return 1
+    done <<A
+$HOME/.agents $HOME/.agents/AGENTS.md
+$HOME/.claude $HOME/CLAUDE.md
+$HOME/.codex $HOME/.codex/AGENTS.md
+$HOME/.gemini $HOME/.gemini/GEMINI.md
+$HOME/.config/opencode $HOME/.config/opencode/AGENTS.md
+A
+
+    while read -r dir; do
+        [ -d "$dir" ] || continue
+        [ -e "$dir/skills/skill0" ] || return 1
+    done <<A
+$HOME/.agents
+$HOME/.claude
+$HOME/.codex
+$HOME/.config/opencode
+$HOME/.openclaw
+A
+
+    return 0
+}
+
+___x_cmd_agent_setup___addskill_ln(){
+    local dir="$1"
+
+    local skill_to_add
+    local skill_name
+    local skill_folder
+
+    ___x_cmd mkdirp "$dir/skills"
+    ___x_cmd rmrf "$dir/skills/x-cmd"   # Now x-cmd skill is skill0 subskill.
+
+    while read -r skill_to_add; do
+        read -r skill_name
+        skill_folder="$dir/skills/$skill_name"
+        if [ -e "$skill_folder" ]; then
+            ___x_cmd rmrf "$skill_folder"
+        fi
+        ___x_cmd_cmds ln -sf "$skill_to_add" "$skill_folder"
+        # Gitbash will use copy in 'ln -s' . It is fine.
+    done <<A
+$___X_CMD_ROOT_MOD/skill0/lib/skill0
+skill0
+A
+
+}
+
+___x_cmd_agent_setup___prepare_prompt_(){
+    # NOTE: do NOT mark x_ as local — the caller relies on this function
+    # writing into its x_ via dynamic scope.
+    # x_='Use x-cmd to access meta skills like `x skill0`, or install 1000+ packages without sudo via `x install`.'
+
+    x_='x-cmd is a large POSIX shell library organized by modules; try `x help` or `x <mod> -h` for more options.'
+    x_="$x_"' Invoke `x` as an external command, or load it as a shell function: `___X_CMD_CLAUDECODE_READY=1 . ~/.x-cmd.root/X`.'
+
+    x_="$x_"' x-cmd installs skill0 into your agent skills folder — referred to below as <SKILL0-FOLDER>. The following subskills are HIGHLY recommended.'
+
+    # TODO: env control to activate the repos in need.
+    x_="$x_"' Use the repo subskill (<SKILL0-FOLDER>/core/repo/SKILL.md) with `x repo --help` for cross-agent repo sharing (avoids duplicate downloads) — repos at `~/.x-repo/<provider>/<owner>/<repo>`, named worktrees under `~/.x-repo/<provider>/<owner>/<repo>@<wtname>`.'
+    # x_="$x_"' Use the rule subskill (<SKILL0-FOLDER>/core/rule/SKILL.md) with `x rule --help` for rule-based compliance checks (find problems, ensure minimum quality) via *.rule.yml files.'
+
+    x_="$x_"' Learn more at https://www.x-cmd.com/llms.txt or in <SKILL0-FOLDER>/core/x-cmd/SKILL.md.'
+}

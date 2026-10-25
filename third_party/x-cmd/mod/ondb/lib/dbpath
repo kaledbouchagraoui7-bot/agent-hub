@@ -1,0 +1,22 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_dbpath(){
+    local dir=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb dbpath "$@" ; return 0 ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    ___x_cmd_ondb_db_path "$dir"
+    if [ -n "$x_" ]; then
+        printf '%s\n' "$x_"
+    else
+        N=ondb M="No SQLite database found. Enable sqlite mode first." log:ret:1
+        return 1
+    fi
+}

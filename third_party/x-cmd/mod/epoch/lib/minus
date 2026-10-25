@@ -1,0 +1,31 @@
+
+# shellcheck shell=dash
+
+___x_cmd_epoch_minus(){
+    local x_=""
+    ___x_cmd_epoch_minus_ "$@" || return $?
+    printf "%s\n" "$x_"
+}
+
+___x_cmd_epoch_minus_(){
+    local is_human=""
+
+    case "$1" in
+        -H)         is_human=1 ; shift ;;
+    esac
+
+    local a b
+    case "$#" in
+        0)  ___x_cmd_epoch_get_ ; a="$x_" ; b=0 ;;
+        1)  ___x_cmd_epoch_get_ ; a="$x_" ; b="$1" ;;
+        2)  a="$1" ; b="$2" ;;
+        *)  N=epoch M="Usage: x epoch minus [-H] [a] [b]" log:ret:64 ;;
+    esac
+
+    x_=$(( ${a%.*} - ${b%.*}))
+
+    if [ "$is_human" = 1 ]; then
+        ___x_cmd humantime sec_ "$x_"
+    fi
+}
+

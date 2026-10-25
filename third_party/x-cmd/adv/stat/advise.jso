@@ -1,0 +1,224 @@
+{
+"#name"
+:
+{
+"stat"
+:
+{
+"en"
+:
+"Display file or filesystem status"
+,
+"zh"
+:
+"显示文件或文件系统状态"
+}
+}
+,
+"#synopsis"
+:
+[
+{
+"x stat [file]"
+:
+null
+}
+,
+{
+"x stat -f [filesystem]"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"en"
+:
+"Display file or filesystem status information.\nShows detailed metadata including permissions, ownership, size, \ntimestamps, and other file attributes.\n"
+,
+"zh"
+:
+"显示文件或文件系统的状态信息。\n显示详细的元数据，包括权限、所有者、大小、时间戳和其他文件属性。\n"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"file"
+,
+"zh"
+:
+"文件"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__file"
+}
+,
+"-j|--json"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Output in JSON format"
+,
+"zh"
+:
+"以 JSON 格式输出"
+}
+}
+,
+"-c|--csv"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Output in CSV format"
+,
+"zh"
+:
+"以 CSV 格式输出"
+}
+}
+,
+"-t|--tsv"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Output in TSV format"
+,
+"zh"
+:
+"以 TSV 格式输出"
+}
+}
+,
+"--app"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"View with interactive UI"
+,
+"zh"
+:
+"使用交互式 UI 查看"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x stat"
+,
+"en"
+:
+"Example: View details of all files in current path using TUI"
+,
+"zh"
+:
+"示例: 以 TUI 方式查看当前路径下所有文件的详细信息"
+}
+,
+{
+"cmd"
+:
+"x stat file.txt"
+,
+"en"
+:
+"Example: View detailed status of file.txt"
+,
+"zh"
+:
+"示例: 查看 file.txt 的详细状态信息"
+}
+,
+{
+"cmd"
+:
+"x stat -f /"
+,
+"en"
+:
+"Example: Display filesystem status of root directory"
+,
+"zh"
+:
+"示例: 显示根目录的文件系统状态"
+}
+,
+{
+"cmd"
+:
+"x stat -j file.txt"
+,
+"en"
+:
+"Example: Output file status in JSON format"
+,
+"zh"
+:
+"示例: 以 JSON 格式输出文件状态"
+}
+,
+{
+"cmd"
+:
+"x stat --app"
+,
+"en"
+:
+"Example: Launch interactive UI to browse file status"
+,
+"zh"
+:
+"示例: 启动交互式 UI 浏览文件状态"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com/mod/stat"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com/mod/stat"
+}
+}
+}
+

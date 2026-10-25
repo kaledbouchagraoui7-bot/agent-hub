@@ -1,0 +1,98 @@
+# x find [prune-args] [--] <path> [find-expr]
+
+___x_cmd_find_better(){
+    [ $# -gt 0 ]    ||  set -- --help
+
+    local ___X_CMD_FIND_PRUNE="${___X_CMD_FIND_PRUNE}"
+    local ___X_CMD_FIND_HOMEPRUNE="${___X_CMD_FIND_HOMEPRUNE}"
+    local ___X_CMD_FIND_UNHIDE="${___X_CMD_FIND_UNHIDE}"
+
+    local homeprune=1
+    local hint=""
+    local prune_hidden=1
+    local dryrun=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)          ___x_cmd help -m find better "$@" ;     return 0    ;;
+
+            --prune)            ___x_cmd_find_prune_add_multi "$2" ;    shift 2     ;;
+            --unhide)           ___x_cmd_find_unhide_add_multi "$2" ;   shift 2     ;;
+            --unhide-all)       prune_hidden="" ;                       shift       ;;
+            --reset-prune)      ___X_CMD_FIND_PRUNE=""
+                                shift ;;
+            --no-homeprune)     homeprune="" ;                          shift       ;;
+            --verbose|-v)       hint=1 ;                                shift       ;;
+            --dryrun)           dryrun=1 ;                              shift       ;;
+
+            --)                 shift ; break ;;
+            *)                  break ;;
+        esac
+    done
+
+    [ $# -gt 0 ]    ||          N=find M="No find expression provided. Run 'x find --help' for usage." log:ret:64
+
+    local rootfp="$1" ;
+    case "$rootfp" in
+        -*)     rootfp="." ;;
+        *)      shift ;;
+    esac
+
+    [ -z "$homeprune" ]    || ___x_cmd_find_homeprune "$rootfp"
+
+    if [ -z "${prune_hidden}${___X_CMD_FIND_PRUNE}${___X_CMD_FIND_HOMEPRUNE}" ]; then
+        ___x_cmd_find___cmd "$rootfp" "$@"
+        return $?
+    fi
+
+    local x_
+    ___x_cmd_find_prune_expr "$rootfp" "$prune_hidden"
+    [ -n "$x_" ] || {
+        ___x_cmd_find___cmd "$rootfp" "$@"
+        return $?
+    }
+
+    eval "set -- ${x_} \"\$@\""
+
+    if [ -n "$hint" ]; then
+        if [ -n "$prune_hidden" ]; then
+            local unhide_info=""
+            [ -z "$___X_CMD_FIND_UNHIDE" ] || {
+                ___x_cmd pipevar ___X_CMD_FIND_UNHIDE   ___x_cmd line join_ ' '
+                unhide_info=" (unhide: $x_)"
+            }
+            find:info "Prune hidden directories${unhide_info}"
+        fi
+
+        if [ -n "$___X_CMD_FIND_PRUNE" ]; then
+            ___x_cmd pipevar ___X_CMD_FIND_PRUNE   ___x_cmd line join_ ' '
+            find:info "Prune patterns -> $x_"
+        fi
+
+        if [ -n "$___X_CMD_FIND_HOMEPRUNE" ]; then
+            ___x_cmd pipevar ___X_CMD_FIND_HOMEPRUNE   ___x_cmd line join_ ' '
+            find:info "Home prune directories -> $x_"
+        fi
+    fi
+
+    if [ -n "$dryrun" ]; then
+        ___x_cmd_find_better___cmdstr_ find "$rootfp" "$@"
+        find:info "Command: $x_"
+        return 0
+    fi
+
+    ___x_cmd_find___cmd "$rootfp" "$@"
+}
+
+___x_cmd_find_better___cmdstr_(){
+    local res=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            *"'"*|*"("*|*")"*|*"!"*|*" "*|*"*"*|*"?"*|*"$___X_CMD_UNSEENCHAR_NEWLINE"*)
+                        ___x_cmd shq1_ "$1" ; res="${res}${x_} " ;;
+            *)          res="${res}${1} " ;;
+        esac
+        shift
+    done
+    x_="$res"
+}

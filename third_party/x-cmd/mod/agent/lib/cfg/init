@@ -1,0 +1,462 @@
+# shellcheck shell=dash
+
+
+# TODO: x-minimax-2.5, x-glm5, x-glm4.7, x-kimi-2.5, x-gpt, x-gemini, x-hub
+___x_cmd_agent_init(){
+    local is_full=0
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m agent init; return ;;
+            --full)     is_full=1; shift ;;
+            *)          shift ;;
+        esac
+    done
+    ___x_cmd_runmode_allow_manual || {
+        agent:error "agent init requires interactive mode"
+        return 1
+    }
+
+    agent:info "Setting up your default AI tool for x agent"
+    agent:debug "Tip: run 'x agent init --full' to see all available tools"
+    local cur_harness=""
+    if [ -f "$(___x_cmd_agent_cur --get config)" ]; then
+        ___x_cmd_agent_cur cur_harness:=zero_harness
+    fi
+
+
+    local default_harness=""; local x_=""
+    if [ "$is_full" -eq 1 ]; then
+        ___x_cmd_agent_init___full_ || return $?
+    else
+        ___x_cmd_agent_init___minimal_ || return $?
+    fi
+    default_harness="$x_"
+
+    [ -n "$default_harness" ] || {
+        if [ -n "$cur_harness" ]; then
+            agent:info "Keeping current default AI tool - $cur_harness"
+            return 0
+        else
+            agent:error "No AI tool was selected. Run 'x agent init' to try again."
+            return 1
+        fi
+    }
+
+    agent:info "Saving default AI tool as $default_harness"
+    ___x_cmd_agent_cfg --set zero_harness="$default_harness" || return $?
+    agent:info "Default AI tool set to $default_harness"
+}
+
+___x_cmd_agent_init___full_(){
+    local default_harness=""
+    local rc=0
+    while :; do
+        log:sub:init -i "agent-tool" agent "Selecting an agent tool"
+        default_harness="$( ___x_cmd pick --ask "Select an agent tool" --datafile "$___X_CMD_ROOT_MOD/agent/lib/data/agent_provider_full_$___X_CMD_LANG" )"
+        [ -n "$default_harness" ] || {
+            agent:error "No agent tool selected"
+            rc=1
+            break
+        }
+
+        default_harness="${default_harness%% *}"
+        agent:info "Selected agent tool - $default_harness"
+
+        if ___x_cmd_agent_init___check_harness "$default_harness"; then
+            x_="$default_harness"
+            break
+        else
+            local choice=""
+            ___x_cmd ui select choice "$default_harness setup failed. What would you like to do?" \
+                "Go back and select another option" \
+                "Cancel initialization" || { rc=$?; break; }
+
+            case "$choice" in
+                1) log:sub:fini; continue ;;
+                *) rc=1; break ;;
+            esac
+        fi
+    done
+    log:sub:fini
+    return $rc
+}
+
+___x_cmd_agent_init___minimal_(){
+    agent:info "Using Claude Code as the default tool"
+
+    local provider=""
+    provider="$( ___x_cmd pick --ask "Choose a Claude Code provider" --datafile "$___X_CMD_ROOT_MOD/agent/lib/data/claude_provider_minimal_$___X_CMD_LANG" )"
+    [ -n "$provider" ] || {
+        agent:error "No provider selected"
+        return 1
+    }
+
+    provider="${provider%% *}"
+    case "$provider" in
+        More*)      ___x_cmd_agent_init___full_ || return $? ;;
+        Skip)       agent:info "Agent initialization skipped"; return 0 ;;
+        claude)     ___x_cmd_agent_init___minimal_claude_ || return $? ;;
+        *)          ___x_cmd_agent_init___minimal_thirdparty_ "claude-$provider" || return $? ;;
+    esac
+}
+
+___x_cmd_agent_init___minimal_claude_(){
+    agent:info "Setting up Claude Code with Anthropic official"
+
+    if ! ___x_cmd hascmd claude; then
+        agent:warn "Claude Code is not installed"
+        ___x_cmd ui yesno "Install Claude Code now?" || return $?
+        agent:info "Installing Claude Code..."
+        ___x_cmd env use claude-code || {
+            agent:error "Failed to install Claude Code"
+            return 1
+        }
+    fi
+
+    ___x_cmd_agent_init___check_harness claude || return $?
+    x_="claude"
+}
+
+___x_cmd_agent_init___minimal_thirdparty_(){
+    local provider="$1"
+    [ -n "$provider" ] || {
+        agent:error "No provider specified"
+        return 1
+    }
+
+    agent:info "Configuring Claude Code provider - $provider"
+    local subcmd="${provider#claude-}"
+    ___x_cmd claude "$subcmd" --cfg --minimal-init || {
+        agent:error "Failed to configure $provider"
+        return 1
+    }
+
+    x_="$provider"
+}
+
+___x_cmd_agent_init___harness_isready(){
+    local harness="$1"
+    agent:debug "Checking harness readiness (non-interactive) - $harness"
+
+    case "$harness" in
+        claude)
+            if ___x_cmd_agent_init___check_claude_version; then
+                ___x_cmd_agent_init___check_claude_login___auth
+            else
+                ___x_cmd_agent_init___check_claude_login___fp
+            fi
+            ;;
+        claude-*)
+            local subcmd="${harness#claude-}"
+            ___x_cmd_agent_init___check_claude_version || return 0
+            ___x_cmd_agent_init___check_claude_login___auth "$subcmd"
+            ;;
+        codex|codex-ds)
+            local codex_login_subcmd=""
+            case "$harness" in
+                codex-ds)   codex_login_subcmd="ds" ;;
+            esac
+            ___x_cmd hascmd codex || return 1
+            [ "$( ___x_cmd codex ${codex_login_subcmd:+"$codex_login_subcmd"} -- login status 2>&1 )" != "Not logged in" ]
+            ;;
+        cursor)
+            { ___x_cmd hascmd cursor || ___x_cmd hascmd agent; } || return 1
+            [ "$( ___x_cmd_agent_request___cursor_runcmd status --format json | ___x_cmd jo .isAuthenticated )" = "true" ]
+            ;;
+        gemini-cli)
+            ___x_cmd hascmd gemini || return 1
+            [ -n "$GEMINI_API_KEY" ] || ___x_cmd gemini --has-apikey
+            ;;
+        opencode)
+            ___x_cmd hascmd opencode || return 1
+            [ -f "$HOME/.local/share/opencode/auth.json" ]
+            ;;
+        kimi-cli)
+            ___x_cmd hascmd kimi-cli || return 1
+            [ -f "$HOME/.kimi/config.toml" ]
+            ;;
+        x-chat)
+            ___x_cmd chat --isready >/dev/null 2>&1
+            ;;
+        *)  return 0 ;;
+    esac
+}
+
+___x_cmd_agent_init___check_harness(){
+    local default_harness="$1"
+    agent:info "Checking harness status - $default_harness"
+
+    if ! ___x_cmd_runmode_allow_manual; then
+        ___x_cmd_agent_init___harness_isready "$default_harness"
+        return $?
+    fi
+
+    local style_warn style_error style_end
+    style_warn="$(___x_cmd ui style yellow)"
+    style_error="$(___x_cmd ui style red)"
+    style_end="$(___x_cmd ui style end)"
+
+    case "$default_harness" in
+        claude)
+            if ___x_cmd_agent_init___check_claude_version; then
+                if ! ___x_cmd_agent_init___check_claude_login___auth; then
+                    agent:warn "Claude Code is not logged in"
+                    printf >&2 "%s\n" ""
+                    printf >&2 "${style_warn}%s${style_end}\n" "  Claude Code needs to authenticate before use."
+                    printf >&2 "%s\n" "  This will open a browser to complete OAuth login."
+                    printf >&2 "%s\n" "  Would you like to log in now?"
+                    printf >&2 "%s\n" ""
+                    ___x_cmd ui yesno "Log in to Claude now?" || return $?
+                    agent:info "Logging in to Claude..."
+                    ___x_cmd claude auth login || {
+                        agent:error "Claude login failed"
+                        return 1
+                    }
+                    ___x_cmd_agent_init___check_claude_login___auth
+                fi
+            else
+                agent:info "Claude version is older than 2.1.41, checking local settings file - $fp"
+                if ! ___x_cmd_agent_init___check_claude_login___fp; then
+                    agent:warn "Claude is not logged in"
+                    return 1
+                fi
+            fi
+            ;;
+        claude-*)
+            local subcmd="${default_harness#claude-}"
+            log:sub:init -i "claude-$subcmd" agent "Configuring Claude provider"
+            ___x_cmd claude "$subcmd" --cfg || {
+                agent:error "Claude-$subcmd configuration failed"
+                return 1
+            }
+
+            if ___x_cmd_agent_init___check_claude_version; then
+                agent:info "Rechecking Claude-$subcmd authentication status"
+                if ! ___x_cmd_agent_init___check_claude_login___auth "$subcmd"; then
+                    agent:warn "Claude-$subcmd is not logged in or API key is not configured"
+                    printf >&2 "${style_error}%s${style_end}\n" "  Failed to configure Claude for '$subcmd'."
+                    printf >&2 "%s\n" "  Please check your API key setup."
+                    return 1
+                fi
+            fi
+            log:sub:fini
+            ;;
+        codex|codex-ds)
+            local codex_login_subcmd=""
+            case "$harness" in
+                codex-ds)   codex_login_subcmd="ds" ;;
+            esac
+            ___x_cmd hascmd codex || ___x_cmd env use codex || return $?
+            if [ "$( ___x_cmd codex ${codex_login_subcmd:+"$codex_login_subcmd"} -- login status 2>&1 )" = "Not logged in" ]; then
+                agent:warn "Codex is not logged in"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  Codex: You are not logged in."
+                printf >&2 "%s\n" "  Would you like to log in now?"
+                printf >&2 "%s\n" ""
+                ___x_cmd ui yesno "Log in to Codex now?" || return $?
+                agent:info "Logging in to Codex..."
+                ___x_cmd codex login || {
+                    agent:error "Codex login failed"
+                    return 1
+                }
+            fi
+            ;;
+        cursor)
+            ___x_cmd hascmd cursor || ___x_cmd hascmd agent || {
+                agent:warn "Cursor Agent is not installed"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  Cursor Agent is not installed."
+                printf >&2 "%s\n" "  Would you like me to install it for you?"
+                printf >&2 "%s\n" ""
+                ___x_cmd ui yesno "Install Cursor Agent now?" || return $?
+                agent:info "Installing Cursor Agent..."
+                ___x_cmd install --cat cursor || return $?
+                ___x_cmd install cursor || {
+                    agent:error "Failed to install Cursor Agent"
+                    return 1
+                }
+                agent:info "Cursor Agent installed successfully"
+            }
+
+            if [ "$( ___x_cmd_agent_request___cursor_runcmd status --format json | ___x_cmd jo .isAuthenticated )" != "true" ]; then
+                agent:warn "Cursor is not logged in"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  Cursor: You are not logged in."
+                printf >&2 "%s\n" "  Would you like to authenticate now?"
+                printf >&2 "%s\n" ""
+                ___x_cmd ui yesno "Log in to Cursor now?" || return $?
+                agent:info "Logging in to Cursor..."
+                ___x_cmd_agent_request___cursor_runcmd login || {
+                    agent:error "Cursor login failed"
+                    return 1
+                }
+            fi
+            ;;
+        gemini-cli)
+            ___x_cmd hascmd gemini || {
+                agent:warn "Gemini CLI is not installed"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  Gemini CLI is not installed."
+                printf >&2 "%s\n" "  Would you like me to install it for you?"
+                printf >&2 "%s\n" ""
+                ___x_cmd ui yesno "Install Gemini CLI now?" || return $?
+                agent:info "Installing Gemini CLI..."
+                ___x_cmd env use gemini-cli  || {
+                    agent:error "Failed to install Gemini CLI"
+                    return 1
+                }
+                agent:info "Gemini CLI installed successfully"
+            }
+            [ -n "$GEMINI_API_KEY" ] || ___x_cmd gemini --has-apikey || {
+                agent:warn "Gemini API key is not configured"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  Gemini: API key is not configured."
+                printf >&2 "%s\n" "  Let's set it up interactively."
+                printf >&2 "%s\n" ""
+                ___x_cmd ui yesno "Configure Gemini API key now?" || return $?
+                agent:info "Setting up Gemini..."
+                ___x_cmd gemini init || {
+                    agent:error "Gemini setup failed"
+                    return 1
+                }
+            }
+            ;;
+        opencode)
+            ___x_cmd hascmd opencode || {
+                agent:warn "Opencode is not installed"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  Opencode is not installed."
+                printf >&2 "%s\n" "  Would you like me to install it for you?"
+                printf >&2 "%s\n" ""
+                ___x_cmd ui yesno "Install Opencode now?" || return $?
+                agent:info "Installing Opencode..."
+                ___x_cmd env use opencode || {
+                    agent:error "Failed to install Opencode"
+                    return 1
+                }
+                agent:info "Opencode installed successfully"
+            }
+
+            [ -f "$HOME/.local/share/opencode/auth.json" ] || {
+                agent:warn "Opencode is not authenticated"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  Opencode: You are not authenticated."
+                printf >&2 "%s\n" "  Let's log you in."
+                printf >&2 "%s\n" ""
+                ___x_cmd ui yesno "Log in to Opencode now?" || return $?
+                agent:info "Logging in to Opencode..."
+                ___x_cmd opencode auth login || {
+                    agent:error "Opencode login failed"
+                    return 1
+                }
+            }
+            ;;
+        kimi-cli)
+            ___x_cmd hascmd kimi-cli || {
+                agent:warn "Kimi CLI is not installed"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  Kimi CLI is not installed."
+                printf >&2 "%s\n" "  Would you like me to install it for you?"
+                printf >&2 "%s\n" ""
+                ___x_cmd ui yesno "Install Kimi CLI now?" || return $?
+                agent:info "Installing Kimi CLI..."
+                ___x_cmd kimi --install || {
+                    agent:error "Failed to install Kimi CLI"
+                    return 1
+                }
+                agent:info "Kimi CLI installed successfully"
+            }
+
+            [ -f "$HOME/.kimi/config.toml" ] || {
+                agent:warn "Kimi CLI is not logged in"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  Kimi CLI: You are not logged in."
+                printf >&2 "%s\n" "  Let's get you authenticated."
+                printf >&2 "%s\n" ""
+                ___x_cmd ui yesno "Log in to Kimi CLI now?" || return $?
+                agent:info "Logging in to Kimi CLI..."
+                ___x_cmd kimi-cli login || {
+                    agent:error "Kimi CLI login failed"
+                    return 1
+                }
+            }
+            ;;
+        x-chat)
+            if ! ___x_cmd chat --isready >/dev/null 2>&1; then
+                agent:warn "x chat is not ready"
+                printf >&2 "%s\n" ""
+                printf >&2 "${style_warn}%s${style_end}\n" "  x chat is not configured."
+                printf >&2 "%s\n" "  Please run 'x chat init' to set up a provider."
+                printf >&2 "%s\n" ""
+                return 1
+            fi
+            ;;
+        *)
+            agent:info "Harness '$default_harness' does not require automatic setup"
+            ;;
+    esac
+
+    agent:info "Harness check completed - $default_harness"
+}
+
+
+___x_cmd_agent_init___check_claude_version(){
+    local target="2.1.41"
+    local x_=""; ___x_cmd claude --version_ || {
+        agent:error "Failed to detect Claude version"
+        return 1
+    }
+    local version="${x_%% *}"
+
+    agent:debug "Comparing Claude version - $version against $target"
+
+    local v1 v2
+    while [ -n "$version" ] || [ -n "$target" ]; do
+        v1="${version%%.*}"
+        if [ "$v1" = "$version" ]; then version=""; else version="${version#*.}"; fi
+        [ -n "$v1" ] || v1=0
+
+        v2="${target%%.*}"
+        if [ "$v2" = "$target" ]; then target=""; else target="${target#*.}"; fi
+        [ -n "$v2" ] || v2=0
+
+        case "$v1" in
+            ''|*[!0-9]*) return 0 ;;
+        esac
+
+        [ "$v1" -gt "$v2" ] && return 0
+        [ "$v1" -lt "$v2" ] && return 1
+    done
+
+    return 1
+}
+
+___x_cmd_agent_init___check_claude_login___auth(){
+    local subcmd="${1:-"--"}"
+    agent:debug "Checking Claude auth status (subcmd - $subcmd)"
+    local loggedIn=; loggedIn="$( ___x_cmd claude "$subcmd" auth status | ___x_cmd jo .loggedIn )"
+    if [ "$loggedIn" = "true" ]; then
+        agent:debug "Claude auth status - authenticated"
+        return 0
+    else
+        agent:debug "Claude auth status - not authenticated"
+        return 1
+    fi
+}
+
+___x_cmd_agent_init___check_claude_login___fp(){
+    local fp="$HOME/.claude/settings.json"
+    agent:debug "Checking Claude auth token in $fp"
+    [ -f "$fp" ] || {
+        agent:debug "Claude settings file not found - $fp"
+        return 1
+    }
+    local token; token="$( ___x_cmd jo .env.ANTHROPIC_AUTH_TOKEN < "$fp" )"
+    if [ -n "$token" ]; then
+        agent:debug "Claude auth token found"
+        return 0
+    else
+        agent:debug "Claude auth token missing in $fp"
+        return 1
+    fi
+}

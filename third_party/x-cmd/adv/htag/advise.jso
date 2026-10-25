@@ -1,0 +1,1608 @@
+{
+"#name"
+:
+{
+"htag"
+:
+null
+,
+"en"
+:
+"Host Tag Management"
+,
+"zh"
+:
+"主机 tag 管理"
+}
+,
+"info"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"print all tags"
+,
+"zh"
+:
+"打印所有 tag"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x htag info"
+,
+"en"
+:
+"print all tags"
+,
+"zh"
+:
+"打印所有 tag"
+,
+"de"
+:
+"alle Tags drucken"
+,
+"es"
+:
+"imprimir todas las etiquetas"
+,
+"fr"
+:
+"afficher toutes les étiquettes"
+,
+"it"
+:
+"stampa tutti i tag"
+,
+"pt"
+:
+"imprimir todas as tags"
+,
+"ru"
+:
+"вывести все теги"
+,
+"uk"
+:
+"вивести всі теги"
+,
+"ja"
+:
+"すべてのタグを表示"
+,
+"ko"
+:
+"모든 태그 출력"
+,
+"cs"
+:
+"vytisknout všechny štítky"
+,
+"pl"
+:
+"wyświetl wszystkie tagi"
+,
+"ro"
+:
+"afișează toate etichetele"
+,
+"tr"
+:
+"tüm etiketleri yazdır"
+,
+"vi"
+:
+"in tất cả các thẻ"
+,
+"th"
+:
+"พิมพ์แท็กทั้งหมด"
+,
+"id"
+:
+"cetak semua tag"
+}
+]
+}
+,
+"auto"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Automatically configure and print tags"
+,
+"zh"
+:
+"自动配置并打印 tag"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x htag auto"
+,
+"en"
+:
+"Automatically configure and print tags"
+,
+"zh"
+:
+"自动配置并打印 tag"
+,
+"de"
+:
+"Tags automatisch konfigurieren und drucken"
+,
+"es"
+:
+"Configurar e imprimir etiquetas automáticamente"
+,
+"fr"
+:
+"Configurer et afficher les étiquettes automatiquement"
+,
+"it"
+:
+"Configura e stampa i tag automaticamente"
+,
+"pt"
+:
+"Configurar e imprimir tags automaticamente"
+,
+"ru"
+:
+"Автоматически настроить и вывести теги"
+,
+"uk"
+:
+"Автоматично налаштувати та вивести теги"
+,
+"ja"
+:
+"タグを自動設定して表示"
+,
+"ko"
+:
+"태그를 자동으로 설정하고 출력"
+,
+"cs"
+:
+"Automaticky nakonfigurovat a vytisknout štítky"
+,
+"pl"
+:
+"Automatycznie skonfiguruj i wyświetl tagi"
+,
+"ro"
+:
+"Configurează și afișează automat etichetele"
+,
+"tr"
+:
+"Etiketleri otomatik yapılandır ve yazdır"
+,
+"vi"
+:
+"Tự động cấu hình và in thẻ"
+,
+"th"
+:
+"กำหนดค่าและพิมพ์แท็กอัตโนมัติ"
+,
+"id"
+:
+"Konfigurasi dan cetak tag secara otomatis"
+}
+]
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"print other tags"
+,
+"zh"
+:
+"查看额外添加的 tag"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x htag ls"
+,
+"en"
+:
+"print other tags"
+,
+"zh"
+:
+"查看额外添加的 tag"
+,
+"de"
+:
+"andere Tags drucken"
+,
+"es"
+:
+"imprimir otras etiquetas"
+,
+"fr"
+:
+"afficher les autres étiquettes"
+,
+"it"
+:
+"stampa altri tag"
+,
+"pt"
+:
+"imprimir outras tags"
+,
+"ru"
+:
+"вывести другие теги"
+,
+"uk"
+:
+"вивести інші теги"
+,
+"ja"
+:
+"追加のタグを表示"
+,
+"ko"
+:
+"추가 태그 출력"
+,
+"cs"
+:
+"vytisknout další štítky"
+,
+"pl"
+:
+"wyświetl dodatkowe tagi"
+,
+"ro"
+:
+"afișează celelalte etichete"
+,
+"tr"
+:
+"diğer etiketleri yazdır"
+,
+"vi"
+:
+"in các thẻ khác"
+,
+"th"
+:
+"พิมพ์แท็กอื่น ๆ"
+,
+"id"
+:
+"cetak tag lainnya"
+}
+]
+}
+,
+"add"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Add other tags"
+,
+"zh"
+:
+"添加额外的 tag"
+}
+,
+"#1"
+:
+null
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x htag tag x-cmd"
+,
+"en"
+:
+"Add 'x-cmd' tag"
+,
+"zh"
+:
+"添加 'x-cmd' tag"
+,
+"de"
+:
+"'x-cmd'-Tag hinzufügen"
+,
+"es"
+:
+"Añadir la etiqueta 'x-cmd'"
+,
+"fr"
+:
+"Ajouter l'étiquette 'x-cmd'"
+,
+"it"
+:
+"Aggiungi il tag 'x-cmd'"
+,
+"pt"
+:
+"Adicionar a tag 'x-cmd'"
+,
+"ru"
+:
+"Добавить тег 'x-cmd'"
+,
+"uk"
+:
+"Додати тег 'x-cmd'"
+,
+"ja"
+:
+"'x-cmd' タグを追加する"
+,
+"ko"
+:
+"'x-cmd' 태그 추가"
+,
+"cs"
+:
+"Přidat štítek 'x-cmd'"
+,
+"pl"
+:
+"Dodaj tag 'x-cmd'"
+,
+"ro"
+:
+"Adaugă eticheta 'x-cmd'"
+,
+"tr"
+:
+"'x-cmd' etiketi ekle"
+,
+"vi"
+:
+"thêm thẻ 'x-cmd'"
+,
+"th"
+:
+"เพิ่มแท็ก 'x-cmd'"
+,
+"id"
+:
+"tambahkan tag 'x-cmd'"
+}
+,
+{
+"cmd"
+:
+"x htag +x-cmd"
+,
+"en"
+:
+"Add 'x-cmd' tag"
+,
+"zh"
+:
+"添加 'x-cmd' tag"
+,
+"de"
+:
+"'x-cmd'-Tag hinzufügen"
+,
+"es"
+:
+"Añadir la etiqueta 'x-cmd'"
+,
+"fr"
+:
+"Ajouter l'étiquette 'x-cmd'"
+,
+"it"
+:
+"Aggiungi il tag 'x-cmd'"
+,
+"pt"
+:
+"Adicionar a tag 'x-cmd'"
+,
+"ru"
+:
+"Добавить тег 'x-cmd'"
+,
+"uk"
+:
+"Додати тег 'x-cmd'"
+,
+"ja"
+:
+"'x-cmd' タグを追加する"
+,
+"ko"
+:
+"'x-cmd' 태그 추가"
+,
+"cs"
+:
+"Přidat štítek 'x-cmd'"
+,
+"pl"
+:
+"Dodaj tag 'x-cmd'"
+,
+"ro"
+:
+"Adaugă eticheta 'x-cmd'"
+,
+"tr"
+:
+"'x-cmd' etiketi ekle"
+,
+"vi"
+:
+"thêm thẻ 'x-cmd'"
+,
+"th"
+:
+"เพิ่มแท็ก 'x-cmd'"
+,
+"id"
+:
+"tambahkan tag 'x-cmd'"
+}
+]
+}
+,
+"rm"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Remove other tags"
+,
+"zh"
+:
+"移除额外的 tag"
+}
+,
+"#1"
+:
+null
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x htag rm x-cmd"
+,
+"en"
+:
+"Remove 'x-cmd' tag"
+,
+"zh"
+:
+"移除 'x-cmd' tag"
+,
+"de"
+:
+"'x-cmd'-Tag entfernen"
+,
+"es"
+:
+"Eliminar la etiqueta 'x-cmd'"
+,
+"fr"
+:
+"Supprimer l'étiquette 'x-cmd'"
+,
+"it"
+:
+"Rimuovi il tag 'x-cmd'"
+,
+"pt"
+:
+"Remover a tag 'x-cmd'"
+,
+"ru"
+:
+"Удалить тег 'x-cmd'"
+,
+"uk"
+:
+"Видалити тег 'x-cmd'"
+,
+"ja"
+:
+"'x-cmd' タグを削除する"
+,
+"ko"
+:
+"'x-cmd' 태그 제거"
+,
+"cs"
+:
+"Odebrat štítek 'x-cmd'"
+,
+"pl"
+:
+"Usuń tag 'x-cmd'"
+,
+"ro"
+:
+"Elimină eticheta 'x-cmd'"
+,
+"tr"
+:
+"'x-cmd' etiketi kaldır"
+,
+"vi"
+:
+"xóa thẻ 'x-cmd'"
+,
+"th"
+:
+"ลบแท็ก 'x-cmd'"
+,
+"id"
+:
+"hapus tag 'x-cmd'"
+}
+,
+{
+"cmd"
+:
+"x htag -x-cmd"
+,
+"en"
+:
+"Remove 'x-cmd' tag"
+,
+"zh"
+:
+"移除 'x-cmd' tag"
+,
+"de"
+:
+"'x-cmd'-Tag entfernen"
+,
+"es"
+:
+"Eliminar la etiqueta 'x-cmd'"
+,
+"fr"
+:
+"Supprimer l'étiquette 'x-cmd'"
+,
+"it"
+:
+"Rimuovi il tag 'x-cmd'"
+,
+"pt"
+:
+"Remover a tag 'x-cmd'"
+,
+"ru"
+:
+"Удалить тег 'x-cmd'"
+,
+"uk"
+:
+"Видалити тег 'x-cmd'"
+,
+"ja"
+:
+"'x-cmd' タグを削除する"
+,
+"ko"
+:
+"'x-cmd' 태그 제거"
+,
+"cs"
+:
+"Odebrat štítek 'x-cmd'"
+,
+"pl"
+:
+"Usuń tag 'x-cmd'"
+,
+"ro"
+:
+"Elimină eticheta 'x-cmd'"
+,
+"tr"
+:
+"'x-cmd' etiketi kaldır"
+,
+"vi"
+:
+"xóa thẻ 'x-cmd'"
+,
+"th"
+:
+"ลบแท็ก 'x-cmd'"
+,
+"id"
+:
+"hapus tag 'x-cmd'"
+}
+]
+}
+,
+"has"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Verify if there is a specified tag in the other tags"
+,
+"zh"
+:
+"验证额外的 tag 中是否有指定的 tag"
+}
+,
+"#1"
+:
+null
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x htag has x-cmd"
+,
+"en"
+:
+"Verify if there are 'x-cmd' tags in the other tags"
+,
+"zh"
+:
+"验证额外的 tag 中是否有 'x-cmd' tag"
+,
+"de"
+:
+"Prüfen, ob es 'x-cmd'-Tags in den anderen Tags gibt"
+,
+"es"
+:
+"Verificar si hay etiquetas 'x-cmd' en las otras etiquetas"
+,
+"fr"
+:
+"Vérifier s'il existe des étiquettes 'x-cmd' dans les autres étiquettes"
+,
+"it"
+:
+"Verifica se ci sono tag 'x-cmd' negli altri tag"
+,
+"pt"
+:
+"Verificar se há tags 'x-cmd' nas outras tags"
+,
+"ru"
+:
+"Проверить, есть ли теги 'x-cmd' среди других тегов"
+,
+"uk"
+:
+"Перевірити, чи є теги 'x-cmd' серед інших тегів"
+,
+"ja"
+:
+"追加のタグに 'x-cmd' タグがあるかどうかを確認"
+,
+"ko"
+:
+"추가 태그에 'x-cmd' 태그가 있는지 확인"
+,
+"cs"
+:
+"Ověřit, zda jsou ve zbývajících štítcích štítky 'x-cmd'"
+,
+"pl"
+:
+"Sprawdź, czy w dodatkowych tagach są tagi 'x-cmd'"
+,
+"ro"
+:
+"Verifică dacă există etichete 'x-cmd' în celelalte etichete"
+,
+"tr"
+:
+"Diğer etiketlerde 'x-cmd' etiketleri olup olmadığını doğrula"
+,
+"vi"
+:
+"kiểm tra xem có thẻ 'x-cmd' trong các thẻ khác không"
+,
+"th"
+:
+"ตรวจสอบว่ามีแท็ก 'x-cmd' ในแท็กอื่นหรือไม่"
+,
+"id"
+:
+"verifikasi apakah ada tag 'x-cmd' di tag lainnya"
+}
+]
+}
+,
+"clear"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Clear all tags"
+,
+"zh"
+:
+"清除所有的 tag"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x htag clear"
+,
+"en"
+:
+"Clear all tags"
+,
+"zh"
+:
+"清除所有的 tag"
+,
+"de"
+:
+"alle Tags löschen"
+,
+"es"
+:
+"borrar todas las etiquetas"
+,
+"fr"
+:
+"effacer toutes les étiquettes"
+,
+"it"
+:
+"cancella tutti i tag"
+,
+"pt"
+:
+"limpar todas as tags"
+,
+"ru"
+:
+"Очистить все теги"
+,
+"uk"
+:
+"Очистити всі теги"
+,
+"ja"
+:
+"すべてのタグをクリア"
+,
+"ko"
+:
+"모든 태그 지우기"
+,
+"cs"
+:
+"vymazat všechny štítky"
+,
+"pl"
+:
+"wyczyść wszystkie tagi"
+,
+"ro"
+:
+"Șterge toate etichetele"
+,
+"tr"
+:
+"tüm etiketleri temizle"
+,
+"vi"
+:
+"xóa tất cả các thẻ"
+,
+"th"
+:
+"ล้างแท็กทั้งหมด"
+,
+"id"
+:
+"hapus semua tag"
+}
+]
+}
+,
+"server"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"print or set server tag"
+,
+"zh"
+:
+"打印或设置 server tag"
+}
+,
+"--unset"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"zh"
+:
+"删除server标签"
+,
+"en"
+:
+"remove server tag"
+}
+}
+,
+"prod"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"tag for production server"
+,
+"zh"
+:
+"生产环境服务器"
+}
+}
+,
+"test"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"tag for testing server"
+,
+"zh"
+:
+"测试环境服务器"
+}
+}
+,
+"dev"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"tag for development server"
+,
+"zh"
+:
+"开发环境服务器"
+}
+}
+,
+"key"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"key server"
+,
+"zh"
+:
+"关键服务器"
+}
+}
+,
+"build"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"tag for building server"
+,
+"zh"
+:
+"构建服务器"
+}
+}
+,
+"integration"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"tag for integration server"
+,
+"zh"
+:
+"集成开发服务器"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Other customized server tag"
+,
+"zh"
+:
+"其它服务器标签"
+}
+}
+}
+,
+"dn"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"print or set Domain Name tags"
+,
+"zh"
+:
+"打印或设置域名 tag"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Domain Name"
+,
+"zh"
+:
+"域名"
+}
+}
+,
+"--auto"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Obtain the local Domain Name as the Domain Name tag"
+,
+"zh"
+:
+"获取本机域名作为域名 tag"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x htag dn --auto"
+,
+"en"
+:
+"Obtain the local Domain Name as the Domain Name tag"
+,
+"zh"
+:
+"获取本机域名作为域名 tag"
+,
+"de"
+:
+"Lokalen Domain-Namen als Domain-Name-Tag erhalten"
+,
+"es"
+:
+"obtener el nombre de dominio local como etiqueta de nombre de dominio"
+,
+"fr"
+:
+"obtenir le nom de domaine local comme étiquette de nom de domaine"
+,
+"it"
+:
+"ottenere il nome di dominio locale come tag del nome di dominio"
+,
+"pt"
+:
+"obter o nome de domínio local como tag de nome de domínio"
+,
+"ru"
+:
+"получить локальное доменное имя в качестве тега доменного имени"
+,
+"uk"
+:
+"отримати локальне доменне ім'я як тег доменного імені"
+,
+"ja"
+:
+"ローカルのドメイン名をドメイン名 tag として取得"
+,
+"ko"
+:
+"로컬 도메인 이름을 도메인 이름 태그로 가져오기"
+,
+"cs"
+:
+"získat místní název domény jako štítek názvu domény"
+,
+"pl"
+:
+"pobierz lokalną nazwę domeny jako tag nazwy domeny"
+,
+"ro"
+:
+"obține numele de domeniu local ca etichetă de nume de domeniu"
+,
+"tr"
+:
+"yerel alan adını alan adı etiketi olarak al"
+,
+"vi"
+:
+"lấy tên miền cục bộ làm thẻ tên miền"
+,
+"th"
+:
+"รับชื่อโดเมนในเครื่องเป็นแท็กชื่อโดเมน"
+,
+"id"
+:
+"dapatkan nama domain lokal sebagai tag nama domain"
+}
+,
+{
+"cmd"
+:
+"x htag dn"
+,
+"en"
+:
+"print the current Domain Name tag"
+,
+"zh"
+:
+"打印当前域名 tag"
+,
+"de"
+:
+"aktuellen Domain-Name-Tag drucken"
+,
+"es"
+:
+"imprimir la etiqueta de nombre de dominio actual"
+,
+"fr"
+:
+"afficher l'étiquette de nom de domaine actuelle"
+,
+"it"
+:
+"stampa il tag del nome di dominio corrente"
+,
+"pt"
+:
+"imprimir a tag de nome de domínio atual"
+,
+"ru"
+:
+"вывести текущий тег доменного имени"
+,
+"uk"
+:
+"вивести поточний тег доменного імені"
+,
+"ja"
+:
+"現在のドメイン名 tag を表示"
+,
+"ko"
+:
+"현재 도메인 이름 태그 출력"
+,
+"cs"
+:
+"vytisknout aktuální štítek názvu domény"
+,
+"pl"
+:
+"wyświetl bieżący tag nazwy domeny"
+,
+"ro"
+:
+"afișează eticheta curentă de nume de domeniu"
+,
+"tr"
+:
+"geçerli alan adı etiketini yazdır"
+,
+"vi"
+:
+"in thẻ tên miền hiện tại"
+,
+"th"
+:
+"พิมพ์แท็กชื่อโดเมนปัจจุบัน"
+,
+"id"
+:
+"cetak tag nama domain saat ini"
+}
+,
+{
+"cmd"
+:
+"x htag dn test.lan"
+,
+"en"
+:
+"Set test.lan as Domain Name tag"
+,
+"zh"
+:
+"设置 test.lan 为域名 tag"
+,
+"de"
+:
+"test.lan als Domain-Name-Tag setzen"
+,
+"es"
+:
+"establecer test.lan como etiqueta de nombre de dominio"
+,
+"fr"
+:
+"définir test.lan comme étiquette de nom de domaine"
+,
+"it"
+:
+"imposta test.lan come tag del nome di dominio"
+,
+"pt"
+:
+"definir test.lan como tag de nome de domínio"
+,
+"ru"
+:
+"задать test.lan как тег доменного имени"
+,
+"uk"
+:
+"встановити test.lan як тег доменного імені"
+,
+"ja"
+:
+"test.lan をドメイン名 tag として設定"
+,
+"ko"
+:
+"test.lan을 도메인 이름 태그로 설정"
+,
+"cs"
+:
+"nastavit test.lan jako štítek názvu domény"
+,
+"pl"
+:
+"ustaw test.lan jako tag nazwy domeny"
+,
+"ro"
+:
+"setează test.lan ca etichetă de nume de domeniu"
+,
+"tr"
+:
+"test.lan değerini alan adı etiketi olarak ayarla"
+,
+"vi"
+:
+"đặt test.lan làm thẻ tên miền"
+,
+"th"
+:
+"ตั้งค่า test.lan เป็นแท็กชื่อโดเมน"
+,
+"id"
+:
+"atur test.lan sebagai tag nama domain"
+}
+]
+}
+,
+"ip"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"print or set IP tag"
+,
+"zh"
+:
+"打印或设置 IP tag"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"IP address"
+,
+"zh"
+:
+"IP 地址"
+}
+}
+,
+"--auto"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Obtain local IP as IP tag"
+,
+"zh"
+:
+"获取本机 IP 作为 IP tag"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x htag ip --auto"
+,
+"en"
+:
+"Obtain local IP as IP tag"
+,
+"zh"
+:
+"获取本机 IP 作为 IP tag"
+,
+"de"
+:
+"lokale IP als IP-Tag erhalten"
+,
+"es"
+:
+"obtener la IP local como etiqueta de IP"
+,
+"fr"
+:
+"obtenir l'IP locale comme étiquette IP"
+,
+"it"
+:
+"ottenere l'IP locale come tag IP"
+,
+"pt"
+:
+"obter o IP local como tag de IP"
+,
+"ru"
+:
+"получить локальный IP в качестве IP-тега"
+,
+"uk"
+:
+"отримати локальний IP як IP-тег"
+,
+"ja"
+:
+"ローカル IP を IP tag として取得"
+,
+"ko"
+:
+"로컬 IP를 IP 태그로 가져오기"
+,
+"cs"
+:
+"získat místní IP jako štítek IP"
+,
+"pl"
+:
+"pobierz lokalny IP jako tag IP"
+,
+"ro"
+:
+"obține IP-ul local ca etichetă IP"
+,
+"tr"
+:
+"yerel IP'yi IP etiketi olarak al"
+,
+"vi"
+:
+"lấy IP cục bộ làm thẻ IP"
+,
+"th"
+:
+"รับ IP ในเครื่องเป็นแท็ก IP"
+,
+"id"
+:
+"dapatkan IP lokal sebagai tag IP"
+}
+,
+{
+"cmd"
+:
+"x htag ip"
+,
+"en"
+:
+"print the current IP tag"
+,
+"zh"
+:
+"打印当前 IP tag"
+,
+"de"
+:
+"aktuellen IP-Tag drucken"
+,
+"es"
+:
+"imprimir la etiqueta de IP actual"
+,
+"fr"
+:
+"afficher l'étiquette IP actuelle"
+,
+"it"
+:
+"stampa il tag IP corrente"
+,
+"pt"
+:
+"imprimir a tag de IP atual"
+,
+"ru"
+:
+"вывести текущий IP-тег"
+,
+"uk"
+:
+"вивести поточний IP-тег"
+,
+"ja"
+:
+"現在の IP tag を表示"
+,
+"ko"
+:
+"현재 IP 태그 출력"
+,
+"cs"
+:
+"vytisknout aktuální štítek IP"
+,
+"pl"
+:
+"wyświetl bieżący tag IP"
+,
+"ro"
+:
+"afișează eticheta IP curentă"
+,
+"tr"
+:
+"geçerli IP etiketini yazdır"
+,
+"vi"
+:
+"in thẻ IP hiện tại"
+,
+"th"
+:
+"พิมพ์แท็ก IP ปัจจุบัน"
+,
+"id"
+:
+"cetak tag IP saat ini"
+}
+,
+{
+"cmd"
+:
+"x htag ip 127.0.0.1"
+,
+"en"
+:
+"Set 127.0.0.1 as IP tag"
+,
+"zh"
+:
+"设置 127.0.0.1 为 IP tag"
+,
+"de"
+:
+"127.0.0.1 als IP-Tag setzen"
+,
+"es"
+:
+"establecer 127.0.0.1 como etiqueta de IP"
+,
+"fr"
+:
+"définir 127.0.0.1 comme étiquette IP"
+,
+"it"
+:
+"imposta 127.0.0.1 come tag IP"
+,
+"pt"
+:
+"definir 127.0.0.1 como tag de IP"
+,
+"ru"
+:
+"задать 127.0.0.1 как IP-тег"
+,
+"uk"
+:
+"встановити 127.0.0.1 як IP-тег"
+,
+"ja"
+:
+"127.0.0.1 を IP tag として設定"
+,
+"ko"
+:
+"127.0.0.1을 IP 태그로 설정"
+,
+"cs"
+:
+"nastavit 127.0.0.1 jako štítek IP"
+,
+"pl"
+:
+"ustaw 127.0.0.1 jako tag IP"
+,
+"ro"
+:
+"setează 127.0.0.1 ca etichetă IP"
+,
+"tr"
+:
+"127.0.0.1 değerini IP etiketi olarak ayarla"
+,
+"vi"
+:
+"đặt 127.0.0.1 làm thẻ IP"
+,
+"th"
+:
+"ตั้งค่า 127.0.0.1 เป็นแท็ก IP"
+,
+"id"
+:
+"atur 127.0.0.1 sebagai tag IP"
+}
+]
+}
+,
+"--help|-h"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Get help"
+,
+"zh"
+:
+"获取帮助"
+}
+}
+}
+

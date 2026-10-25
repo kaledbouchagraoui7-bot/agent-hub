@@ -1,0 +1,45 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_link(){
+    local from="" rel="" to="" file="" dir="" no_schema=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb link "$@" ; return 0 ;;
+            --from)     from="$2"; arg:2:shift ;;
+            --rel)      rel="$2"; arg:2:shift ;;
+            --to)       to="$2"; arg:2:shift ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --no-schema) no_schema=1; shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    [ -n "$from" ] || { N=ondb M="--from is required" log:ret:64; return; }
+    [ -n "$rel" ]  || { N=ondb M="--rel is required" log:ret:64; return; }
+    [ -n "$to" ]   || { N=ondb M="--to is required" log:ret:64; return; }
+
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_write "$dir"
+        file="$x_"
+    else
+        file="ondb.tsv"
+    fi
+
+    local ms; ms="$( x epoch ms )"
+
+    local TAB; TAB="$(printf '\t')"
+    local line="link${TAB}${from}${TAB}${rel}${TAB}${to}${TAB}${ms}"
+
+    local prop key val
+    for prop in "$@"; do
+        key="${prop%%=*}"
+        val="${prop#*=}"
+        line="${line}${TAB}${key}${TAB}${val}"
+    done
+
+    printf '%s\n' "$line" >> "$file"
+    rm -f "${file%.tsv}.lines"
+    printf "linked\t%s --%s--> %s\n" "$from" "$rel" "$to"
+}

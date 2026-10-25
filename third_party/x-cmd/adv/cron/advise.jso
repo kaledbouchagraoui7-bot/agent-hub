@@ -1,0 +1,1124 @@
+{
+"#name"
+:
+{
+"cron"
+:
+null
+,
+"zh"
+:
+"Cron 定时任务管理"
+,
+"en"
+:
+"Cron job scheduler"
+}
+,
+"#synopsis"
+:
+[
+"x cron <subcmd> [options]"
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"轻量级 Cron 定时任务管理模块，支持添加、删除、列表、匹配测试。\n通过命名空间隔离任务，支持按命名空间设定时区。\n支持标准 cron 时间格式（分钟 小时 日 月 星期）。\n每个任务以目录形式存储，包含 cron 表达式、cmd 命令及可选 desc 描述。\n"
+,
+"en"
+:
+"Lightweight cron job scheduler with add, remove, list, and match testing.\nJobs are isolated by namespace with per-namespace timezone support.\nSupports standard cron time format (min hour day month dow).\nEach job is stored as a directory containing the cron pattern, cmd script,\nand optional description.\n"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"三者分工：cron 是循环定时任务调度（cron mission，内含多个 job）；bgjob 是一次性后台任务（run and finish）；worker 是常驻后台进程管理（如守护服务）。\n完整对比参见 x bgjob --help。\n"
+,
+"en"
+:
+"Three-way comparison: cron = recurring scheduled task (cron mission with multiple jobs); bgjob = one-shot background task; worker = persistent background process (e.g. daemon).\nSee x bgjob --help for full comparison.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x cron add --name myjob --desc \"say hello\" \"*/5 * * * *\" \"echo hello\""
+,
+"zh"
+:
+"示例: 添加一个每5分钟执行的带描述任务"
+,
+"en"
+:
+"Example: Add a described job that runs every 5 minutes"
+}
+,
+{
+"cmd"
+:
+"x cron add --once --name greeting \"0 9 * * *\" \"echo good morning\""
+,
+"zh"
+:
+"示例: 添加一个只执行一次的定时任务"
+,
+"en"
+:
+"Example: Add a one-time job"
+}
+,
+{
+"cmd"
+:
+"x cron ls"
+,
+"zh"
+:
+"示例: 列出所有任务"
+,
+"en"
+:
+"Example: List all jobs"
+}
+,
+{
+"cmd"
+:
+"x cron rm myjob"
+,
+"zh"
+:
+"示例: 删除任务"
+,
+"en"
+:
+"Example: Remove a job"
+}
+,
+{
+"cmd"
+:
+"x cron match \"*/5 * * * *\""
+,
+"zh"
+:
+"示例: 测试当前时间是否匹配 cron 表达式"
+,
+"en"
+:
+"Example: Test if current time matches a cron pattern"
+}
+,
+{
+"cmd"
+:
+"x cron match \"*/5 * * * *\" \"30 8 16 4 4\""
+,
+"zh"
+:
+"示例: 测试指定时间是否匹配 cron 表达式"
+,
+"en"
+:
+"Example: Test if a specific time matches a cron pattern"
+}
+,
+{
+"cmd"
+:
+"x cron tz Asia/Shanghai"
+,
+"zh"
+:
+"示例: 设置当前命名空间（DEFAULT）的调度时区"
+,
+"en"
+:
+"Example: Set scheduling timezone for the current namespace"
+}
+,
+{
+"cmd"
+:
+"x cron service start"
+,
+"zh"
+:
+"示例: 启动 cron 守护进程"
+,
+"en"
+:
+"Example: Start the cron daemon"
+}
+,
+{
+"cmd"
+:
+"x cron run --ns mynamespace"
+,
+"zh"
+:
+"示例: 前台调试指定命名空间的守护进程"
+,
+"en"
+:
+"Example: Debug daemon for a namespace in foreground"
+}
+,
+{
+"cmd"
+:
+"x cron runonce"
+,
+"zh"
+:
+"示例: 手动触发一次任务补跑"
+,
+"en"
+:
+"Example: Manually trigger a one-time job run"
+}
+,
+{
+"cmd"
+:
+"x cron exec myjob"
+,
+"zh"
+:
+"示例: 直接执行指定任务测试效果"
+,
+"en"
+:
+"Example: Execute a specific job directly for testing"
+}
+,
+{
+"cmd"
+:
+"x cron history myjob"
+,
+"zh"
+:
+"示例: 查看任务最近一次执行的详情"
+,
+"en"
+:
+"Example: View the latest execution details for a job"
+}
+,
+{
+"cmd"
+:
+"x cron history myjob 1715673705"
+,
+"zh"
+:
+"示例: 查看指定时间戳的执行详情"
+,
+"en"
+:
+"Example: View execution details for a specific timestamp"
+}
+]
+,
+"#subcmd:Job"
+:
+[
+"add"
+,
+"rm"
+,
+"ls|list"
+,
+"match"
+]
+,
+"#subcmd:Run"
+:
+[
+"run"
+,
+"runonce"
+,
+"exec"
+]
+,
+"#subcmd:History"
+:
+[
+"history"
+]
+,
+"#subcmd:Config"
+:
+[
+"tz"
+]
+,
+"#subcmd:Service"
+:
+[
+"service"
+]
+,
+"add"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"添加一个 cron 任务"
+,
+"en"
+:
+"Add a cron job"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"不确定 cron 表达式写得对不对？先用 x cron match 测试一下"
+,
+"en"
+:
+"Not sure if your cron expression is correct? Test it with x cron match first"
+}
+]
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间（默认 DEFAULT）"
+,
+"en"
+:
+"Specify the namespace (default DEFAULT)"
+}
+,
+"#1"
+:
+null
+}
+,
+"--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定任务名称（必须唯一）"
+,
+"en"
+:
+"Specify the job name (must be unique)"
+}
+,
+"#1"
+:
+null
+}
+,
+"--desc"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"任务描述"
+,
+"en"
+:
+"Job description"
+}
+,
+"#1"
+:
+null
+}
+,
+"--once"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"只执行一次，执行后自动删除"
+,
+"en"
+:
+"Run only once, auto-delete after execution"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"cron 时间表达式（分钟 小时 日 月 星期）"
+,
+"en"
+:
+"Cron time expression (min hour day month dow)"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"要执行的命令"
+,
+"en"
+:
+"Command to execute"
+}
+}
+}
+,
+"rm"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"删除指定任务"
+,
+"en"
+:
+"Remove a job by name"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"删除前想确认任务内容？用 x cron ls 先查看"
+,
+"en"
+:
+"Want to confirm before deleting? Check with x cron ls first"
+}
+]
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间（默认 DEFAULT）"
+,
+"en"
+:
+"Specify the namespace (default DEFAULT)"
+}
+,
+"#1"
+:
+null
+}
+,
+"--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"任务名称"
+,
+"en"
+:
+"Job name"
+}
+,
+"#1"
+:
+null
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"任务名称（兼容用法，推荐用 --name）"
+,
+"en"
+:
+"Job name (legacy positional, prefer --name)"
+}
+}
+}
+,
+"ls|list"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出当前命名空间下的所有任务（TSV 格式：名称 表达式 描述 一次性 上次开始 上次结束 上次状态 上次退出码 命令）"
+,
+"en"
+:
+"List all jobs in the current namespace (TSV: name pattern desc once last_start last_end last_status last_exit_code cmd)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"TSV 输出，适合管道处理；结合 x cron ls | grep 快速筛选任务"
+,
+"en"
+:
+"TSV output, pipe-friendly; combine with x cron ls | grep to filter jobs"
+}
+]
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间（默认 DEFAULT）"
+,
+"en"
+:
+"Specify the namespace (default DEFAULT)"
+}
+,
+"#1"
+:
+null
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出"
+,
+"en"
+:
+"Output in TSV format"
+}
+}
+,
+"--auto"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"自动判断输出格式"
+,
+"en"
+:
+"Auto-detect output format"
+}
+}
+}
+,
+"match"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"测试指定时间是否匹配 cron 表达式（默认使用当前时间）"
+,
+"en"
+:
+"Test if a time matches a cron pattern (uses current time by default)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"写好 cron 表达式后先 match 一下验证，再 add 到任务列表"
+,
+"en"
+:
+"Test your cron expression with match before adding it as a job"
+}
+]
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"cron 时间表达式"
+,
+"en"
+:
+"Cron time expression"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"测试时间（格式：分 时 日 月 星期），省略则使用当前时间"
+,
+"en"
+:
+"Time to test (format: min hour day month dow), defaults to current time"
+}
+}
+}
+,
+"tz"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"配置任务调度时区（省略参数时查看当前配置）"
+,
+"en"
+:
+"Configure the timezone for job scheduling"
+}
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间（默认 DEFAULT）"
+,
+"en"
+:
+"Specify the namespace (default DEFAULT)"
+}
+,
+"#1"
+:
+null
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"时区名称（如 Asia/Shanghai、CST-8），省略则查看当前配置"
+,
+"en"
+:
+"Timezone name (e.g. Asia/Shanghai, CST-8), omit to show current setting"
+}
+}
+}
+,
+"run"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"前台运行 cron 守护进程（循环执行，每分钟检查并运行匹配任务）"
+,
+"en"
+:
+"Run the cron daemon in the foreground (loop, check and run matching jobs every minute)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"调试用，前台运行可看实时输出；生产环境用 x cron service start 后台启动"
+,
+"en"
+:
+"For debugging, foreground shows real-time output; for production use x cron service start"
+}
+]
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间（默认 DEFAULT）"
+,
+"en"
+:
+"Specify the namespace (default DEFAULT)"
+}
+,
+"#1"
+:
+null
+}
+,
+"--fp"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定任务列表目录路径"
+,
+"en"
+:
+"Specify the job list directory path"
+}
+,
+"#1"
+:
+null
+}
+}
+,
+"runonce"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"立即执行当前时间匹配的所有任务（单次执行，不循环）"
+,
+"en"
+:
+"Execute all jobs matching the current time once (no loop)"
+}
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间（默认 DEFAULT）"
+,
+"en"
+:
+"Specify the namespace (default DEFAULT)"
+}
+,
+"#1"
+:
+null
+}
+,
+"--fp"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定任务列表目录路径"
+,
+"en"
+:
+"Specify the job list directory path"
+}
+,
+"#1"
+:
+null
+}
+}
+,
+"history"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看任务的执行详情（省略时间戳时显示最近一次）"
+,
+"en"
+:
+"View execution details for a cron job (shows latest if timestamp omitted)"
+}
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间（默认 DEFAULT）"
+,
+"en"
+:
+"Specify the namespace (default DEFAULT)"
+}
+,
+"#1"
+:
+null
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"任务名称"
+,
+"en"
+:
+"Job name"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"执行时间戳（unix epoch），省略则显示最近一次"
+,
+"en"
+:
+"Execution timestamp (unix epoch), omit to show latest"
+}
+}
+}
+,
+"exec"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"直接执行指定任务的命令（忽略 cron 时间匹配，用于测试）"
+,
+"en"
+:
+"Execute a specific job's command directly (ignoring cron time match, for testing)"
+}
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间（默认 DEFAULT）"
+,
+"en"
+:
+"Specify the namespace (default DEFAULT)"
+}
+,
+"#1"
+:
+null
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"任务名称"
+,
+"en"
+:
+"Job name"
+}
+}
+}
+,
+"service"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"管理 cron 守护进程"
+,
+"en"
+:
+"Manage the cron daemon"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"守护进程意外停止？用 x cron service status 检查，service log 查看日志"
+,
+"en"
+:
+"Daemon stopped unexpectedly? Check with x cron service status, inspect logs with service log"
+}
+]
+,
+"start"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"启动 cron 守护进程"
+,
+"en"
+:
+"Start the cron daemon"
+}
+}
+,
+"stop"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"停止 cron 守护进程"
+,
+"en"
+:
+"Stop the cron daemon"
+}
+}
+,
+"restart"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"重启 cron 守护进程"
+,
+"en"
+:
+"Restart the cron daemon"
+}
+}
+,
+"status"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 cron 守护进程状态"
+,
+"en"
+:
+"Show the cron daemon status"
+}
+}
+,
+"log"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 cron 守护进程日志"
+,
+"en"
+:
+"Show the cron daemon logs"
+}
+,
+"-n"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"输出最后 N 行日志"
+,
+"en"
+:
+"Output the last N lines of logs"
+}
+,
+"#1"
+:
+null
+}
+,
+"-f"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"持续跟踪日志输出"
+,
+"en"
+:
+"Follow log output continuously"
+}
+}
+}
+,
+"run"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"前台运行 cron 守护进程（输出重定向到日志）"
+,
+"en"
+:
+"Run the cron daemon in the foreground (output redirected to log)"
+}
+}
+}
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com/mod/cron"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com/mod/cron"
+}
+}
+}
+

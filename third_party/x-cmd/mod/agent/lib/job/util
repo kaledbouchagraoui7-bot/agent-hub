@@ -1,0 +1,71 @@
+# shellcheck shell=dash
+
+# Get the latest job subdirectory from a parent directory
+___x_cmd_agent_job___get_lastdir(){
+    local parent_dir="${1:-$___X_CMD_AGENT_JOB_DIR}"
+    [ -d "$parent_dir" ] || return 0
+    local job_id; job_id="$( ___x_cmd_cmds ls "$parent_dir" | ___x_cmd_cmds sort -r | ___x_cmd_cmds head -n 1 )"
+    [ -n "$job_id" ] || return 0
+    printf "%s\n" "$parent_dir/$job_id"
+}
+
+# Resolve a job directory from optional parent directory and optional job id.
+# Prints the resolved full job directory path to stdout.
+# Behavior:
+#   - If job_id is given: returns <parent_dir>/<job_id>
+#   - If only parent_dir is given: returns the latest subdirectory (full job dir)
+#   - If neither is given: returns $___X_CMD_AGENT_JOB_RECENT or latest in default dir
+# The caller is responsible for existence checks and error messages.
+___x_cmd_agent_job___resolve_dir_(){
+    local parent_dir="${1:-}"
+    local job_id="${2:-}"
+    local result=""
+
+    if [ -n "$job_id" ]; then
+        [ -n "$parent_dir" ] || parent_dir="$___X_CMD_AGENT_JOB_DIR"
+        result="$parent_dir/$job_id"
+    elif [ -n "$parent_dir" ]; then
+        # If parent_dir itself looks like a job dir (contains DESC.md), use it as-is.
+        if [ -f "$parent_dir/DESC.md" ]; then
+            result="$parent_dir"
+        else
+            result="$(___x_cmd_agent_job___get_lastdir "$parent_dir")"
+        fi
+    elif [ -n "$___X_CMD_AGENT_JOB_RECENT" ]; then
+        result="$___X_CMD_AGENT_JOB_RECENT"
+    else
+        result="$(___x_cmd_agent_job___get_lastdir "$___X_CMD_AGENT_JOB_DIR")"
+    fi
+
+    printf "%s\n" "$result"
+}
+
+# Check if the worker for a given job id is still running.
+# Returns 0 if running, 1 otherwise.
+___x_cmd_agent_job___is_running_(){
+    local job_id="$1"
+    [ -n "$job_id" ] || return 1
+    ___x_cmd worker isalive --ns 'x-agent-job' --name "$job_id" >/dev/null 2>&1
+}
+
+# Read the "Desc:" block from DESC.md, spanning multiple lines until
+# the first "---" separator. Falls back to "[no description]" if absent.
+___x_cmd_agent_job___get_desc_(){
+    local jobdir="$1"
+    local desc="[no description]"
+    if [ -f "$jobdir/DESC.md" ]; then
+        desc="$(___x_cmd_cmds awk '
+            BEGIN { found = 0 }
+            /^Desc: / {
+                found = 1
+                sub(/^Desc: /, "")
+                print
+                next
+            }
+            found && /^---$/ { exit }
+            found { print }
+        ' "$jobdir/DESC.md")"
+        [ -n "$desc" ] || desc="[no description]"
+    fi
+    printf "%s\n" "$desc"
+}

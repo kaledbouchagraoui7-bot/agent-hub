@@ -1,0 +1,14 @@
+
+___x_cmd_teeshot___runmain(){
+    ___x_cmd_teeshot___runcmd "$@"
+}
+
+___x_cmd_teeshot___runcmd(){
+    if ___x_cmd_hascmd teeshot; then
+        ___x_cmd_teeshot___runcmd(){  ___x_cmd_cmds teeshot "$@"; }
+    else
+        ___x_cmd_teeshot___install || return
+        ___x_cmd_teeshot___runcmd(){ "$___X_CMD_teeshot_BIN_PATH/$___X_CMD_teeshot_BIN" "$@" ; }
+    fi || return
+    ___x_cmd_teeshot___runcmd "$@"
+}

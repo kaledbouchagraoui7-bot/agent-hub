@@ -1,0 +1,720 @@
+{
+"#synopsis"
+:
+[
+{
+"x claw qywx <SUBCMD> <CHATID>"
+:
+null
+}
+]
+,
+"#subcmd:Query"
+:
+[
+"get-msg"
+,
+"unread-count"
+,
+"recent-msg"
+,
+"has-unread"
+,
+"update-offset"
+]
+,
+"#subcmd:Action"
+:
+[
+"send"
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw qywx send --chatid mychatid --text 'hello'"
+,
+"zh"
+:
+"场景: 向 chatid 为 mychatid 的企业微信对话发送文本消息"
+,
+"en"
+:
+"Scenario: Send a text message to the Qywx chat with chatid mychatid"
+}
+,
+{
+"cmd"
+:
+"x claw qywx get-msg mychatid 100:200"
+,
+"zh"
+:
+"场景: 批量回顾 chatid 为 mychatid 的第 100 到 200 行消息"
+,
+"en"
+:
+"Scenario: Batch review messages line 100-200 for chatid mychatid"
+}
+,
+{
+"cmd"
+:
+"x claw qywx update-offset mychatid 100"
+,
+"zh"
+:
+"场景: 处理完前 100 条后，更新该 chatid 的已读位置避免重复"
+,
+"en"
+:
+"Scenario: After processing 100 messages, update read offset for this chatid"
+}
+,
+{
+"cmd"
+:
+"x claw qywx unread-count mychatid"
+,
+"zh"
+:
+"场景: 获取指定 chatid 的未读数量，用于决定是否启动 Agent"
+,
+"en"
+:
+"Scenario: Get unread count for chatid to decide whether to spawn an Agent"
+}
+,
+{
+"cmd"
+:
+"if x claw qywx has-unread mychatid; then\n    x claw qywx recent-msg mychatid\nfi\n"
+,
+"zh"
+:
+"场景: 条件读取——检测到有未读时才获取内容（has-unread 靠 exit code 0/1 判断）"
+,
+"en"
+:
+"Scenario: Conditional read — fetch messages only when unread detected (has-unread uses exit code 0/1)"
+}
+]
+,
+"get-msg"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"按行号范围获取消息"
+,
+"en"
+:
+"Get messages by line range"
+}
+,
+"#synopsis"
+:
+"<CHATID> <START>[:<END>]"
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"行号范围（如 100:200）或起始行号"
+,
+"en"
+:
+"Line range (e.g. 100:200) or start line"
+}
+}
+,
+"#3"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"结束行号（可选，与起始行号一起使用）"
+,
+"en"
+:
+"End line number (optional, used with start line)"
+}
+}
+}
+,
+"unread-count"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示未读消息数量（stdout 输出数字）"
+,
+"en"
+:
+"Show unread message count (outputs number to stdout)"
+}
+,
+"#synopsis"
+:
+"<CHATID>"
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+}
+}
+,
+"recent-msg"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示最新所有未读的消息"
+,
+"en"
+:
+"Show all recent unread messages"
+}
+,
+"#synopsis"
+:
+"<CHATID>"
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+}
+}
+,
+"has-unread"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"检查是否有未读消息。返回退出码 0 表示有未读，1 表示无未读。不输出任何内容到 stdout，需在脚本中用 if 或 &&/|| 消费 exit code。"
+,
+"en"
+:
+"Check if there are unread messages. Exit code 0 means yes, 1 means no. No stdout output; consume the exit code with if or &&/|| in scripts."
+}
+,
+"#synopsis"
+:
+"<CHATID>"
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"if x claw qywx has-unread mychatid; then\n    x claw qywx recent-msg mychatid\nfi\n"
+,
+"zh"
+:
+"场景: 轮询检测到有未读时才读取，避免空跑"
+,
+"en"
+:
+"Scenario: Poll and read only when unread exists, avoiding empty runs"
+}
+]
+}
+,
+"send"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"发送文本/图片/文件消息"
+,
+"en"
+:
+"Send text/image/file messages"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw qywx send --chatid <chatid> --text \"Hello\""
+,
+"zh"
+:
+"发送文本消息到指定会话"
+,
+"en"
+:
+"Send a text message to the specified chat"
+}
+,
+{
+"cmd"
+:
+"x claw qywx send --chatid <chatid> --image /path/to/image.png"
+,
+"zh"
+:
+"发送图片消息到指定会话"
+,
+"en"
+:
+"Send an image message to the specified chat"
+}
+,
+{
+"cmd"
+:
+"x claw qywx send --chatid <chatid> --file /path/to/file.pdf"
+,
+"zh"
+:
+"发送文件到指定会话"
+,
+"en"
+:
+"Send a file to the specified chat"
+}
+]
+,
+"#subcmd:send"
+:
+[
+"--text"
+,
+"--image"
+,
+"--file"
+]
+,
+"--text"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"zh"
+:
+"发送文本消息到指定会话"
+,
+"en"
+:
+"Send a text message to the specified chat"
+}
+,
+"--chatid"
+:
+{
+"#synopsis"
+:
+"<chatid>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"文本消息内容"
+,
+"en"
+:
+"Text message content"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw qywx send --chatid <chatid> --text \"Hello\""
+,
+"zh"
+:
+"发送文本消息到指定会话"
+,
+"en"
+:
+"Send a text message to the specified chat"
+}
+]
+}
+,
+"--image"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"zh"
+:
+"发送图片消息到指定会话"
+,
+"en"
+:
+"Send an image message to the specified chat"
+}
+,
+"--chatid"
+:
+{
+"#synopsis"
+:
+"<chatid>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+}
+}
+,
+"#1"
+:
+{
+"#synopsis"
+:
+"<path>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"图片文件路径"
+,
+"en"
+:
+"Path to the image file"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw qywx send --chatid <chatid> --image /path/to/image.png"
+,
+"zh"
+:
+"发送图片消息到指定会话"
+,
+"en"
+:
+"Send an image message to the specified chat"
+}
+]
+}
+,
+"--file"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"zh"
+:
+"发送文件到指定会话"
+,
+"en"
+:
+"Send a file to the specified chat"
+}
+,
+"--chatid"
+:
+{
+"#synopsis"
+:
+"<chatid>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+}
+}
+,
+"#1"
+:
+{
+"#synopsis"
+:
+"<path>"
+,
+"#desc"
+:
+{
+"zh"
+:
+"文件路径"
+,
+"en"
+:
+"Path to the file"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw qywx send --chatid <chatid> --file /path/to/file.pdf"
+,
+"zh"
+:
+"发送文件到指定会话"
+,
+"en"
+:
+"Send a file to the specified chat"
+}
+]
+}
+}
+,
+"update-offset"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"更新已读位置到指定行号，标记该行及之前的消息为已读"
+,
+"en"
+:
+"Update the read offset to the specified line number, marking messages up to that line as read"
+}
+,
+"#synopsis"
+:
+"<CHATID> <OFFSET>"
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"企业微信 chatid"
+,
+"en"
+:
+"Qywx chatid"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"要更新到的行号"
+,
+"en"
+:
+"The line number to update the offset to"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw qywx update-offset mychatid 100"
+,
+"zh"
+:
+"场景: 标记该 chatid 前 100 条为已读，下次从 101 开始"
+,
+"en"
+:
+"Scenario: Mark first 100 messages for chatid as read; start from 101 next time"
+}
+]
+}
+}
+

@@ -1,0 +1,664 @@
+{
+"#name"
+:
+{
+"dns"
+:
+null
+,
+"en"
+:
+"DNS utilities"
+,
+"zh"
+:
+"DNS 工具"
+}
+,
+"#synopsis"
+:
+[
+{
+"x dns"
+:
+null
+}
+,
+{
+"x dns current|c"
+:
+null
+}
+,
+{
+"x dns ls"
+:
+null
+}
+,
+{
+"x dns refresh|r"
+:
+null
+}
+,
+{
+"x dns reload"
+:
+null
+}
+,
+{
+"x dns set [target] <ip> [ip ...]"
+:
+null
+}
+,
+{
+"x dns set --file <ip> [ip ...]"
+:
+null
+}
+,
+{
+"x dns set --dry-run <ip> [ip ...]"
+:
+null
+}
+,
+{
+"x dns reset [target]"
+:
+null
+}
+,
+{
+"x dns backup <name>"
+:
+null
+}
+,
+{
+"x dns restore <name>"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"en"
+:
+"DNS (Domain Name System) configuration management utilities.\nView current DNS settings, list available DNS servers,\nand refresh DNS cache on the system.\n"
+,
+"zh"
+:
+"DNS（域名系统）配置管理工具。\n查看当前 DNS 设置、列出可用的 DNS 服务器、\n以及刷新系统上的 DNS 缓存。\n"
+}
+,
+"#subcmd:Command"
+:
+[
+"current|c"
+,
+"ls"
+,
+"refresh|r"
+,
+"set"
+,
+"reset"
+,
+"backup"
+,
+"restore"
+]
+,
+"current|c"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"View the current DNS configuration information"
+,
+"zh"
+:
+"查看当前 DNS 配置信息"
+}
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"List available DNS server addresses"
+,
+"zh"
+:
+"列出可用的 DNS 服务器地址"
+}
+,
+"--json"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Display DNS configuration in JSON format"
+,
+"zh"
+:
+"以 JSON 格式显示 DNS 配置"
+}
+}
+,
+"--yml"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Display DNS configuration in YAML format"
+,
+"zh"
+:
+"以 YAML 格式显示 DNS 配置"
+}
+}
+,
+"--csv"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Display DNS configuration in CSV format"
+,
+"zh"
+:
+"以 CSV 格式显示 DNS 配置"
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Display DNS configuration in TSV format (default when stdout is not a TTY)"
+,
+"zh"
+:
+"以 TSV 格式显示 DNS 配置（输出非 TTY 时默认）"
+}
+}
+}
+,
+"refresh|r"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Flush the DNS response cache"
+,
+"zh"
+:
+"刷新 DNS 响应缓存"
+}
+}
+,
+"reload"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Reload the DNS configuration (make the service re-read config)"
+,
+"zh"
+:
+"重新加载 DNS 配置（让服务重读配置）"
+}
+}
+,
+"set"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Set DNS servers (system-wide by default; per-target if a target is given)"
+,
+"zh"
+:
+"设置 DNS 服务器（无 target 时系统级；有 target 时针对该 target）"
+}
+,
+"--file"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Write directly to /etc/resolv.conf (Linux only; bypasses NetworkManager)"
+,
+"zh"
+:
+"直接写入 /etc/resolv.conf（仅 Linux，绕过 NetworkManager）"
+}
+}
+,
+"--dry-run"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Print commands that would run, do not execute"
+,
+"zh"
+:
+"打印将运行的命令但不执行"
+}
+}
+,
+"--no-ipv4"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Skip IPv4 servers"
+,
+"zh"
+:
+"跳过 IPv4 服务器"
+}
+}
+,
+"--no-ipv6"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Skip IPv6 servers"
+,
+"zh"
+:
+"跳过 IPv6 服务器"
+}
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"无 target 时系统级：macOS 走 `scutil`，Windows 走所有物理网卡，\nLinux 三层 fallback：NetworkManager → systemd-resolved → /etc/resolv.conf。\n有 target 时 per-target：macOS 走 `networksetup`，Linux 走 `nmcli`，\nWindows 走 `Set-DnsClientServerAddress`。\n自动识别 IPv4 / IPv6 地址。需要 root 权限（sudo）。\n"
+,
+"en"
+:
+"Without target: system-wide.\n  macOS -> scutil; Windows -> every physical adapter;\n  Linux -> 3-tier fallback: NetworkManager -> systemd-resolved -> /etc/resolv.conf.\nWith target: per-target.\n  macOS -> networksetup; Linux -> nmcli;\n  Windows -> Set-DnsClientServerAddress.\nIPv4 / IPv6 auto-detected. Requires root (sudo).\n"
+}
+]
+}
+,
+"reset"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Revert DNS to automatic / DHCP defaults (system-wide; per-target if a target is given)"
+,
+"zh"
+:
+"还原 DNS 为自动 / DHCP 默认值（无 target 时系统级；有 target 时针对该 target）"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"清除手动设置的 DNS，恢复从 DHCP / Router 接收的 DNS。\n无 target 时系统级还原，有 target 时只还原该 target。\n"
+,
+"en"
+:
+"Clear manually-set DNS and revert to DHCP / router-provided servers.\nSystem-wide without target; per-target with target.\n"
+}
+]
+}
+,
+"backup"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Save current DNS state to a named backup"
+,
+"zh"
+:
+"将当前 DNS 状态保存到命名备份"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"备份文件存放在 `$___X_CMD_ROOT_DATA/dns/backup/<name>.json`。\n配合 `x dns restore` 使用，可在更换 DNS 前保存当前状态。\n"
+,
+"en"
+:
+"Backup files are stored at `$___X_CMD_ROOT_DATA/dns/backup/<name>.json`.\nUse with `x dns restore` to save state before changing DNS.\n"
+}
+]
+}
+,
+"restore"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Restore DNS from a previous backup"
+,
+"zh"
+:
+"从之前的备份还原 DNS"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"从 `$___X_CMD_ROOT_DATA/dns/backup/<name>.json` 读取并应用。\n"
+,
+"en"
+:
+"Reads from `$___X_CMD_ROOT_DATA/dns/backup/<name>.json` and applies it.\n"
+}
+]
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x dns"
+,
+"en"
+:
+"Example: Show current DNS configuration"
+,
+"zh"
+:
+"示例: 显示当前 DNS 配置"
+}
+,
+{
+"cmd"
+:
+"x dns current"
+,
+"en"
+:
+"Example: View detailed current DNS settings"
+,
+"zh"
+:
+"示例: 查看详细的当前 DNS 设置"
+}
+,
+{
+"cmd"
+:
+"x dns ls"
+,
+"en"
+:
+"Example: List all available DNS servers"
+,
+"zh"
+:
+"示例: 列出所有可用的 DNS 服务器"
+}
+,
+{
+"cmd"
+:
+"x dns ls --json"
+,
+"en"
+:
+"Example: List DNS servers in JSON format"
+,
+"zh"
+:
+"示例: 以 JSON 格式列出 DNS 服务器"
+}
+,
+{
+"cmd"
+:
+"x dns ls | cat"
+,
+"en"
+:
+"Example: Pipe the list (auto-falls back to TSV when stdout is not a TTY)"
+,
+"zh"
+:
+"示例: 管道输出（输出非 TTY 时自动回退为 TSV）"
+}
+,
+{
+"cmd"
+:
+"x dns refresh"
+,
+"en"
+:
+"Example: Refresh DNS cache on the system"
+,
+"zh"
+:
+"示例: 刷新系统 DNS 缓存"
+}
+,
+{
+"cmd"
+:
+"x dns reload"
+,
+"en"
+:
+"Example: Reload DNS configuration (re-read config without changing it)"
+,
+"zh"
+:
+"示例: 重新加载 DNS 配置（不改变配置，仅让服务重读）"
+}
+,
+{
+"cmd"
+:
+"x dns set 8.8.8.8 1.1.1.1"
+,
+"en"
+:
+"Example: Set system-wide DNS (default behavior; scutil / all interfaces / Linux 3-tier fallback)"
+,
+"zh"
+:
+"示例: 设置系统级 DNS（默认行为；scutil / 所有网卡 / Linux 三层 fallback）"
+}
+,
+{
+"cmd"
+:
+"x dns set Wi-Fi 8.8.8.8 8.8.4.4"
+,
+"en"
+:
+"Example: Set DNS for a specific service / connection / interface"
+,
+"zh"
+:
+"示例: 给特定的 service / connection / interface 设置 DNS"
+}
+,
+{
+"cmd"
+:
+"x dns set --file 8.8.8.8"
+,
+"en"
+:
+"Example: Write directly to /etc/resolv.conf (Linux only; containers, chroots)"
+,
+"zh"
+:
+"示例: 直接写入 /etc/resolv.conf（仅 Linux；容器、chroot 场景）"
+}
+,
+{
+"cmd"
+:
+"x dns set --dry-run 8.8.8.8"
+,
+"en"
+:
+"Example: Preview the commands without executing them"
+,
+"zh"
+:
+"示例: 预览将运行的命令但不执行"
+}
+,
+{
+"cmd"
+:
+"x dns reset"
+,
+"en"
+:
+"Example: Revert system-wide DNS to DHCP"
+,
+"zh"
+:
+"示例: 还原系统级 DNS 为 DHCP"
+}
+,
+{
+"cmd"
+:
+"x dns reset Wi-Fi"
+,
+"en"
+:
+"Example: Revert a specific service / connection / interface to DHCP"
+,
+"zh"
+:
+"示例: 还原特定 service / connection / interface 为 DHCP"
+}
+,
+{
+"cmd"
+:
+"x dns backup home-router"
+,
+"en"
+:
+"Example: Save current DNS state as 'home-router'"
+,
+"zh"
+:
+"示例: 将当前 DNS 状态保存为 home-router"
+}
+,
+{
+"cmd"
+:
+"x dns restore home-router"
+,
+"en"
+:
+"Example: Restore DNS from the 'home-router' backup"
+,
+"zh"
+:
+"示例: 从 home-router 备份还原 DNS"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

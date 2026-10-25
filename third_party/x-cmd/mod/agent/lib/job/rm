@@ -1,0 +1,34 @@
+# shellcheck shell=dash
+# Remove an existing agent job directory.
+
+___x_cmd_agent_job_rm(){
+    local jobdir=""
+    local jobid=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m agent job rm; return 0 ;;
+            --job-dir)      jobdir="$2" ;   arg:2:shift ;;
+            --job-id)       jobid="$2" ;    arg:2:shift ;;
+            *)              break ;;
+        esac
+    done
+
+    [ -n "$jobid" ] || N=agent M="Please specify the job id to remove." log:ret:64
+
+    local resolved_jobdir
+    resolved_jobdir="$(___x_cmd_agent_job___resolve_dir_ "$jobdir" "$jobid")"
+
+    if [ -z "$resolved_jobdir" ] || [ ! -d "$resolved_jobdir" ]; then
+        agent:error "job-id '$jobid' does not exist"
+        return 1
+    fi
+
+    if ___x_cmd_agent_job___is_running_ "$jobid"; then
+        agent:error "job '$jobid' is still running, stop it first"
+        agent:error "  x agent job stop --job-id $jobid"
+        return 1
+    fi
+
+    ___x_cmd rmrf "$resolved_jobdir" && agent:info "Job '$jobid' removed"
+}

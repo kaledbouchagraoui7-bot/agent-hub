@@ -1,0 +1,123 @@
+{
+ "meta": {
+  "version": "0.1.0",
+  "root": "/tmp/arena/tenants/6e6e56ee-1cde-4461-9e72-7d3e90738727/sessions/c5024215-ad64-495f-9c4f-f7ec31ba1e1c/workspace/agent-hub/obsidian-datafarm/starter-vault",
+  "directed": true,
+  "note_count": 6,
+  "edge_count": 6
+ },
+ "nodes": [
+  {
+   "id": "00-Inbox/_about.md",
+   "title": "Inbox",
+   "folder": "00-Inbox",
+   "tags": [
+    "inbox"
+   ],
+   "degree": 0,
+   "in": 0,
+   "out": 0,
+   "words": 28,
+   "x": 19.602,
+   "y": 3.257
+  },
+  {
+   "id": "40-Projects/PRJ-001 Data Farm.md",
+   "title": "PRJ-001 Data Farm",
+   "folder": "40-Projects",
+   "tags": [
+    "datafarm",
+    "project"
+   ],
+   "degree": 3,
+   "in": 1,
+   "out": 2,
+   "words": 53,
+   "x": -0.647,
+   "y": 15.375
+  },
+  {
+   "id": "90-Meta/Conventions.md",
+   "title": "Conventions",
+   "folder": "90-Meta",
+   "tags": [
+    "conventions"
+   ],
+   "degree": 2,
+   "in": 2,
+   "out": 0,
+   "words": 113,
+   "x": -22.213,
+   "y": 20.656
+  },
+  {
+   "id": "90-Meta/DATA-MODEL.md",
+   "title": "Data Model",
+   "folder": "90-Meta",
+   "tags": [
+    "provenance",
+    "schema"
+   ],
+   "degree": 2,
+   "in": 2,
+   "out": 0,
+   "words": 168,
+   "x": -15.448,
+   "y": 29.044
+  },
+  {
+   "id": "90-Meta/Home.md",
+   "title": "Home",
+   "folder": "90-Meta",
+   "tags": [
+    "entry",
+    "moc"
+   ],
+   "degree": 4,
+   "in": 0,
+   "out": 4,
+   "words": 57,
+   "x": -24.292,
+   "y": 29.491
+  },
+  {
+   "id": "AGENTS.md",
+   "title": "AGENTS.md — contract for any AI agent working in this vault",
+   "folder": "",
+   "tags": [],
+   "degree": 1,
+   "in": 1,
+   "out": 0,
+   "words": 417,
+   "x": -37.89,
+   "y": 35.25
+  }
+ ],
+ "edges": [
+  {
+   "source": "40-Projects/PRJ-001 Data Farm.md",
+   "target": "90-Meta/Conventions.md"
+  },
+  {
+   "source": "40-Projects/PRJ-001 Data Farm.md",
+   "target": "90-Meta/DATA-MODEL.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "40-Projects/PRJ-001 Data Farm.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "90-Meta/Conventions.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "90-Meta/DATA-MODEL.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "AGENTS.md"
+  }
+ ],
+ "unresolved": {}
+}

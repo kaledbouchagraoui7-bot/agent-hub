@@ -1,0 +1,148 @@
+{
+"#name"
+:
+{
+"coin"
+:
+null
+,
+"zh"
+:
+"加密货币行情查看器 (CoinPaprika 数据源)"
+,
+"en"
+:
+"Cryptocurrency market viewer (powered by CoinPaprika)"
+}
+,
+"#desc"
+:
+{
+"en"
+:
+"View the top 100 cryptocurrencies by market cap from the CoinPaprika public API"
+,
+"zh"
+:
+"通过 CoinPaprika 公开 API 查看市值排名前 100 的加密货币行情"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x coin"
+,
+"zh"
+:
+"示例: 查看市值前 100 的加密货币行情"
+,
+"en"
+:
+"Example: View top 100 cryptocurrencies by market cap"
+}
+,
+{
+"cmd"
+:
+"x coin --app"
+,
+"zh"
+:
+"示例: 以交互式 app 查看行情"
+,
+"en"
+:
+"Example: View market data in interactive app"
+}
+,
+{
+"cmd"
+:
+"x coin --csv"
+,
+"zh"
+:
+"示例: 以 CSV 格式输出行情"
+,
+"en"
+:
+"Example: Output market data in CSV format"
+}
+,
+{
+"cmd"
+:
+"x coin --json"
+,
+"zh"
+:
+"示例: 以 JSON 格式输出行情"
+,
+"en"
+:
+"Example: Output market data in JSON format"
+}
+]
+,
+"#subcmd:Output"
+:
+[
+"--app"
+,
+"--csv"
+,
+"--json"
+]
+,
+"#subcmd:Other"
+:
+[
+"--help|-h"
+]
+,
+"#tip"
+:
+[
+{
+"en"
+:
+"Market data is sourced from the CoinPaprika public API (no API key required).\nResults are cached for 60s to stay well within the free-tier rate limit.\n"
+,
+"zh"
+:
+"行情数据来自 CoinPaprika 公开 API (无需密钥)。\n结果缓存 60 秒, 远低于免费档速率限制。\n"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Data provided by"
+:
+"Coinpaprika"
+,
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"数据来源:"
+:
+"Coinpaprika"
+,
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

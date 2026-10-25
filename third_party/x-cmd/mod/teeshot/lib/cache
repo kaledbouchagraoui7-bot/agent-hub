@@ -1,0 +1,158 @@
+# shellcheck shell=dash
+
+# Section: cache subcommand dispatcher
+# Public entry: ___x_cmd_teeshot_cache <op> [args...]
+#   ls                    list cached snapshots (default if no op)
+#   cat <id>              print full output from cache
+#   rm <id>               remove one
+#   rm --all              remove all (with explicit confirmation)
+#   info <id>             print metadata only
+
+___x_cmd_teeshot_cache(){
+    ___x_cmd_teeshot_util_init
+
+    [ "$#" -gt 0 ] || set -- ls
+
+    local op="$1"; shift
+    case "$op" in
+        -h|--help)  ___x_cmd help -m teeshot cache "$@" ; return 0 ;;
+        ls|list)    ___x_cmd_teeshot_cache_ls "$@" ;;
+        cat|view)   ___x_cmd_teeshot_cache_cat "$@" ;;
+        rm|remove)  ___x_cmd_teeshot_cache_rm "$@" ;;
+        info)       ___x_cmd_teeshot_cache_info "$@" ;;
+        *)          N=teeshot M="Unknown cache subcmd -> $op" log:ret:64 ;;
+    esac
+}
+
+# meta_ls now returns "day\tid" pairs. Loop with a tab separator.
+___x_cmd_teeshot_cache_ls(){
+    printf '%-9s  %-18s  %-8s  %6s  %-19s  %s\n' "DAY" "ID" "EXIT" "LINES" "MTIME" "CMD"
+
+    local entry day id
+    local count=0
+    while IFS="$(printf '\t')" read -r day id; do
+        [ -z "$id" ] && continue
+        _ls_cmd="$(___x_cmd_teeshot_meta_get "$id" cmd)"
+        _ls_exit="$(___x_cmd_teeshot_meta_get "$id" exit)"
+        _ls_lines="$(___x_cmd_teeshot_meta_get "$id" lines)"
+        _ls_mtime="$(___x_cmd_teeshot_meta_get "$id" mtime)"
+
+        if [ "${#_ls_cmd}" -gt 60 ]; then
+            _ls_cmd="${_ls_cmd:0:57}..."
+        fi
+
+        printf '%-9s  %-18s  %-8s  %6s  %-19s  %s\n' \
+            "$day" "$id" "${_ls_exit:-?}" "${_ls_lines:-?}" "${_ls_mtime:-?}" "$_ls_cmd"
+        count=$((count + 1))
+    done <<EOF
+$(___x_cmd_teeshot_meta_ls)
+EOF
+
+    [ "$count" -eq 0 ] && printf '(no cached snapshots)\n'
+    return 0
+}
+
+___x_cmd_teeshot_cache_cat(){
+    [ "$#" -gt 0 ] || {
+        N=teeshot M="cache cat requires <id>" log:ret:64
+    }
+    local id="$1"
+    local out_file
+    if ! out_file="$(___x_cmd_teeshot_resolve_path "$id" out)"; then
+        N=teeshot M="No cached snapshot with id: $id" log:ret:64
+    fi
+
+    cat "$out_file"
+}
+
+___x_cmd_teeshot_cache_info(){
+    [ "$#" -gt 0 ] || {
+        N=teeshot M="cache info requires <id>" log:ret:64
+    }
+    local id="$1"
+    local meta_file out_file
+    meta_file="$(___x_cmd_teeshot_resolve_path "$id" meta 2>/dev/null)" || meta_file=""
+    if ! out_file="$(___x_cmd_teeshot_resolve_path "$id" out)"; then
+        N=teeshot M="No cached snapshot with id: $id" log:ret:64
+    fi
+
+    local bytes
+    bytes="$(wc -c < "$out_file" 2>/dev/null | tr -d ' ')"
+    local size_human
+    size_human="$(___x_cmd_teeshot_fmt_bytes "${bytes:-0}")"
+
+    printf 'id:     %s\n' "$id"
+    printf 'cache:  %s\n' "$out_file"
+    printf 'size:   %s (%s bytes)\n' "$size_human" "$bytes"
+    if [ -n "$meta_file" ] && [ -f "$meta_file" ]; then
+        printf '\n'
+        cat "$meta_file" | sed 's/^/  /'
+    fi
+}
+
+___x_cmd_teeshot_cache_rm(){
+    local remove_all=0
+    local ids=()
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --all|-a)   remove_all=1 ;;
+            -h|--help)  ___x_cmd help -m teeshot cache rm ; return 0 ;;
+            --)         shift; ids=("$@"); break ;;
+            *)          ids+=("$1") ;;
+        esac
+        shift
+    done
+
+    if [ "$remove_all" = "1" ]; then
+        # Confirm destructive operation
+        ___x_cmd_teeshot_cache_ls
+        printf '\nAbout to remove ALL cached snapshots. Continue? [y/N] '
+        local ans
+        read -r ans
+        case "$ans" in
+            y|Y|yes|YES) ;;
+            *)           printf 'Aborted.\n'; return 0 ;;
+        esac
+
+        # Wipe every file in every day subdir, plus the base dir
+        local count=0
+        if [ -d "$___X_CMD_TEESHOT_CACHE_DIR" ]; then
+            # shellcheck disable=SC2044
+            for f in "$___X_CMD_TEESHOT_CACHE_DIR"/*/; do
+                [ -d "$f" ] || continue
+                # shellcheck disable=SC2034
+                for inner in "$f"*.out "$f"*.meta; do
+                    [ -f "$inner" ] || continue
+                    rm -f "$inner"
+                    count=$((count + 1))
+                done
+            done
+            # Legacy top-level files
+            for f in "$___X_CMD_TEESHOT_CACHE_DIR"/*.out "$___X_CMD_TEESHOT_CACHE_DIR"/*.meta; do
+                [ -f "$f" ] || continue
+                rm -f "$f"
+                count=$((count + 1))
+            done
+        fi
+        printf 'Removed %s file(s).\n' "$count"
+        return 0
+    fi
+
+    if [ "${#ids[@]}" -eq 0 ]; then
+        N=teeshot M="cache rm requires <id> or --all" log:ret:64
+    fi
+
+    local id out_path meta_path
+    for id in "${ids[@]}"; do
+        out_path="$(___x_cmd_teeshot_resolve_path "$id" out 2>/dev/null)" || out_path=""
+        meta_path="$(___x_cmd_teeshot_resolve_path "$id" meta 2>/dev/null)" || meta_path=""
+        if [ -n "$out_path" ] || [ -n "$meta_path" ]; then
+            [ -n "$out_path" ] && rm -f "$out_path"
+            [ -n "$meta_path" ] && rm -f "$meta_path"
+            printf 'removed %s\n' "$id"
+        else
+            printf 'skip %s (not found)\n' "$id" >&2
+        fi
+    done
+}

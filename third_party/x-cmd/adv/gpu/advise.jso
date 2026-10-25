@@ -1,0 +1,298 @@
+{
+"#name"
+:
+{
+"gpu"
+:
+{
+"en"
+:
+"GPU information, stats, and display details"
+,
+"zh"
+:
+"GPU 信息、负载统计和显示器详情"
+}
+}
+,
+"#synopsis"
+:
+[
+{
+"x gpu [subcommand]"
+:
+null
+}
+,
+{
+"x gpu"
+:
+null
+}
+,
+{
+"x gpu info"
+:
+null
+}
+,
+{
+"x gpu info --simple"
+:
+null
+}
+,
+{
+"x gpu info --fresh"
+:
+null
+}
+,
+{
+"x gpu stat"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"en"
+:
+"GPU tool with three modes (sum/info/stat), cross-platform with unified output format"
+,
+"zh"
+:
+"GPU 工具三种模式（sum/info/stat），跨平台统一输出格式"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"想一次看全 GPU 状态？直接 `x gpu`，默认合并 info（硬件能力）和 stat（实时负载）"
+,
+"en"
+:
+"Want a full snapshot? `x gpu` combines info (hardware capabilities) and stat (live load)"
+}
+,
+{
+"zh"
+:
+"写脚本采集监控数据？`x gpu stat` 只输出实时利用率/显存，适合管道解析"
+,
+"en"
+:
+"Scraping stats in a script? `x gpu stat` prints only live utilization/memory, pipe-friendly"
+}
+,
+{
+"zh"
+:
+"想看 Metal 能力、显示器、刷新率这些静态信息？`x gpu info` 不含利用率"
+,
+"en"
+:
+"Need Metal capability, display, refresh rate? `x gpu info` skips utilization"
+}
+,
+{
+"zh"
+:
+"macOS 上 info 默认缓存 1 天，加 `--fresh` 强制重跑 system_profiler/ioreg"
+,
+"en"
+:
+"On macOS info is cached 1 day by default; add `--fresh` to rerun system_profiler/ioreg"
+}
+,
+{
+"zh"
+:
+"只想要基本字段？`x gpu info --simple` 跳过 Metal API 和 IOKit 扩展字段"
+,
+"en"
+:
+"Want just the basics? `x gpu info --simple` skips Metal API and IOKit extra fields"
+}
+]
+,
+"sum"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Combines \"x gpu info\" and \"x gpu stat\" into a single output (same as running bare \"x gpu\")"
+,
+"zh"
+:
+"将 \"x gpu info\" 和 \"x gpu stat\" 合并输出（等同于直接运行 \"x gpu\"）"
+}
+}
+,
+"info"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Show static GPU hardware information only — no utilization stats"
+,
+"zh"
+:
+"仅显示静态 GPU 硬件信息——不含利用率统计"
+}
+,
+"-s|--simple"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"只输出基本字段，跳过 Metal API 和 IOKit 扩展"
+,
+"en"
+:
+"Output basic fields only, skip Metal API and IOKit extras"
+}
+}
+,
+"--fresh"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"忽略缓存，强制重新探测硬件"
+,
+"en"
+:
+"Ignore cache, force re-probe of hardware"
+}
+}
+}
+,
+"stat"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Show real-time GPU utilization and memory usage only — no hardware info"
+,
+"zh"
+:
+"仅显示实时 GPU 利用率和内存使用——不含硬件信息"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x gpu"
+,
+"zh"
+:
+"示例: 显示完整 GPU 概览（info + stat）"
+,
+"en"
+:
+"Example: Display full GPU overview (info + stat)"
+}
+,
+{
+"cmd"
+:
+"x gpu info"
+,
+"zh"
+:
+"示例: 仅显示静态 GPU 硬件信息"
+,
+"en"
+:
+"Example: Show static GPU hardware info only"
+}
+,
+{
+"cmd"
+:
+"x gpu info --simple"
+,
+"zh"
+:
+"示例: 显示基本 GPU 信息"
+,
+"en"
+:
+"Example: Show basic GPU info"
+}
+,
+{
+"cmd"
+:
+"x gpu info --fresh"
+,
+"zh"
+:
+"示例: 强制刷新缓存，重新获取 GPU 信息"
+,
+"en"
+:
+"Example: Force cache refresh, re-fetch GPU info"
+}
+,
+{
+"cmd"
+:
+"x gpu stat"
+,
+"zh"
+:
+"示例: 仅显示实时 GPU 负载"
+,
+"en"
+:
+"Example: Show real-time GPU utilization only"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

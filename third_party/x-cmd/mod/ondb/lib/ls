@@ -1,0 +1,73 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_ls(){
+    local type="" dir="" fmt="tsv"
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb ls "$@" ; return 0 ;;
+            --type)     type="$2"; arg:2:shift ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --tsv)      fmt="tsv"; shift ;;
+            --json)     fmt="json"; shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    # Resolve backend explicitly
+    ___x_cmd_ondb_backend_resolve
+    local backend="$x_"
+
+    # SQLite path
+    if [ "$backend" = "sqlite" ]; then
+        ___x_cmd_ondb_db_path "$dir"
+        if [ -n "$x_" ]; then
+            local db="$x_" where="" etype="$type"
+            [ -n "$type" ] && { ___x_cmd_ondb_db_esc etype; where=" WHERE e.type='$etype'"; }
+            if [ "$fmt" = "json" ]; then
+                sqlite3 "$db" "SELECT json_group_array(json_object('id', e.id, 'type', e.type, 'name', IFNULL(p.value,''))) FROM entities e LEFT JOIN props p ON p.entity_id=e.id AND p.key='name'${where};"
+            else
+                sqlite3 -separator '	' "$db" "SELECT e.id, e.type, IFNULL(p.value,'') FROM entities e LEFT JOIN props p ON p.entity_id=e.id AND p.key='name'${where} ORDER BY e.ctime;"
+            fi
+            return
+        fi
+    fi
+
+    # JS path
+    if [ "$backend" = "js" ] && command -v bun >/dev/null 2>&1; then
+        local input
+        if [ -n "$dir" ]; then
+            ___x_cmd_ondb_logpath_read "$dir"
+            input="$x_"
+        else
+            input="cat 'ondb.tsv'"
+        fi
+        eval "$input" | bun run "$___X_CMD_ROOT_MOD/ondb/lib/js/ls.js" --type="${type:-}"
+        return
+    fi
+
+    # Python path
+    if [ "$backend" = "python" ] && command -v python3 >/dev/null 2>&1; then
+        local input
+        if [ -n "$dir" ]; then
+            ___x_cmd_ondb_logpath_read "$dir"
+            input="$x_"
+        else
+            input="cat 'ondb.tsv'"
+        fi
+        eval "$input" | python3 "$___X_CMD_ROOT_MOD/ondb/lib/py/ls.py" --type="${type:-}"
+        return
+    fi
+
+    # AWK fallback
+    local input
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_read "$dir"
+        input="$x_"
+    else
+        input="cat 'ondb.tsv'"
+    fi
+
+    eval "$input" | ___x_cmd_ondb_cawk ls -v ONTO_TYPE="${type:-}" -v ONTO_FMT="$fmt"
+}

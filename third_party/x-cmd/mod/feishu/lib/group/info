@@ -1,0 +1,36 @@
+# shellcheck shell=dash
+
+# Reference: https://open.feishu.cn/document/server-docs/group/chat/get
+
+___x_cmd_feishu_group_info(){
+    local chatid=
+    local format=
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)              ___x_cmd help -m feishu group info ; return 0 ;;
+            --json)                 format="json";    shift ;;
+            --chatid)               chatid="$2";      arg:2:shift ;;
+            -*)                     N=feishu M="Unknown option -> $1" log:ret:64 ;;
+        esac
+    done
+
+    [ -n "$chatid" ] || N=feishu M="Usage: x feishu group info --chatid <chatid> [--json]" log:ret:64
+
+    local x_=""  cur_token=""
+    ____x_cmd_tenant_token || return $?
+    cur_token="$x_"
+
+    local resp
+    resp="$(___x_cmd curl -s "https://open.feishu.cn/open-apis/im/v1/chats/${chatid}" \
+                  -H "Authorization: Bearer $cur_token")"
+
+    if [ "$format" = "json" ]; then
+        printf "%s\n" "$resp"
+    else
+        printf "%s\n" "$resp" \
+            | ___x_cmd jq '[.data]' \
+            | ___x_cmd jo 2c              .name      .chat_mode    .owner_id    .description \
+            | ___x_cmd csv header --add   Name       ChatMode      OwnerID       Description \
+            | ___x_cmd csv totsv
+    fi
+}

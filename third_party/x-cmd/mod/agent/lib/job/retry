@@ -1,0 +1,79 @@
+# shellcheck shell=dash
+# Retry an existing agent job.
+
+___x_cmd_agent_job_retry(){
+    local jobdir=""
+    local jobid=""
+    local keep_plan=""
+    local harness=""
+    local debug=""
+    local mode="auto"
+    local max_iterations=""
+    local inrow=""
+    local continuous=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)              ___x_cmd help -m agent job retry; return 0 ;;
+            --job-dir)              jobdir="$2" ;   arg:2:shift ;;
+            --job-id)               jobid="$2" ;    arg:2:shift ;;
+            --keep-plan)            keep_plan=1;    shift ;;
+            -b|--batch)             mode="batch";   shift ;;
+            --harness)              harness="$2" ;  arg:2:shift ;;
+            --debug)                debug=1;        shift ;;
+            --max-iterations)       max_iterations="$2" ;       arg:2:int; arg:2:shift ;;
+            --inrow)                inrow="$2" ;                arg:2:int; arg:2:shift ;;
+            --continuous)           continuous=1;               shift ;;
+            *)                      break ;;
+        esac
+    done
+
+    [ -n "$jobid" ] || N=agent M="Please specify the job id to retry." log:ret:64
+
+    local resolved_jobdir
+    resolved_jobdir="$(___x_cmd_agent_job___resolve_dir_ "$jobdir" "$jobid")"
+
+    if [ -z "$resolved_jobdir" ] || [ ! -d "$resolved_jobdir" ]; then
+        agent:error "job-id '$jobid' does not exist, use 'x agent run --job-id $jobid \"description\"' to create a new job"
+        return 1
+    fi
+
+    if ___x_cmd_agent_job___is_running_ "$jobid"; then
+        agent:error "job '$jobid' is still running, stop it first"
+        agent:error "  x agent job stop --job-id $jobid"
+        return 1
+    fi
+
+    # Clean stale execution state while preserving DESC.md, AGENTS.md and response files.
+    ___x_cmd_agent_job___cleanup_for_retry "$resolved_jobdir"
+
+    agent:info "Retrying agent job id => $jobid"
+    agent:info "To check status - x agent job status --job-id '$jobid'"
+
+    set --
+    set -- "$@" --retry
+    [ -z "$keep_plan" ] && set -- "$@" --reinit
+    [ "$mode" = "batch" ] && set -- "$@" --batch
+    [ -n "$jobdir" ] && set -- "$@" --job-dir "$jobdir"
+    [ -n "$harness" ] && set -- "$@" --harness "$harness"
+    [ -n "$debug" ] && set -- "$@" --debug
+    [ -n "$max_iterations" ] && set -- "$@" --max-iterations "$max_iterations"
+    [ -n "$inrow" ] && set -- "$@" --inrow "$inrow"
+    [ -n "$continuous" ] && set -- "$@" --continuous
+
+    ___x_cmd worker run --ns 'x-agent-job' --name "$jobid" -- \
+        ___x_cmd_agent_job_exec --job-id "$jobid" "$@"
+}
+
+
+# Remove stale execution state files before retrying a job.
+# Preserves DESC.md, AGENTS.md, *.response.md, SKILL.md and other config files.
+___x_cmd_agent_job___cleanup_for_retry(){
+    local jobdir="$1"
+    [ -d "$jobdir" ] || return 1
+
+    local f
+    for f in DONE.md SUMMARY.md ERROR.md status.yml TODO.md; do
+        [ ! -f "$jobdir/$f" ] || ___x_cmd rmrf "$jobdir/$f"
+    done
+}

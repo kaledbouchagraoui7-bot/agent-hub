@@ -1,0 +1,44 @@
+{
+"#synopsis"
+:
+[
+{
+"x claw stop"
+:
+null
+}
+]
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"停止 X-Claw 后台服务及心跳进程。如需断开 IM 连接，请使用 `x claw disconnect`。"
+,
+"en"
+:
+"Stop the X-Claw background service and heartbeat worker. To disconnect IM platforms, use `x claw disconnect`."
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw stop"
+,
+"zh"
+:
+"场景: 完全停止 claw 后台服务和心跳进程"
+,
+"en"
+:
+"Scenario: Fully stop the claw background service and heartbeat worker"
+}
+]
+}
+

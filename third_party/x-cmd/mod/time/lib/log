@@ -1,0 +1,52 @@
+# shellcheck shell=dash
+___x_cmd_time_log(){
+    arg:init time
+
+    local count=1
+    local quiet=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)          ___x_cmd help -m time log "$@" ; return 0 ;;
+            -c)                 count="$2" ;    arg:2:shift ;;
+            -q)                 quiet=1 ; shift ;;
+            -*)                 N=time M="Unknown options -> $1" log:ret:64 ;;
+            *)                  break
+        esac
+    done
+
+    local times_before_file="${TMPDIR:-/tmp}/time_log_before.$$"
+    local times_after_file="${TMPDIR:-/tmp}/time_log_after.$$"
+    local x_=""
+    local begin
+    local end
+    local ret
+
+    local i=1
+    while [ "$i" -le "$count" ]; do
+        if [ -n "$quiet" ]; then
+            x_=""; ___x_cmd_epoch_ms_; begin="$x_"
+            times > "$times_before_file"
+            "$@" 1>/dev/null 2>/dev/null; ret=$?
+            times > "$times_after_file"
+            ___x_cmd_epoch_ms_; end="$x_"
+        else
+            x_=""; ___x_cmd_epoch_ms_; begin="$x_"
+            times > "$times_before_file"
+            "$@"; ret=$?
+            times > "$times_after_file"
+            ___x_cmd_epoch_ms_; end="$x_"
+        fi
+
+        ___X_CMD_TIME_CMD="$*"  \
+        ___x_cmd_cmds awk       \
+            -v wall="$(( end - begin ))" -v bs="$begin" -v es="$end" -v ret="$ret" \
+            -f "${___X_CMD_ROOT_MOD}/time/lib/awk/log-parse.awk" \
+            "$times_before_file" "$times_after_file" >&2
+
+        i=$((i+1))
+    done
+
+    ___x_cmd rmrf "$times_before_file" "$times_after_file"
+    return 0
+}

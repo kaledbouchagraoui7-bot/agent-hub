@@ -1,0 +1,16 @@
+=== OBSIDIAN CONNECTION REPORT ===
+vault: /tmp/arena/tenants/6e6e56ee-1cde-4461-9e72-7d3e90738727/sessions/c5024215-ad64-495f-9c4f-f7ec31ba1e1c/workspace/obsidian-datafarm/demo_vault
+status: CONNECTED (readable markdown vault)
+  readable: True
+  is_obsidian_vault: True
+  notes_md: 123
+  attachments_other: 3
+  vault_size: 138.6KB
+  vault_size_bytes: 141919
+  words: 18805
+  notes_with_links: 123
+  notes_with_frontmatter: 123
+  unique_inline_tags: 3
+  notes_scanned_for_secrets: 123
+  writable: True
+community plugins: dataview, templater-obsidian

@@ -1,0 +1,1636 @@
+{
+"#name"
+:
+{
+"abox"
+:
+null
+,
+"zh"
+:
+"AI Agent Box - Docker 容器管理模块"
+,
+"en"
+:
+"AI Agent Box - Docker container management module"
+}
+,
+"#desc"
+:
+{
+"zh"
+:
+"abox 是一个用于管理 AI Agent Docker 容器的命令行工具。\n它提供了快速启动、停止、重启容器的能力，以及通过 tmux、ssh、exec 等方式与容器交互的功能。\n适用于本地开发和测试 AI 编程代理（如 Claude Code、Codex、OpenCode）的场景。\n"
+,
+"en"
+:
+"abox is a command-line tool for managing AI Agent Docker containers.\nIt provides the ability to quickly start, stop, and restart containers,\nas well as interact with containers via tmux, ssh, exec, etc.\nSuitable for local development and testing of AI programming agents (e.g., Claude Code, Codex, OpenCode).\n"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"快速开始：\n1. 启动容器：`x abox start`\n2. 连接到容器，并打开 tmux 名为 claude 的会话：`x abox tmux :claude`\n3. 停止容器：`x abox stop`\n"
+,
+"en"
+:
+"Quick Start:\n1. Start container: `x abox start`\n2. Connect to container and open tmux session named claude: `x abox tmux :claude`\n3. Stop container: `x abox stop`\n"
+}
+]
+,
+"start"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"启动一个新的 abox 容器"
+,
+"en"
+:
+"Start a new abox container"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"如果不指定容器名称，默认使用 \"abox-0\"。\n使用 --pass 或 --key 时必须指定 --port。\n"
+,
+"en"
+:
+"If no container name is specified, \"abox-0\" is used by default.\nWhen using --pass or --key, --port is required.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox start --key <ssh-pubkey-file> --port 2222"
+,
+"zh"
+:
+"使用 SSH 公钥启动容器并映射端口"
+,
+"en"
+:
+"Start container with SSH public key and port mapping"
+}
+,
+{
+"cmd"
+:
+"x abox rm"
+,
+"zh"
+:
+"删除默认容器"
+,
+"en"
+:
+"Remove default container"
+}
+,
+{
+"cmd"
+:
+"x abox start"
+,
+"zh"
+:
+"启动默认容器（无 SSH）"
+,
+"en"
+:
+"Start default container (no SSH)"
+}
+,
+{
+"cmd"
+:
+"x abox start --pass - --port 2222 && ssh -p 2222 ai@localhost"
+,
+"zh"
+:
+"使用随机密码启动容器，然后通过 SSH 连接（密码见启动输出）"
+,
+"en"
+:
+"Start container with random password and connect via SSH (see startup output for password)"
+}
+,
+{
+"cmd"
+:
+"x abox start --key ~/.ssh/id_rsa.pub --port 2223 -n mybox && ssh -p 2223 -i ~/.ssh/id_rsa ai@localhost"
+,
+"zh"
+:
+"使用 SSH 公钥启动名为 mybox 的容器，然后使用对应私钥连接"
+,
+"en"
+:
+"Start container named mybox with SSH public key and connect using the corresponding private key"
+}
+,
+{
+"cmd"
+:
+"x abox start --dind"
+,
+"zh"
+:
+"启动容器并共享宿主机 Docker（容器内可直接使用 docker 命令）"
+,
+"en"
+:
+"Start container sharing host Docker (docker commands work directly inside the container)"
+}
+]
+,
+"--key"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"SSH 公钥文件路径（需要 --port）"
+,
+"en"
+:
+"SSH public key file path (requires --port)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"公钥文件路径"
+,
+"en"
+:
+"Public key file path"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__file"
+}
+}
+,
+"--pass"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"SSH 密码（需要 --port，使用 \"-\" 自动生成随机密码）"
+,
+"en"
+:
+"SSH password (requires --port, use \"-\" to auto-generate random password)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"密码或 \"-\""
+,
+"en"
+:
+"Password or \"-\""
+}
+}
+}
+,
+"--port|-p"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"SSH 端口映射（主机端口）"
+,
+"en"
+:
+"SSH port mapping (host port)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"端口号"
+,
+"en"
+:
+"Port number"
+}
+}
+}
+,
+"--name|-n"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称"
+,
+"en"
+:
+"Container name"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（默认为 abox-0）"
+,
+"en"
+:
+"Container name (defaults to abox-0)"
+}
+}
+}
+,
+"--dind"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"挂载宿主机的 Docker socket，使容器内可使用宿主机的 Docker（与 x docker run --dind 一致）"
+,
+"en"
+:
+"Mount the host Docker socket so the host Docker is usable inside the container (same as x docker run --dind)"
+}
+}
+}
+,
+"stop"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"停止指定的 abox 容器"
+,
+"en"
+:
+"Stop the specified abox container"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"如果不指定容器名称，默认停止名为 \"abox-0\" 的容器。\n"
+,
+"en"
+:
+"If no container name is specified, stops the container named \"abox-0\" by default.\n"
+}
+]
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（可选，默认为 abox-0）"
+,
+"en"
+:
+"Container name (optional, defaults to abox-0)"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox stop"
+,
+"zh"
+:
+"停止默认容器 abox-0"
+,
+"en"
+:
+"Stop the default container abox-0"
+}
+,
+{
+"cmd"
+:
+"x abox stop mybox"
+,
+"zh"
+:
+"停止名为 mybox 的容器"
+,
+"en"
+:
+"Stop container named mybox"
+}
+]
+}
+,
+"restart"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"重启指定的 abox 容器"
+,
+"en"
+:
+"Restart the specified abox container"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"如果不指定容器名称，默认重启名为 \"abox-0\" 的容器。\n"
+,
+"en"
+:
+"If no container name is specified, restarts the container named \"abox-0\" by default.\n"
+}
+]
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（可选，默认为 abox-0）"
+,
+"en"
+:
+"Container name (optional, defaults to abox-0)"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox restart"
+,
+"zh"
+:
+"重启默认容器 abox-0"
+,
+"en"
+:
+"Restart the default container abox-0"
+}
+,
+{
+"cmd"
+:
+"x abox restart mybox"
+,
+"zh"
+:
+"重启名为 mybox 的容器"
+,
+"en"
+:
+"Restart container named mybox"
+}
+]
+}
+,
+"pause"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"暂停指定的 abox 容器"
+,
+"en"
+:
+"Pause the specified abox container"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"暂停容器会冻结其进程，但不停止容器。\n如果不指定容器名称，默认暂停名为 \"abox-0\" 的容器。\n"
+,
+"en"
+:
+"Pausing container freezes its processes without stopping it.\nIf no container name is specified, pauses the container named \"abox-0\" by default.\n"
+}
+]
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（可选，默认为 abox-0）"
+,
+"en"
+:
+"Container name (optional, defaults to abox-0)"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox pause"
+,
+"zh"
+:
+"暂停默认容器"
+,
+"en"
+:
+"Pause the default container"
+}
+,
+{
+"cmd"
+:
+"x abox pause mybox"
+,
+"zh"
+:
+"暂停名为 mybox 的容器"
+,
+"en"
+:
+"Pause container named mybox"
+}
+]
+}
+,
+"resume"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"恢复指定的 abox 容器"
+,
+"en"
+:
+"Resume the specified abox container"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"恢复被暂停的容器，继续运行其进程。\n如果不指定容器名称，默认恢复名为 \"abox-0\" 的容器。\n"
+,
+"en"
+:
+"Resumes a paused container and continues its processes.\nIf no container name is specified, resumes the container named \"abox-0\" by default.\n"
+}
+]
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（可选，默认为 abox-0）"
+,
+"en"
+:
+"Container name (optional, defaults to abox-0)"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox resume"
+,
+"zh"
+:
+"恢复默认容器"
+,
+"en"
+:
+"Resume the default container"
+}
+,
+{
+"cmd"
+:
+"x abox resume mybox"
+,
+"zh"
+:
+"恢复名为 mybox 的容器"
+,
+"en"
+:
+"Resume container named mybox"
+}
+]
+}
+,
+"rm"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"删除指定的 abox 容器"
+,
+"en"
+:
+"Remove the specified abox container"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"强制删除容器，即使容器正在运行。\n如果不指定容器名称，默认删除名为 \"abox-0\" 的容器。\n"
+,
+"en"
+:
+"Force removes container even if it's running.\nIf no container name is specified, removes the container named \"abox-0\" by default.\n"
+}
+]
+,
+"-n|--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称"
+,
+"en"
+:
+"Container name"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（默认为 abox-0）"
+,
+"en"
+:
+"Container name (defaults to abox-0)"
+}
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称"
+,
+"en"
+:
+"Container name"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox rm"
+,
+"zh"
+:
+"删除默认容器 abox-0"
+,
+"en"
+:
+"Remove the default container abox-0"
+}
+,
+{
+"cmd"
+:
+"x abox rm mybox"
+,
+"zh"
+:
+"删除名为 mybox 的容器"
+,
+"en"
+:
+"Remove container named mybox"
+}
+]
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出所有 abox 容器"
+,
+"en"
+:
+"List all abox containers"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"列出所有名称以 \"abox-\" 开头的容器。\n"
+,
+"en"
+:
+"Lists all containers whose names start with \"abox-\".\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox ls"
+,
+"zh"
+:
+"列出所有 abox 容器"
+,
+"en"
+:
+"List all abox containers"
+}
+]
+}
+,
+"fz"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"使用 FZF 交互式选择 abox 容器"
+,
+"en"
+:
+"Interactively select abox containers using FZF"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"启动 FZF 界面，可以通过模糊搜索选择容器进行操作。\n"
+,
+"en"
+:
+"Launches FZF interface for fuzzy searching and selecting containers.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox fz"
+,
+"zh"
+:
+"启动 FZF 交互式选择容器"
+,
+"en"
+:
+"Launch FZF for interactive container selection"
+}
+]
+}
+,
+"tmux|t"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"通过 tmux 连接到容器"
+,
+"en"
+:
+"Connect to container via tmux"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"在容器中启动一个 tmux 会话，适合长时间运行的交互式任务。\n如果不指定容器名称，默认连接名为 \"abox-0\" 的容器。\n"
+,
+"en"
+:
+"Starts a tmux session in the container, suitable for long-running interactive tasks.\nIf no container name is specified, connects to container named \"abox-0\" by default.\n"
+}
+]
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（可选，默认为 abox-0）"
+,
+"en"
+:
+"Container name (optional, defaults to abox-0)"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox tmux"
+,
+"zh"
+:
+"通过 tmux 连接到默认容器"
+,
+"en"
+:
+"Connect to default container via tmux"
+}
+,
+{
+"cmd"
+:
+"x abox t mybox"
+,
+"zh"
+:
+"通过 tmux 连接到名为 mybox 的容器（简写）"
+,
+"en"
+:
+"Connect to container named mybox via tmux (short form)"
+}
+,
+{
+"cmd"
+:
+"x abox t mybox:claude"
+,
+"zh"
+:
+"通过 tmux 连接到名为 mybox 的容器中并启动名为 claude 的 tmux 会话"
+,
+"en"
+:
+"Connect to container named mybox via tmux and start a tmux session named claude"
+}
+]
+}
+,
+"cmd"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"在容器中执行命令（非交互式）"
+,
+"en"
+:
+"Execute command in container (non-interactive)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"在指定容器中执行命令，不分配 TTY。\n如果不指定命令，默认执行 bash。\n如果不指定容器名称，默认使用名为 \"abox-0\" 的容器。\n"
+,
+"en"
+:
+"Executes command in specified container without allocating TTY.\nIf no command is specified, defaults to bash.\nIf no container name is specified, uses container named \"abox-0\" by default.\n"
+}
+]
+,
+"-n|--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称"
+,
+"en"
+:
+"Container name"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（默认为 abox-0）"
+,
+"en"
+:
+"Container name (defaults to abox-0)"
+}
+}
+}
+,
+"-r|--root"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 root 用户执行命令"
+,
+"en"
+:
+"Execute command as root user"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"要执行的命令"
+,
+"en"
+:
+"Command to execute"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox cmd -n mybox ls -la"
+,
+"zh"
+:
+"在 mybox 容器中执行 ls -la"
+,
+"en"
+:
+"Execute ls -la in mybox container"
+}
+,
+{
+"cmd"
+:
+"x abox cmd -r apt update"
+,
+"zh"
+:
+"在默认容器中以 root 执行 apt update"
+,
+"en"
+:
+"Execute apt update as root in default container"
+}
+]
+}
+,
+"cmdi"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"在容器中执行命令（交互式）"
+,
+"en"
+:
+"Execute command in container (interactive)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"在指定容器中交互式执行命令，分配 TTY。\n如果不指定命令，默认执行 bash。\n如果不指定容器名称，默认使用名为 \"abox-0\" 的容器。\n"
+,
+"en"
+:
+"Executes command in specified container interactively with TTY allocated.\nIf no command is specified, defaults to bash.\nIf no container name is specified, uses container named \"abox-0\" by default.\n"
+}
+]
+,
+"-n|--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称"
+,
+"en"
+:
+"Container name"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（默认为 abox-0）"
+,
+"en"
+:
+"Container name (defaults to abox-0)"
+}
+}
+}
+,
+"-r|--root"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 root 用户执行命令"
+,
+"en"
+:
+"Execute command as root user"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"要执行的命令"
+,
+"en"
+:
+"Command to execute"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox cmdi -n mybox bash"
+,
+"zh"
+:
+"在 mybox 容器中启动交互式 bash"
+,
+"en"
+:
+"Start interactive bash in mybox container"
+}
+,
+{
+"cmd"
+:
+"x abox cmdi -r bash"
+,
+"zh"
+:
+"在默认容器中以 root 启动交互式 bash"
+,
+"en"
+:
+"Start interactive bash as root in default container"
+}
+]
+}
+,
+"login"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"登录到容器（启动 bash）"
+,
+"en"
+:
+"Login to container (start bash)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"在容器中启动一个 bash shell，用于直接操作容器。\n如果不指定容器名称，默认登录名为 \"abox-0\" 的容器。\n"
+,
+"en"
+:
+"Starts a bash shell in the container for direct operation.\nIf no container name is specified, logs into container named \"abox-0\" by default.\n"
+}
+]
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"容器名称（可选，默认为 abox-0）"
+,
+"en"
+:
+"Container name (optional, defaults to abox-0)"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox login"
+,
+"zh"
+:
+"登录到默认容器"
+,
+"en"
+:
+"Login to default container"
+}
+,
+{
+"cmd"
+:
+"x abox login mybox"
+,
+"zh"
+:
+"登录到名为 mybox 的容器"
+,
+"en"
+:
+"Login to container named mybox"
+}
+]
+}
+,
+"clearall"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"停止并删除所有 abox 容器和镜像"
+,
+"en"
+:
+"Stop and remove all abox containers and images"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"此命令会：\n1. 停止所有名称以 \"abox-\" 开头的容器\n2. 删除所有名称以 \"abox-\" 开头的容器\n3. 删除 abox 镜像\n\n注意：此操作不可逆，请谨慎使用。\n"
+,
+"en"
+:
+"This command will:\n1. Stop all containers with names starting with \"abox-\"\n2. Remove all containers with names starting with \"abox-\"\n3. Remove the abox image\n\nWarning: This operation is irreversible, use with caution.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox clearall"
+,
+"zh"
+:
+"清理所有 abox 容器和镜像"
+,
+"en"
+:
+"Clean up all abox containers and images"
+}
+]
+}
+,
+"prepare"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"确保 abox 镜像存在，缺失时自动重建"
+,
+"en"
+:
+"Ensure the abox image exists, rebuild if missing"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"启动容器前会自动调用 prepare。\n若镜像已存在则跳过；缺失时调用 rebuild。\n"
+,
+"en"
+:
+"prepare is invoked automatically before starting a container.\nSkipped when the image already exists; otherwise rebuild is triggered.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox prepare"
+,
+"zh"
+:
+"确保 abox 镜像存在"
+,
+"en"
+:
+"Ensure the abox image exists"
+}
+]
+}
+,
+"rebuild"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"从 ubuntu 基础镜像重建 abox 镜像，跳过缓存"
+,
+"en"
+:
+"Rebuild the abox image from ubuntu base, bypassing cache"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"预装 curl、jq、sqlite3、git、openssh、tmux、doas，并通过 --xenv 安装 claude-code、codex、opencode。\n使用 --no-cache 强制 apt 层与 xenv 安装全部重新执行。\n"
+,
+"en"
+:
+"Installs curl, jq, sqlite3, git, openssh, tmux, doas and --xenv installs claude-code, codex, opencode.\n--no-cache forces apt layers and xenv installs to re-run from scratch.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox rebuild"
+,
+"zh"
+:
+"强制重建 abox 镜像"
+,
+"en"
+:
+"Force-rebuild the abox image"
+}
+]
+}
+,
+"#subcmd:Image"
+:
+[
+"prepare"
+,
+"rebuild"
+]
+,
+"#subcmd:Container"
+:
+[
+"start"
+,
+"stop"
+,
+"restart"
+,
+"pause"
+,
+"resume"
+,
+"rm"
+,
+"ls"
+,
+"fz"
+,
+"clearall"
+]
+,
+"#subcmd:Connection"
+:
+[
+"tmux|t"
+,
+"cmd"
+,
+"cmdi"
+,
+"login"
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x abox start"
+,
+"zh"
+:
+"启动默认容器（无 SSH）"
+,
+"en"
+:
+"Start default container (no SSH)"
+}
+,
+{
+"cmd"
+:
+"x abox start --pass - --port 2222"
+,
+"zh"
+:
+"启动容器并启用 SSH（随机密码）"
+,
+"en"
+:
+"Start container with SSH (random password)"
+}
+,
+{
+"cmd"
+:
+"x abox start --key ~/.ssh/id_rsa.pub --port 2222 -n mybox"
+,
+"zh"
+:
+"使用 SSH 公钥启动命名容器"
+,
+"en"
+:
+"Start named container with SSH key"
+}
+,
+{
+"cmd"
+:
+"x abox rm"
+,
+"zh"
+:
+"删除默认容器"
+,
+"en"
+:
+"Remove default container"
+}
+,
+{
+"cmd"
+:
+"x abox ls"
+,
+"zh"
+:
+"列出所有 abox 容器"
+,
+"en"
+:
+"List all abox containers"
+}
+,
+{
+"cmd"
+:
+"x abox t"
+,
+"zh"
+:
+"通过 tmux 连接到默认容器"
+,
+"en"
+:
+"Connect to default container via tmux"
+}
+,
+{
+"cmd"
+:
+"x abox tmux :claude"
+,
+"zh"
+:
+"在容器中启动名为 claude 的 tmux 会话"
+,
+"en"
+:
+"Start tmux session named 'claude' in container"
+}
+,
+{
+"cmd"
+:
+"x abox stop"
+,
+"zh"
+:
+"停止默认容器"
+,
+"en"
+:
+"Stop default container"
+}
+,
+{
+"cmd"
+:
+"x abox pause"
+,
+"zh"
+:
+"暂停默认容器"
+,
+"en"
+:
+"Pause default container"
+}
+,
+{
+"cmd"
+:
+"x abox resume"
+,
+"zh"
+:
+"恢复默认容器"
+,
+"en"
+:
+"Resume default container"
+}
+,
+{
+"cmd"
+:
+"x abox cmdi bash"
+,
+"zh"
+:
+"在默认容器中启动交互式 bash"
+,
+"en"
+:
+"Start interactive bash in default container"
+}
+,
+{
+"cmd"
+:
+"x abox clearall"
+,
+"zh"
+:
+"清理所有 abox 容器和镜像"
+,
+"en"
+:
+"Clean up all abox containers and images"
+}
+,
+{
+"cmd"
+:
+"x abox prepare"
+,
+"zh"
+:
+"确保 abox 镜像存在（缺失时自动重建）"
+,
+"en"
+:
+"Ensure the abox image exists (auto-rebuild if missing)"
+}
+,
+{
+"cmd"
+:
+"x abox rebuild"
+,
+"zh"
+:
+"强制重建 abox 镜像（跳过缓存）"
+,
+"en"
+:
+"Force-rebuild the abox image (cache bypassed)"
+}
+]
+}
+

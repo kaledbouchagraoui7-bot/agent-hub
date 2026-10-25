@@ -1,0 +1,136 @@
+# shellcheck shell=dash
+
+# First-time onboarding for the claw manager.
+#
+# This is only invoked when the user runs `x claw` with no message and the
+# manager workspace does not exist yet. It is interactive, so it must stay
+# lightweight: do NOT run slow platform probes before showing the menu.
+#
+# The structured task sheet printed to stdout is consumed by
+# ___x_cmd_claw_manager___chat as the first prompt for the manager agent.
+___x_cmd_claw_manager_first(){
+    # Non-interactive environments cannot show a menu.
+    ___x_cmd_runmode_allow_manual || return 0
+
+    local lang_tag="en"
+    [ "$___X_CMD_LANG" = zh ] && lang_tag="zh"
+
+    # Keep the welcome minimal so the user gets a reaction quickly.
+    if [ "$lang_tag" = zh ]; then
+        claw:info "欢迎使用 claw！这是首次使用。"
+        claw:info "claw 是你的 AI 执行入口：可以运行任何任务、管理 IM 平台、调度定时作业，或让它帮你完成其它工作。"
+    else
+        claw:info "Welcome to claw! This is your first time."
+        claw:info "claw is your AI execution hub: run any task, manage IM platforms, schedule jobs, or ask it to do anything else."
+    fi
+
+    # Service status is cheap enough; platform readiness is NOT checked here.
+    local service_running=0
+    ___x_cmd service isalive x-claw-service 2>/dev/null && service_running=1
+
+    local opt_quickstart opt_start opt_connect opt_chat
+    if [ "$lang_tag" = zh ]; then
+        opt_quickstart="快速开始 - 检查状态并建议下一步"
+        opt_start="启动 claw 服务"
+        opt_connect="连接一个 IM 平台"
+        opt_chat="与 claw 管理者对话"
+    else
+        opt_quickstart="Quick start - check status and recommend next steps"
+        opt_start="Start claw service"
+        opt_connect="Connect an IM platform"
+        opt_chat="Chat with claw manager"
+    fi
+
+    set -- "$opt_quickstart"
+    [ "$service_running" -eq 0 ] && set -- "$@" "$opt_start"
+    set -- "$@" "$opt_connect" "$opt_chat"
+
+    local idx=0 val=""
+    local menu_msg
+    [ "$lang_tag" = zh ] && menu_msg="你想做什么？" || menu_msg="What would you like to do?"
+    ___x_cmd ui select idx,val "$menu_msg" "$@" || return $?
+
+    case "$val" in
+        "$opt_quickstart")  ___x_cmd_claw_manager_first___quickstart "$lang_tag" "$service_running" ;;
+        "$opt_start")       ___x_cmd_claw_manager_first___start      "$lang_tag" ;;
+        "$opt_connect")     ___x_cmd_claw_manager_first___connect    "$lang_tag" ;;
+        "$opt_chat")        ___x_cmd_claw_manager_first___chat       "$lang_tag" ;;
+    esac
+
+    return 0
+}
+
+# Print the language name used in output instructions.
+___x_cmd_claw_manager_first___lang(){
+    [ "$1" = zh ] && printf "%s" "Chinese" || printf "%s" "English"
+}
+
+___x_cmd_claw_manager_first___quickstart(){
+    local lang_tag="$1" service_running="$2"
+    local lang; lang="$(___x_cmd_claw_manager_first___lang "$lang_tag")"
+
+    local service_state
+    [ "$service_running" -eq 1 ] && service_state="running" || service_state="not running"
+
+    printf "<intent>quick-start</intent>\n"
+    printf "<language>%s</language>\n" "$lang_tag"
+    printf "<state>Service: %s</state>\n" "$service_state"
+    printf "<tasks>\n"
+    printf "1. Run: x claw status\n"
+    printf "2. Summarize service state, active IM connections, and cron tasks.\n"
+    printf "3. Recommend the next step.\n"
+    printf "</tasks>\n"
+    printf "<output>\n"
+    printf "Reply briefly in %s. Do NOT run extra diagnostic commands.\n" "$lang"
+    printf "</output>\n"
+}
+
+___x_cmd_claw_manager_first___start(){
+    local lang_tag="$1"
+    local lang; lang="$(___x_cmd_claw_manager_first___lang "$lang_tag")"
+
+    printf "<intent>start-service</intent>\n"
+    printf "<language>%s</language>\n" "$lang_tag"
+    printf "<tasks>\n"
+    printf "1. Run: x claw service start\n"
+    printf "2. Verify with: x claw service status\n"
+    printf "3. Report the result.\n"
+    printf "</tasks>\n"
+    printf "<output>\n"
+    printf "Briefly report the start result in %s.\n" "$lang"
+    printf "</output>\n"
+}
+
+___x_cmd_claw_manager_first___connect(){
+    local lang_tag="$1"
+    local lang; lang="$(___x_cmd_claw_manager_first___lang "$lang_tag")"
+
+    # No second UI menu: hand off to the agent and let it ask the user.
+    # Feishu defaults to single chat; groups must be explicitly chosen.
+    printf "<intent>connect-im</intent>\n"
+    printf "<language>%s</language>\n" "$lang_tag"
+    printf "<tasks>\n"
+    printf "1. Ask the user which IM platform to connect (weixin, telegram, qywx, feishu).\n"
+    printf "2. If the user chooses feishu, ask whether to connect a single chat or all groups; single chat is \"feishu\" and all groups is \"feishu:groups\". Default to single chat.\n"
+    printf "3. Run: x claw connect <confirmed platform>\n"
+    printf "4. Report the connection result.\n"
+    printf "</tasks>\n"
+    printf "<output>\n"
+    printf "Reply briefly in %s. Ask only the minimum necessary question; default feishu to single chat.\n" "$lang"
+    printf "</output>\n"
+}
+
+___x_cmd_claw_manager_first___chat(){
+    local lang_tag="$1"
+    local lang; lang="$(___x_cmd_claw_manager_first___lang "$lang_tag")"
+
+    printf "<intent>chat</intent>\n"
+    printf "<language>%s</language>\n" "$lang_tag"
+    printf "<tasks>\n"
+    printf "1. Greet the user briefly.\n"
+    printf "2. Ask how you can help manage claw.\n"
+    printf "</tasks>\n"
+    printf "<output>\n"
+    printf "Brief friendly greeting in %s, then ask how you can help manage claw.\n" "$lang"
+    printf "</output>\n"
+}

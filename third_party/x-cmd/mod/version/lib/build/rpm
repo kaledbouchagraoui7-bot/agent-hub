@@ -1,0 +1,136 @@
+# shellcheck shell=dash disable=SC2016
+
+# https://www.redhat.com/en/blog/create-rpm-package
+# dnf install /path/to/x-cmd.rpm
+
+___x_cmd_version_build_rpm(){
+    local version="$1"
+    local versum="$2"
+    local mode="$3"
+
+    ___x_cmd_version_build_rpm_builddir "$version" "$versum" || return "$?"
+
+    if [ "$mode" = "docker" ]; then
+        ___x_cmd_version_build_rpm_docker "$@"
+    else
+        ___x_cmd_version_build_rpm_local "$@"
+    fi
+}
+
+___x_cmd_version_build_rpm_docker(){
+    local version="$1"
+    printf "%s\n" 'FROM fedora:latest
+
+RUN dnf install -y rpmdevtools rpmlint' > ".build/fedora-builder.Dockerfile"
+
+    docker build -f ".build/fedora-builder.Dockerfile" --tag fedora-builder .
+    docker run --rm -v "$PWD/.build/rpm:/home/builder/rpmbuild" --name fedora-builder fedora-builder sh -c '
+    cd /home/builder/rpmbuild
+    groupadd abuild && useradd -m -G abuild builder && chown -R builder /home/builder/rpmbuild
+
+    # Lint SPEC file before building
+    echo "===== rpmlint SPECS/x-cmd.spec ====="
+    rpmlint -r SPECS/x-cmd.rpmlintrc --ignore-unused-rpmlintrc SPECS/x-cmd.spec 2>&1 | tee rpmlint.spec.log || true
+
+    su -c "rpmbuild -ba /home/builder/rpmbuild/SPECS/x-cmd.spec" builder || exit 1
+
+    # Lint the built RPM
+    echo "===== rpmlint RPMS/noarch/x-cmd-*.rpm ====="
+    for rpm in RPMS/noarch/x-cmd-*.rpm; do
+        [ -f "$rpm" ] || continue
+        rpmlint -r SPECS/x-cmd.rpmlintrc --ignore-unused-rpmlintrc "$rpm" 2>&1 | tee "rpmlint.$(basename "$rpm").log" || true
+    done
+' || return "$?"
+
+    local distfp="$___X_CMD_VERSION_BUILD_DATA/release/${version}/rpm"
+    ___x_cmd mkdirp "$distfp"
+	___x_cmd_cmds cp -rf "$builddir/rpm/RPMS/noarch/"* "$distfp/x-cmd_${version#v}_all.rpm"
+}
+
+___x_cmd_version_build_rpm_local()(
+    cd ".build/rpm"
+    rpmbuild -ba SPECS/x-cmd.spec || return "$?"
+)
+
+___x_cmd_version_build_rpm_builddir(){
+    local version="$1"
+    local versum="$2"
+    local url="$(___x_cmd_version_build_info___ url)"
+    local license="$(___x_cmd_version_build_info___ license)"
+    local summary="$(___x_cmd_version_build_info___ summary)"
+
+    local builddir=".build/rpm"
+    ___x_cmd rm -rf "$builddir"
+    ___x_cmd mkdirp "$builddir/BUILD"
+    ___x_cmd mkdirp "$builddir/RPMS"
+    ___x_cmd mkdirp "$builddir/SOURCES"
+    ___x_cmd mkdirp "$builddir/SPECS"
+    ___x_cmd mkdirp "$builddir/SRPMS"
+    cp -rf ".build/x-cmd-${version}.tgz" "$builddir/SOURCES/x-cmd-${version#v}.tgz"
+
+    printf "%s\n" '%global __requires_exclude ^/data/data/com.termux/.*$
+Name:           x-cmd
+Version:        '"${version#v}"'
+Release:        1%{?dist}
+Summary:        '"$summary"'
+BuildArch:      noarch
+
+License:        '"$license"'
+URL:            '"$url"'
+
+Source0:        %{name}-%{version}.tgz
+
+Requires:       curl
+Requires:       /usr/bin/bash
+
+%global _pkgsum  '"$versum"'
+%global _pkgdir  %{_prefix}/share/x-cmd/v/%{_pkgsum}
+
+%description
+ A modern toolkit for POSIX shell (bash, zsh, ash, dash) — designed
+ to make shell as powerful as Python'\''s standard library.
+
+%prep
+
+%build
+
+%check
+
+%install
+mkdir -p %{buildroot}%{_pkgdir}
+tar -xzf %{SOURCE0} -C %{buildroot}%{_pkgdir}
+
+mkdir -p %{buildroot}%{_prefix}/share/x-cmd/v
+ln -sf %{_pkgsum} %{buildroot}%{_prefix}/share/x-cmd/v/latest
+
+mkdir -p %{buildroot}%{_bindir}
+install -m755 %{buildroot}%{_pkgdir}/mod/x-cmd/lib/bin/x-cmd \
+              %{buildroot}%{_bindir}/x-cmd
+
+mkdir -p %{buildroot}%{_defaultdocdir}/x-cmd
+if [ -f %{buildroot}%{_pkgdir}/LICENSE.txt ]; then
+    cp %{buildroot}%{_pkgdir}/LICENSE.txt \
+       %{buildroot}%{_defaultdocdir}/x-cmd/LICENSE.txt
+fi
+
+%files
+%license %{_defaultdocdir}/x-cmd/LICENSE.txt
+%{_datadir}/x-cmd/v/%{_pkgsum}/
+%{_datadir}/x-cmd/v/latest
+%{_bindir}/x-cmd
+
+%changelog
+* Mon Feb 24 2025 Li Junhao <l@x-cmd.com> - '"${version#v}"'-1
+- First time packaging x-cmd into an RPM package
+
+' > "$builddir/SPECS/x-cmd.spec"
+
+
+    printf "%s\n" '# rpmlint config for x-cmd
+# Filter known x-cmd packaging false positives.
+# Format: legacy rpmlint INI. addFilter() takes a regex matched against
+# the full "level: checkname path" string.
+addFilter("W: hidden-file-or-dir /usr/share/x-cmd/v/[^/]+.*")
+addFilter("W: no-manual-page-for-binary x-cmd")
+' > "$builddir/SPECS/x-cmd.rpmlintrc"
+}

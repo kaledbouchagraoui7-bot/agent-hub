@@ -1,0 +1,78 @@
+{
+"#synopsis"
+:
+[
+{
+"x claw disconnect <IM>..."
+:
+null
+}
+]
+,
+"#1"
+:
+{
+"$ref"
+:
+"x-advise://claw/data/im_platform.jso"
+,
+"#desc"
+:
+{
+"zh"
+:
+"IM 平台标识，可指定多个。格式与 connect 一致：`im` 或 `im:chatid`。\n省略 chatid 时断开该平台的所有连接。\n"
+,
+"en"
+:
+"IM platform identifier, multiple allowed. Same format as connect: `im` or `im:chatid`.\nOmitting chatid disconnects all connections for that platform.\n"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw disconnect weixin telegram feishu:groups"
+,
+"zh"
+:
+"场景: 临时断开微信、Telegram 和飞书群聊，保留服务本身运行"
+,
+"en"
+:
+"Scenario: Temporarily disconnect WeChat, Telegram, and Feishu groups while keeping the service running"
+}
+,
+{
+"cmd"
+:
+"x claw disconnect feishu:oc_xxx"
+,
+"zh"
+:
+"场景: 仅断开飞书指定群聊，不影响其他群或平台"
+,
+"en"
+:
+"Scenario: Disconnect only a specific Feishu group without affecting others"
+}
+,
+{
+"cmd"
+:
+"x claw disconnect weixin"
+,
+"zh"
+:
+"场景: 完全断开微信的所有连接"
+,
+"en"
+:
+"Scenario: Disconnect all WeChat connections entirely"
+}
+]
+}
+

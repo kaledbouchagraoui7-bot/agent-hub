@@ -1,0 +1,178 @@
+# shellcheck disable=SC2016
+
+
+___x_cmd_abox_prepare(){
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m abox prepare "$@" ; return 0 ;;
+            *)              break ;;
+        esac
+    done
+
+    ___x_cmd docker image exist abox ||  ___x_cmd_abox_rebuild "$@"
+}
+
+___x_cmd_abox_rebuild(){
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m abox rebuild "$@" ; return 0 ;;
+            *)              break ;;
+        esac
+    done
+
+    ___x_cmd docker refit --no-cache --userai --from ubuntu    \
+            --apt "curl jq sqlite3 git openssh-server openssh-client tmux doas locales"  \
+            --xenv "claude-code codex opencode"     \
+            --utf8 --to abox
+}
+
+# ___x_cmd_abox_prepare(){
+#     ___x_cmd_abox_preparebase || return $?
+#     ___x_cmd docker image exist abox-xfce4 ||           \
+#         ___x_cmd docker refit --userai --from abox      \
+#             --apt "xfce4 xfce4-goodies tightvncserver websockify novnc python3"  \
+#             --utf8  --to abox-xfce4
+# }
+
+# Use ubuntu as the the base image. Using
+___x_cmd_abox_dockercp(){
+    abox:debug "Log --> $*"
+    ___x_cmd docker cp "$@" 2>/dev/null
+}
+
+# x abox start
+___x_cmd_abox_start(){
+    local key=""
+    local sshpass=""
+
+    local port=""
+    local name=""
+    local dind=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m abox start "$@" ; return 0 ;;
+            --key)          key="$2" ;      arg:2:shift ;;
+            --pass)         sshpass="$2" ;  arg:2:shift ;;
+            --port)         port="$2";      arg:2:shift ;;
+            -n|--name)      name="$2";      arg:2:shift ;;
+            --dind)         dind=1;         shift ;;
+            *)              break ;;
+        esac
+
+    done
+
+    if [ -f "$key" ] && [ ! -r "$key" ]; then
+        N=abox M="The keyfile is not readable." log:ret:64
+    fi
+
+    if [ -z "$port" ] && { [ -n "$sshpass" ] || [ -n "$key" ] ; }; then
+        N=abox M="Please specify ssh port using --port" log:ret:64
+    fi
+
+    case "$sshpass" in
+        -)
+                sshpass="$( ___x_cmd rand uuid )"
+                abox:info "Generate a ssh password -> $sshpass"
+                ;;
+    esac
+
+    if [ $# -gt 0 ]; then
+        name="$1";  shift
+    fi
+
+    local x_=
+    ___x_cmd_abox___normalize_name_ "$name" || return $?
+    name="$x_"
+
+    ___x_cmd_abox_prepare "$@" ||    N=abox M="Fail to prepare abox" log:ret:1
+
+    local agent_home="$___X_CMD_ABOX_HOME/$name"
+    ___x_cmd mkdirp "$agent_home"
+
+    set --  -d -v "${agent_home}:/home/ai"  \
+            --name "$name"
+
+    if [ -n "$port" ]; then
+        set -- "$@" -p "${port}:22"
+    fi
+
+    if [ -n "$dind" ]; then
+        set -- "$@" -v /var/run/docker.sock:/var/run/docker.sock
+    fi
+
+    ___x_cmd mkdirp "$HOME/.x-repo"
+    set -- "$@" -v "$HOME/.x-repo:/home/ai/.x-repo"
+
+    local _uid ; _uid=$(id -u)
+    local _gid ; _gid=$(id -g)
+
+    ___x_cmd docker run "$@"    abox  foreversleep.sh || return $?
+
+    # TODO: add more specific subcmd, like update, install, purge. Notice install ./dangerous.apt will be a problem. We should have a wrapper for apt.
+
+    ___x_cmd_abox_dockercp "$___X_CMD_ROOT_MOD/abox/lib/start/apt"          "$name:/usr/local/bin"
+    ___x_cmd docker exec --user root "$name" sh -c "
+sed -i \"/^ai:/s/:[0-9]*:[0-9]*:/:$_uid:$_gid:/\" /etc/passwd
+sed -i \"/^ai:/s/:[0-9]*:/:$_gid:/\" /etc/group
+
+chsh -s /bin/bash root
+chsh -s /bin/bash ai
+echo \"permit nopass ai cmd /usr/bin/apt\" >\"/etc/doas.conf\"
+
+chmod +x /usr/local/bin/apt
+chmod -R go+x /usr/local/bin/
+
+find /home/ai -path /home/ai/.x-repo -prune -o -exec chown ai {} \+
+
+locale-gen en_US.UTF-8
+update-locale
+"
+
+    if [ -n "$port" ]; then
+        ___x_cmd_abox_start___ssh
+    fi
+
+    ___x_cmd_abox_dockercp "$___X_CMD_ROOT_MOD/abox/lib/start/c.AGENTS.md"  "$name:/home/ai/AGENTS.md"
+    ___x_cmd_abox_dockercp "$___X_CMD_ROOT_MOD/abox/lib/start/c.AGENTS.md"  "$name:/home/ai/CLAUDE.md"
+
+    ___x_cmd docker exec --user ai "$name" sh -c '___X_CMD_ROOTBIN_SLEEP=0 x-cmd theme use l
+printf "%s\n" "source ~/.bashrc" >~/.bash_profile
+'
+
+    # ___x_cmd tmux --setup # TODO: fix bug in container. Then automatically include it.
+
+}
+
+___x_cmd_abox_start___ssh(){
+    if [ -n "$sshpass" ] || [ -n "$key" ]; then
+       ___x_cmd_abox_dockercp "$___X_CMD_ROOT_MOD/abox/lib/start/forever-sshd.sh"    "$name:/usr/bin/forever-sshd.sh"
+
+        ___x_cmd docker exec --user root "$name" sh -c '
+mkdir -p /root/.ssh
+
+ssh-keygen -A
+chmod +x /usr/bin/forever-sshd.sh
+nohup /usr/bin/forever-sshd.sh &
+'
+    fi
+
+    if [ -n "$key" ]; then
+        ___x_cmd_abox_dockercp "$key" "$name:/tmp/authorized_keys"
+        ___x_cmd docker exec --user root "$name" sh -c '
+            mkdir -p /root/.ssh /home/ai/.ssh
+            cp /tmp/authorized_keys /root/.ssh/authorized_keys
+            cp /tmp/authorized_keys /home/ai/.ssh/authorized_keys
+            chmod 700 /root/.ssh /home/ai/.ssh
+            chmod 600 /root/.ssh/authorized_keys /home/ai/.ssh/authorized_keys
+            chown -R ai /home/ai/.ssh
+            rm -f /tmp/authorized_keys
+        '
+    fi
+
+    if [ -n "$sshpass" ]; then
+        ___x_cmd docker exec --user root "$name" sh -c "
+yes \"$sshpass\" | passwd root
+yes \"$sshpass\" | passwd ai
+"
+    fi
+}

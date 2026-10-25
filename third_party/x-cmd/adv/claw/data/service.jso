@@ -1,0 +1,360 @@
+{
+"#synopsis"
+:
+[
+{
+"x claw service <SUBCMD>"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"管理 x claw 后台服务"
+,
+"en"
+:
+"Manage the x claw background service"
+}
+,
+"#subcmd:Service"
+:
+[
+"start"
+,
+"stop"
+,
+"restart"
+,
+"status"
+,
+"log"
+,
+"install"
+,
+"uninstall"
+]
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"也可以通过 x claw start/stop/restart/status/log 直接调用对应服务操作。\ninstall/uninstall 用于注册或移除开机自启动。\n"
+,
+"en"
+:
+"Service operations can also be invoked directly via x claw start/stop/restart/status/log.\nUse install/uninstall to register or remove startup service entries.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw service start"
+,
+"zh"
+:
+"示例: 启动 claw 后台服务"
+,
+"en"
+:
+"Example: Start the claw background service"
+}
+,
+{
+"cmd"
+:
+"x claw service install"
+,
+"zh"
+:
+"示例: 注册 claw 开机自启动"
+,
+"en"
+:
+"Example: Register claw as a startup service"
+}
+,
+{
+"cmd"
+:
+"x claw service uninstall"
+,
+"zh"
+:
+"示例: 移除 claw 开机自启动"
+,
+"en"
+:
+"Example: Remove claw from startup services"
+}
+,
+{
+"cmd"
+:
+"x claw service status"
+,
+"zh"
+:
+"示例: 查看 claw 服务状态"
+,
+"en"
+:
+"Example: Check claw service status"
+}
+]
+,
+"start"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"启动 x claw 后台服务"
+,
+"en"
+:
+"Start the x claw background service"
+}
+,
+"$ref"
+:
+"x-advise://claw/data/start.jso"
+}
+,
+"stop"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"停止 x claw 后台服务"
+,
+"en"
+:
+"Stop the x claw background service"
+}
+,
+"$ref"
+:
+"x-advise://claw/data/stop.jso"
+}
+,
+"restart"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"重启 x claw 后台服务"
+,
+"en"
+:
+"Restart the x claw background service"
+}
+,
+"$ref"
+:
+"x-advise://claw/data/restart.jso"
+}
+,
+"status"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 x claw 服务状态"
+,
+"en"
+:
+"Show x claw service status"
+}
+,
+"$ref"
+:
+"x-advise://claw/data/status.jso"
+}
+,
+"log"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 x claw 服务日志"
+,
+"en"
+:
+"Show x claw service logs"
+}
+,
+"$ref"
+:
+"x-advise://claw/data/log.jso"
+}
+,
+"install"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"注册 x claw 开机自启动"
+,
+"en"
+:
+"Register x claw as a startup service"
+}
+,
+"#synopsis"
+:
+[
+{
+"x claw service install"
+:
+null
+}
+]
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"注册前如果服务未运行，会先尝试启动服务。\n注册后系统重启时会自动拉起 claw 后台服务。\n"
+,
+"en"
+:
+"If the service is not running, it will be started before registration.\nAfter registration, claw will auto-start on system boot.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw service install"
+,
+"zh"
+:
+"示例: 注册 claw 开机自启动"
+,
+"en"
+:
+"Example: Register claw as a startup service"
+}
+,
+{
+"cmd"
+:
+"x claw service install"
+,
+"zh"
+:
+"示例: 部署后设置服务随系统启动"
+,
+"en"
+:
+"Example: Enable auto-start after deployment"
+}
+]
+}
+,
+"uninstall"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"移除 x claw 开机自启动"
+,
+"en"
+:
+"Remove x claw from startup services"
+}
+,
+"#synopsis"
+:
+[
+{
+"x claw service uninstall"
+:
+null
+}
+]
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"卸载后服务不会随系统启动，但当前运行中的服务不会被停止。\n"
+,
+"en"
+:
+"The service will no longer auto-start on boot, but a currently running service is not stopped.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw service uninstall"
+,
+"zh"
+:
+"示例: 移除 claw 开机自启动"
+,
+"en"
+:
+"Example: Remove claw from startup services"
+}
+,
+{
+"cmd"
+:
+"x claw service uninstall"
+,
+"zh"
+:
+"示例: 卸载前清理系统启动项"
+,
+"en"
+:
+"Example: Clean up startup entries before uninstalling"
+}
+]
+}
+}
+

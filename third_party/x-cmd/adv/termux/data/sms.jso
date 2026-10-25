@@ -1,0 +1,158 @@
+{
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x termux sms send -n <telephone number> <content>"
+,
+"zh"
+:
+"发送短信。"
+,
+"en"
+:
+"sending a text message"
+}
+,
+{
+"cmd"
+:
+"x termux sms ls"
+,
+"en"
+:
+"Read and list SMS content"
+,
+"zh"
+:
+"读取并列出短信内容"
+}
+]
+,
+"send"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"发送短信。"
+,
+"en"
+:
+"sending a text message."
+}
+,
+"-n"
+:
+{
+"zh"
+:
+"目标手机号码。"
+,
+"en"
+:
+"Target mobile number."
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"SMS content."
+,
+"zh"
+:
+"短信内容。"
+}
+}
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Read and list SMS content (using fzf for beautification by default)."
+,
+"zh"
+:
+"读取并列出短信内容(默认使用 fzf 美化显示)。"
+}
+,
+"--json"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 JSON 格式输出短信列表。"
+,
+"en"
+:
+"Output a list of SMS messages in JSON format."
+}
+}
+,
+"--csv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 CSV 格式输出短信列表。"
+,
+"en"
+:
+"Export SMS message list in CSV format."
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出短信列表。"
+,
+"en"
+:
+"Output SMS list in TSV format."
+}
+}
+,
+"--yml"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 YML 格式输出短信列表。"
+,
+"en"
+:
+"Output SMS list in YML format."
+}
+}
+}
+}
+

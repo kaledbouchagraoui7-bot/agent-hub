@@ -1,0 +1,142 @@
+# shellcheck shell=dash
+# Comprehensive test for ondb — all subcommands, edge cases, error handling
+
+___x_cmd_ondb___comprehensive_test(){
+    local testdir="/tmp/ondb-comprehensive-$$"
+    mkdir -p "$testdir"
+    trap 'rm -rf "$testdir"' EXIT
+
+    local fail=0
+    ___x_cmd_ondb___test_assert(){
+        if [ "$1" -ne 0 ]; then
+            printf "FAIL: %s\n" "$2"
+            fail=$((fail + 1))
+        else
+            printf "PASS: %s\n" "$2"
+        fi
+    }
+
+    printf "=== ondb comprehensive test ===\n"
+
+    # ─── schema ───
+    # After commit 59c50e3 the `x ondb schema add` / `schema ls` CLI was
+    # removed. Schema is now written directly as schema.tsv. This block
+    # covers the same intent: write a schema, add an entity that violates
+    # it, expect validate to flag.
+    printf "\n--- schema management ---\n"
+    cat > "$testdir/schema.tsv" << 'EOF'
+type	Project	required	name,status
+type	Task	required	name,status
+type	Person	required	name
+EOF
+    ___x_cmd_ondb___test_assert $? "schema.tsv written directly"
+
+    # ─── add ───
+    printf "\n--- add entities ---\n"
+    x ondb add -d "$testdir" --type Project --name "ProjA" --id p1 -- status=active
+    x ondb add -d "$testdir" --type Project --name "ProjB" --id p2 -- status=paused
+    x ondb add -d "$testdir" --type Task --name "Task1" --id t1 -- status=open priority=high
+    x ondb add -d "$testdir" --type Task --name "Task2" --id t2 -- status=open priority=low
+    x ondb add -d "$testdir" --type Task --name "Task3" --id t3 -- status=done
+    x ondb add -d "$testdir" --type Person --name "Alice" --id alice -- email=alice@test.com
+    x ondb add -d "$testdir" --type Person --name "Bob" --id bob -- email=bob@test.com phone=123
+    ___x_cmd_ondb___test_assert $? "add multiple entities"
+
+    # ─── get ───
+    printf "\n--- get ---\n"
+    x ondb get -d "$testdir" --id p1 >/dev/null
+    ___x_cmd_ondb___test_assert $? "get by id"
+    x ondb get -d "$testdir" --id t1 --json >/dev/null
+    ___x_cmd_ondb___test_assert $? "get --json"
+
+    # ─── ls ───
+    printf "\n--- ls ---\n"
+    local count; count="$(x ondb ls -d "$testdir" | wc -l)"
+    [ "$count" -eq 7 ]
+    ___x_cmd_ondb___test_assert $? "ls count=7"
+    x ondb ls -d "$testdir" --type Task | grep -q Task1
+    ___x_cmd_ondb___test_assert $? "ls --type Task"
+    x ondb ls -d "$testdir" --json >/dev/null
+    ___x_cmd_ondb___test_assert $? "ls --json"
+
+    # ─── link / unlink ───
+    printf "\n--- link / unlink ---\n"
+    x ondb link -d "$testdir" --from p1 --rel has_task --to t1
+    x ondb link -d "$testdir" --from p1 --rel has_task --to t2
+    x ondb link -d "$testdir" --from t1 --rel blocks --to t2
+    x ondb link -d "$testdir" --from t1 --rel assigned_to --to alice
+    x ondb link -d "$testdir" --from t2 --rel assigned_to --to bob
+    ___x_cmd_ondb___test_assert $? "link multiple relations"
+
+    x ondb linked -d "$testdir" --id p1 | grep -q has_task
+    ___x_cmd_ondb___test_assert $? "linked outgoing"
+    x ondb linked -d "$testdir" --id alice --direction incoming | grep -q assigned_to
+    ___x_cmd_ondb___test_assert $? "linked incoming"
+    x ondb linked -d "$testdir" --id t1 --direction both | grep -q blocks
+    ___x_cmd_ondb___test_assert $? "linked both"
+
+    x ondb unlink -d "$testdir" --from t1 --rel blocks --to t2
+    x ondb linked -d "$testdir" --id t1 | grep -q blocks
+    [ $? -ne 0 ]
+    ___x_cmd_ondb___test_assert $? "unlink removes relation"
+
+    # ─── set ───
+    printf "\n--- set ---\n"
+    x ondb set -d "$testdir" --id t1 status=done
+    x ondb get -d "$testdir" --id t1 | grep -q status=done
+    ___x_cmd_ondb___test_assert $? "set updates property"
+    x ondb set -d "$testdir" --id t1 priority=urgent due=2026-06-01
+    x ondb get -d "$testdir" --id t1 | grep -q due=2026-06-01
+    ___x_cmd_ondb___test_assert $? "set multiple properties"
+
+    # ─── query ───
+    printf "\n--- query ---\n"
+    x ondb query -d "$testdir" --type Task | grep -q Task1
+    ___x_cmd_ondb___test_assert $? "query by type"
+    x ondb query -d "$testdir" --type Task --where status=done | grep -q Task1
+    ___x_cmd_ondb___test_assert $? "query by type+where"
+
+    # ─── rm ───
+    printf "\n--- rm ---\n"
+    x ondb add -d "$testdir" --type Task --name "Temp" --id temp_del
+    x ondb rm -d "$testdir" --id temp_del
+    x ondb get -d "$testdir" --id temp_del 2>/dev/null
+    [ $? -ne 0 ]
+    ___x_cmd_ondb___test_assert $? "rm deletes entity"
+
+    # ─── validate ───
+    printf "\n--- validate ---\n"
+    x ondb validate -d "$testdir" 2>&1 | tail -1 | grep -q "Graph is valid"
+    ___x_cmd_ondb___test_assert $? "validate passes"
+
+    # ─── compact ───
+    printf "\n--- compact ---\n"
+    x ondb compact -d "$testdir"
+    [ -f "$testdir/snapshot."* ]
+    ___x_cmd_ondb___test_assert $? "compact creates snapshot"
+
+    # Verify data intact after compact
+    count="$(x ondb ls -d "$testdir" | wc -l)"
+    [ "$count" -eq 7 ]
+    ___x_cmd_ondb___test_assert $? "data intact after compact"
+
+    # Add after compact
+    x ondb add -d "$testdir" --type Task --name "PostCompact" --id t4 -- status=open
+    count="$(x ondb ls -d "$testdir" | wc -l)"
+    [ "$count" -eq 8 ]
+    ___x_cmd_ondb___test_assert $? "add after compact works"
+
+    # ─── directory-only mode (-f rejected) ───
+    # After commit 52c65d2 the `-f` flag was removed. Verify `-f` is now
+    # treated as an unknown option (write path rejects it).
+    printf "\n--- directory-only mode (-f rejected) ---\n"
+    local ftest="$testdir/file-mode.tsv"
+    x ondb add -f "$ftest" --type Test --name "FileMode" --id fm1 2>/dev/null
+    [ $? -ne 0 ]
+    ___x_cmd_ondb___test_assert $? "file mode -f rejected"
+    [ ! -f "$ftest" ]
+    ___x_cmd_ondb___test_assert $? "file mode -f does not create tsv"
+
+    printf "\n=== Results: %d failures ===\n" "$fail"
+    return "$fail"
+}

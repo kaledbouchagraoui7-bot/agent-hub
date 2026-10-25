@@ -1,0 +1,180 @@
+# shellcheck shell=dash
+
+___x_cmd_feishu_listen(){
+    param:void
+
+    local chat_type="admin"
+    local format="" fp="" chatid=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m feishu listen "$@" ; return 0 ;;
+            --fp)           fp=1 ;          shift ;;
+            --json)         format="json";  shift ;;
+            --admin)        chat_type="admin"; chatid="$2";    arg:2:shift ;;
+            --group)
+                            shift
+                            chat_type="group";
+                            if [ $# -ge 1 ]; then
+                                chatid="$1"
+                                shift
+                            fi
+                            ;;
+            *)              N=feishu M="Unknown op -> $1" log:ret:64   ;;
+        esac
+    done
+
+    local chats=
+    if [ -n "$chatid" ]; then
+        chats="$chatid"
+    else
+        chats="$(___x_cmd feishu group ls --json | ___x_cmd jq -r '.data.items[].chat_id' 2>/dev/null)"
+        [ -n "$chats" ] || N=feishu M="Failed to start listener: cannot get group list." log:ret:64
+    fi
+
+    local x_
+    local cur_token
+    ____x_cmd_tenant_token ; cur_token="$x_"
+    local start_time=; ___x_cmd date timestamp_ ; start_time="$x_"
+
+    local chat_state_dir="${___X_CMD_FEISHU_TMP}/chat_poll_states"
+    ___x_cmd rmrf   "$chat_state_dir"
+    ___x_cmd mkdirp "$chat_state_dir"
+
+    local fail_count=0
+    local curl_errcode=0
+    while true; do
+        # Refresh token every 30 minutes
+        local current_time=; ___x_cmd date timestamp_ ; current_time="$x_"
+        if [ $((current_time - start_time)) -ge 1800 ]; then
+            ____x_cmd_tenant_token ; cur_token="$x_"
+            start_time="$current_time"
+        fi
+
+        local chatid
+        while IFS= read -r chatid; do
+            local state_file="${chat_state_dir}/${chatid}"
+            local msg_time_file="${state_file}.msg_time"
+
+            local last_msg_time="" last_poll_time="" interval=""
+            [ ! -f "$msg_time_file" ] || read -r last_msg_time < "$msg_time_file"
+            [ -n "$last_msg_time" ]   || last_msg_time="$start_time"
+
+            # Calculate poll interval based on activity
+            x_=""; ___x_cmd_feishu_poll_interval "$last_msg_time" "$current_time"
+            interval="$x_"
+
+            [ ! -f "$state_file" ] || read -r last_poll_time < "$state_file"
+
+            if [ -n "$last_poll_time" ] && [ $((current_time - last_poll_time)) -lt "$interval" ]; then
+                continue
+            fi
+
+            # Record poll time
+            printf "%s" "$current_time" > "$state_file"
+
+            # Use last_msg_time as start_time, or current time if first poll or invalid
+            # If poll_start_time < start_time, it means last_msg_time was corrupted, reset to last_poll_time
+            # to avoid skipping messages between last_poll_time and current_time
+            local poll_start_time="${last_msg_time}"
+            if [ "$poll_start_time" -lt "$start_time" ]; then
+                poll_start_time="${last_poll_time:-"$current_time"}"
+            fi
+
+            local resp=;
+            resp="$(___x_cmd_feishu_getmessages "$chatid" "$poll_start_time")" || {
+                curl_errcode=$?
+                case "$curl_errcode" in
+                    28) continue ;;
+                    130)
+                        feishu:error "Exit because recved Interrupt."
+                        return 1 ;;
+                    *)
+                        feishu:error "Failed to start listener: $resp"
+                        ___x_cmd sleep 1
+                        return 1 ;;
+                esac
+            }
+
+            local msg="" code=""
+            ___x_cmd jo env . msg=.data.items code=.code <<A
+$resp
+A
+
+            if [ -n "$code" ] && [ "$code" != "0" ]; then
+                feishu:error "Failed to start listener: $resp"
+                return 1
+            fi
+
+            msg="$(printf "%s\n" "$msg" | ___x_cmd jq -c '.[] | select(.sender.sender_type == "user")')"
+            [ "$msg" != "" ]    || continue
+
+            local oldest_msg_time
+            oldest_msg_time="$(printf "%s" "$msg" | ___x_cmd jq -rs '.[-1].create_time // empty')"
+            local new_msg_time=$(( (oldest_msg_time / 1000) + 1 ))
+            # Only update if new_msg_time > poll_start_time (guards against empty or wrong-unit values)
+            if [ "$new_msg_time" -gt "$poll_start_time" ]; then
+                printf "%s" "$new_msg_time" > "$msg_time_file"
+            fi
+
+            if [ -n "$fp" ]; then
+                [ -n "$chatid" ] || {
+                    feishu:error "Failed to get chat id, cannot save data to file"
+                    continue
+                }
+
+                [ "$chat_type" = "group" ] || {
+                    chatid="$(printf "%s\n" "$msg" | ___x_cmd jq -rs '.[0].sender.id')"
+                }
+
+                ___X_CMD_FEISHU_BOT_DATA="${___X_CMD_FEISHU_BOT_PATH}/data_${chatid}.tsv"
+                ___x_cmd ensurefp "$___X_CMD_FEISHU_BOT_DATA"
+                printf "%s\n" "$msg"  >> "$___X_CMD_FEISHU_BOT_DATA"
+
+                ___x_cmd tailer pub "$___X_CMD_ROOT_DATA/feishu/sub" "feishu:${chatid}"
+            elif [ "$format" = "json" ]; then
+                printf "%s\n" "$msg"
+            else
+                printf "%s\n" "$msg"
+            fi
+        done <<A
+$chats
+A
+        sleep 2
+    done
+}
+
+___x_cmd_feishu_poll_interval(){
+    local last_msg_time="$1"
+    local current_time="$2"
+    local diff=$(( current_time - last_msg_time ))
+    if [ "$diff" -lt 60 ]; then
+        x_=2
+    elif [ "$diff" -lt 300 ]; then
+        x_=10
+    else
+        x_=30
+    fi
+}
+
+___x_cmd_feishu_getmessages(){
+    local chatid="$1"
+    local start_time="$2"
+    ___x_cmd curl -s "https://open.feishu.cn/open-apis/im/v1/messages?container_id=$chatid&container_id_type=chat&page_size=50&sort_type=ByCreateTimeAsc&start_time=$start_time" \
+                  -H "Authorization: Bearer $cur_token"
+}
+
+# ___x_cmd_feishu_parsemsg(){
+#     ___x_cmd awk0 -m j/json -m j/jiter '
+# { jiparse_after_tokenize(o, $0); }
+# END{
+#     kp = SUBSEP "\"1\"" SUBSEP "\"data\"" SUBSEP "\"items\""
+#     l = o[ kp L ]
+#     for (i=1; i<=l; ++i){
+#         kp_i = kp SUBSEP "\""i"\""
+#         kp_sender_type = kp_i SUBSEP "\"sender\"" SUBSEP "\"sender_type\""
+#         if (o[ kp_sender_type ] == "\"user\""){
+#             print jstr0(o, kp_i, " ")
+#         }
+#     }
+# }'
+# }

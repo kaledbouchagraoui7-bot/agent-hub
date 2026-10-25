@@ -1,0 +1,24 @@
+# shellcheck shell=dash disable=SC2034
+
+# x ondb advise - provide autocomplete suggestions for subcommands
+
+___x_cmd_ondb___advise(){
+    candidate_subcmd_arr=(
+        "add"
+        "get"
+        "set"
+        "rm"
+        "link"
+        "unlink"
+        "linked"
+        "ls"
+        "query"
+        "validate"
+        "compact"
+        "schema"
+        "--runmain"
+        "-h"
+        "--help"
+    )
+    return 0
+}

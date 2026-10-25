@@ -1,0 +1,255 @@
+# ___x_cmd_claw_telegram -h
+# x claw telegram send --chatid <CHATID> --text <xxxxxx>
+# x claw telegram send --chatid <CHATID> --image <path>
+# x claw telegram send --chatid <CHATID> --file <path>
+# x claw telegram send --chatid <CHATID> --video <path>
+# x claw feishu send --chatid <chatid> --text <xxxxxx>
+# x claw feishu send --chatid <chatid> --image <path>
+# x claw feishu send --chatid <chatid> --file <path>
+# x claw telegram send --chatid <chatid> --text <xxxxxx>
+# x claw telegram send --chatid <chatid> --image <path>
+# x claw telegram send --chatid <chatid> --file <path>
+# x claw telegram send --chatid <chatid> --video <path>
+# x claw telegram get-sent --chatid <chatid>
+
+___x_cmd_claw_telegram(){
+    [ $# -gt 0 ]    ||  set -- --help
+
+    local op="$1" ;     shift
+    case "$op" in
+        --help|-h)
+            ___x_cmd help -m claw telegram ; return 0 ;;
+        send)
+            ___x_cmd_claw_telegram_send "$@" ;;
+        get-sent)
+            ___x_cmd_claw_telegram_get_sent "$@" ;;
+        get-msg)
+            ___x_cmd_claw_telegram_get_msg "$@" ;;
+        get-unread)
+            ___x_cmd_claw_telegram_get_unread "$@" ;;
+        has-unread)
+            ___x_cmd_claw_telegram_has_unread "$@" ;;
+        unread-count)
+            ___x_cmd_claw_telegram_unread_count "$@" ;;
+        recent-msg)
+            ___x_cmd_claw_telegram_recent_msg "$@" ;;
+        get-offset)
+            ___x_cmd_claw_telegram_get_offset "$@" ;;
+        update-offset)
+            ___x_cmd_claw_telegram_update_offset "$@" ;;
+        *)  N=claw M="Unknown subcmd -> $op" log:ret:64 ;;
+    esac
+}
+
+___x_cmd_claw_telegram_send(){
+    local chatid=""
+    local msg_type=""
+    local content=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --help|-h)  ___x_cmd help -m claw telegram send; return 0 ;;
+            --chatid)   shift; chatid="$1"; shift; continue ;;
+            --text)     shift; msg_type="text";  content="$*"; break ;;
+            --image)    shift; msg_type="image"; content="$1"; shift; break ;;
+            --file)     shift; msg_type="file";  content="$1"; shift; break ;;
+            --video)    shift; msg_type="video"; content="$1"; shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    [ -n "$chatid" ]    || N=claw M="send: must specify --chatid" log:ret:64
+    [ -n "$msg_type" ]  || N=claw M="send: must specify --text, --image, --file, or --video" log:ret:64
+    [ -n "$content" ]   || N=claw M="send: missing ${msg_type} content" log:ret:64
+
+    case "$msg_type" in
+        text)  ___x_cmd telegram bot send --text --chatid "$chatid" "$content" ;;
+        *)     ___x_cmd telegram bot send "--${msg_type}" --chatid "$chatid" --file_path "$content" ;;
+    esac
+
+    local x_; ___x_cmd date timestamp_
+    local send_time="$x_"
+
+    local sent_data_path="$___X_CMD_ROOT_DATA/telegram/bot/sent/data_${chatid}.tsv"
+
+    case "$msg_type" in
+        image|file|video)
+            local asset_dir="$___X_CMD_ROOT_DATA/telegram/bot/sent/asset"
+            ___x_cmd mkdirp "$asset_dir"
+            local target_path="${asset_dir}/${send_time}_${content##*/}"
+
+            ___x_cmd_cmds cp "$content" "$target_path" || {
+                telegram:warn "Failed to copy $msg_type to $target_path"
+            }
+            content="$target_path"
+            ;;
+    esac
+
+    ___x_cmd_claw_run___tsv_escape_ "$content"
+    local escaped_content="$x_"
+
+    ___x_cmd ensurefp "$sent_data_path"
+    printf '%s\t%s\t%s\n' "$send_time" "$msg_type" "$escaped_content" >> "$sent_data_path" || {
+        telegram:warn "Failed to save sent message to $sent_data_path"
+    }
+}
+
+
+___x_cmd_claw_telegram_get_offset_(){
+    local chatid="$1"
+    [ -n "$chatid" ] || return 1
+
+    local datadir_offset="$___X_CMD_CLAW_BOT_DATA/DATA_OFFSET/telegram-${chatid}"
+    x_=0
+    [ ! -f "$datadir_offset" ] || read -r x_ <"$datadir_offset"
+    x_="${x_:-0}"
+}
+
+___x_cmd_claw_telegram_get_offset(){
+    local chatid="$1"
+    [ -n "$chatid" ] || N=claw M="Please provide telegram chatid" log:ret:64
+
+    local x_=""
+    ___x_cmd_claw_telegram_get_offset_ "$chatid" || return $?
+    printf "%s\n" "$x_"
+}
+
+___x_cmd_claw_telegram_get_unread(){
+    local chatid="$1"
+    [ -n "$chatid" ] || N=claw M="Please provide telegram chatid" log:ret:64
+
+    local x_=""; ___x_cmd_claw_telegram_get_offset_ "$chatid" || return $?
+    local offset="$x_"
+
+    local x_=""
+    ___x_cmd telegram bot data which_ "$chatid"
+    local botdata="$x_"
+
+    local total_line=0
+    if [ -f "$botdata" ]; then
+        x_=""; ___x_cmd_claw_run___msg_line_count_ "$botdata" || return $?
+        total_line="$x_"
+    fi
+
+    local msg_unread_count="$((total_line - offset))"
+    local end_line="$offset"
+
+    if [ "$msg_unread_count" -gt 0 ]; then
+        local start_line=""
+        local msgprompt=""
+        if [ "$msg_unread_count" -gt 10 ]; then
+            start_line="$((total_line - 9))"
+            end_line="$total_line"
+            msgprompt="You have $msg_unread_count unread messages. Here are the latest 10 (from line $start_line to line $end_line):"
+        else
+            start_line="$((offset + 1))"
+            end_line="$total_line"
+            msgprompt="You have $msg_unread_count unread messages (from line $start_line to line $end_line):"
+        fi
+        printf "%s\n" "$msgprompt"
+        printf "%s\n" "<user_messages>"
+        ___x_cmd_claw_telegram_get_msg "$chatid" "$start_line" "$end_line"
+        printf "%s\n" "</user_messages>"
+        printf "%s\n" "---"
+    else
+        printf "%s\n" "You have no unread messages."
+    fi
+
+    printf "%s\n" \
+        ">>> *** MANDATORY RULE - CHECK RECENT THEN UPDATE OFFSET *** <<<" \
+        "" \
+        "After processing the above messages, you MUST do these TWO actions in EXACT order:" \
+        "" \
+        "1. FIRST: Run \`x claw telegram recent-msg \"${chatid}\"\` to check for any newer unread messages." \
+        "   If new messages appear, process them immediately before proceeding." \
+        "" \
+        "2. SECOND: Immediately run \`x claw telegram update-offset \"${chatid}\" $end_line\`." \
+        "" \
+        "Do NOT skip the recent-msg check." \
+        "If you fail to update the offset, the same messages will be re-processed repeatedly." \
+        "" \
+        "Use 'x claw telegram -h' to see all available commands."
+}
+
+___x_cmd_claw_telegram_get_msg(){
+    ___x_cmd telegram parse "$@"
+}
+
+___x_cmd_claw_telegram_recent_msg(){
+    local chatid="$1"
+    [ -n "$chatid" ] || N=claw M="Please provide telegram chatid" log:ret:64
+
+    local x_=""; ___x_cmd_claw_telegram_get_offset_ "$chatid" || return $?
+    local offset="$x_"
+    ___x_cmd_claw_telegram_get_msg "$chatid" "$((offset+1))"
+}
+
+___x_cmd_claw_telegram_update_offset(){
+    local chatid="$1"
+    [ -n "$chatid" ] || N=claw M="Please provide telegram chatid" log:ret:64
+    local end_line="$2"
+
+    local x_=""
+    ___x_cmd telegram bot data which_ "$chatid"
+    local botdata="$x_"
+
+    local total_line=0
+    if [ -f "$botdata" ]; then
+        x_=""; ___x_cmd_claw_run___msg_line_count_ "$botdata" || return $?
+        total_line="$x_"
+    fi
+
+    [ -n "$end_line" ] || N=claw M="No line number provided for update-offset" log:ret:64
+
+    case "$end_line" in
+        *[!0-9]*)
+            claw:warn "[MSG] Invalid line number '$end_line', defaulting to 0"
+            end_line=0
+            ;;
+    esac
+
+    if [ "$end_line" -gt "$total_line" ]; then
+        claw:warn "[MSG] Line number $end_line exceeds total lines $total_line, setting to $total_line"
+        end_line="$total_line"
+    fi
+
+    local x_=""; ___x_cmd_claw_telegram_get_offset_ "$chatid" || return $?
+    local offset="$x_"
+
+    local datadir_offset="$___X_CMD_CLAW_BOT_DATA/DATA_OFFSET/telegram-${chatid}"
+    ___x_cmd ensurefp "$datadir_offset"
+    [ "$end_line" -le "$offset" ] || printf "%s\n" "$end_line" > "$datadir_offset"
+}
+
+___x_cmd_claw_telegram_has_unread(){
+    local chatid="$1"
+    [ -n "$chatid" ] || N=claw M="Please provide telegram chatid" log:ret:64
+    local x_=""; ___x_cmd_claw_telegram_unread_count_ "$@" || return $?
+    [ "$x_" -gt 0 ]
+}
+
+___x_cmd_claw_telegram_unread_count_(){
+    local chatid="$1"
+    [ -n "$chatid" ] || N=claw M="Please provide telegram chatid" log:ret:64
+
+    x_=""; ___x_cmd_claw_telegram_get_offset_ "$chatid" || return $?
+    local offset="$x_"
+
+    x_=""; ___x_cmd telegram bot data which_ "$chatid"
+    local botdata="$x_"
+
+    local total_line=0
+    if [ -f "$botdata" ]; then
+        x_=""; ___x_cmd_claw_run___msg_line_count_ "$botdata" || return $?
+        total_line="$x_"
+    else
+        return 1
+    fi
+
+    x_="$((total_line - offset))"
+}
+
+___x_cmd_claw_telegram_unread_count(){
+    local x_=""; ___x_cmd_claw_telegram_unread_count_ "$@" || return $?
+    printf "%s\n" "$x_"
+}

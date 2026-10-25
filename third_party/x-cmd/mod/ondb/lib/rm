@@ -1,0 +1,29 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_rm(){
+    local id="" file="" dir=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb rm "$@" ; return 0 ;;
+            --id)       id="$2"; arg:2:shift ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    [ -n "$id" ] || { N=ondb M="--id is required" log:ret:64; return; }
+
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_write "$dir"
+        file="$x_"
+    else
+        file="ondb.tsv"
+    fi
+
+    local ms; ms="$( x epoch ms )"
+
+    printf 'rm\t%s\t%s\n' "$id" "$ms" >> "$file"
+    printf "deleted\t%s\n" "$id"
+}

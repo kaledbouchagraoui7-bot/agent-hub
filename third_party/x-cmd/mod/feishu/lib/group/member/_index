@@ -1,0 +1,18 @@
+# shellcheck shell=sh disable=SC2154,SC2120,SC3043,SC2034,SC2329
+
+# Reference: https://open.feishu.cn/document/server-docs/group/chat/members/get
+
+xrc:mod:lib feishu   group/member/ls
+
+___x_cmd_feishu_group_member(){
+    param:void
+
+    [ $# -gt 0 ]    ||  set -- --help
+
+    local op="$1" ;     shift
+    case "$op" in
+        -h|--help)  ___x_cmd help -m feishu group member ; return 0 ;;
+        ls)         ___x_cmd_feishu_group_member_ls "$@" ;;
+        *)          N=feishu M="Unknown op -> $op" log:ret:64   ;;
+    esac
+}

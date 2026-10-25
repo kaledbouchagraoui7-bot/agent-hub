@@ -1,0 +1,25 @@
+# shellcheck shell=dash disable=2120
+
+# `x agent stat cross claude` -- cross-session (multi-session) turn-level statistics.
+#
+# Reuses parse/claude.py's core parsing logic, concatenating turns from multiple
+# sessions into a single stream with a session_id column for traceability.
+# See plan.2.md for the full design.
+#
+# Output formats:
+#   tsv (default)  -- header line + one row per turn + session_id column
+#   json           -- JSON array of turn objects, each with a session_id key
+
+xrc:mod:lib     agent       stat/cross/claude
+
+___x_cmd_agent_stat_cross(){
+    [ "$#" -gt 0 ] ||       set -- --help
+
+    local op="$1";          shift
+    case "$op" in
+        -h|--help)          ___x_cmd help -m agent stat cross "$@" ;      return 0 ;;
+        claude)             ___x_cmd_agent_stat_cross_claude  "$@" ;;
+
+        *)                  N=agent M="Unknown stat cross subcmd -> $op" log:ret:64 ;;
+    esac
+}

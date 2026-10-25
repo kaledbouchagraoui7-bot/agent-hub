@@ -1,0 +1,100 @@
+{
+"#synopsis"
+:
+[
+{
+"x claw workspace <SUBCMD>"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"手动检查并更新 workspace 模板"
+,
+"en"
+:
+"Manually check and update workspace templates"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"当 workspace 的 AGENTS.md 过期且不支持 RUNONCE.md 机制时，可通过此命令触发 manager 处理更新。\n新机制生效后，后续模板更新会自动通过 RUNONCE.md 处理。\n"
+,
+"en"
+:
+"Use this when a workspace AGENTS.md is outdated and does not support RUNONCE.md.\nOnce migrated, future template updates are handled automatically via RUNONCE.md.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw workspace check"
+,
+"zh"
+:
+"示例: 检查所有 workspace 模板是否需要更新"
+,
+"en"
+:
+"Example: Check all workspaces for outdated templates"
+}
+]
+,
+"check"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"检查所有 workspace 的 AGENTS.md 是否比模板旧，并通知 manager 处理"
+,
+"en"
+:
+"Check if any workspace AGENTS.md is older than the template and notify the manager"
+}
+,
+"#synopsis"
+:
+[
+{
+"x claw workspace check"
+:
+null
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw workspace check"
+,
+"zh"
+:
+"示例: 检查 workspace 模板更新"
+,
+"en"
+:
+"Example: Check workspace template updates"
+}
+]
+}
+}
+

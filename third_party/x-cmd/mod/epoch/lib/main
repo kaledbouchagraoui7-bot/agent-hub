@@ -1,0 +1,134 @@
+# shellcheck shell=dash
+
+xrc:mod:lib     epoch   minus util store
+
+___x_cmd_epoch___main(){
+    [ "$#" -gt 0 ] ||   set -- get
+
+    local op="$1";      shift
+    case "$op" in
+        -h|--help)      ___x_cmd help -m epoch "$@";    return 0 ;;
+
+        get|get_|ms|ms_|real|real_|real3|real3_|minus|minus_|now|day|day_)
+                        ___x_cmd_epoch_"$op" "$@" ;;
+
+        river|store)    ___x_cmd hascmd ___x_cmd_epoch_"$op" || xrc:mod:lib epoch "$op"
+                        ___x_cmd_epoch_"$op" "$@" ;;
+
+        *)              N=epoch M="Unknown subcmd -> $op" log:ret:64 ;;
+    esac
+}
+
+___x_cmd_epoch_get(){
+    if [ -n "$EPOCHSECONDS" ]; then
+        printf "%s\n" "$EPOCHSECONDS"
+    elif [ -n "$EPOCHREALTIME" ]; then
+        printf "%s\n" "${EPOCHREALTIME%.*}"
+    elif [ -r "/proc/uptime" ]; then
+        local x_
+        ___x_cmd btime_
+        local uptime
+        read -r uptime</proc/uptime
+        uptime="${uptime%%.*}"
+        printf "%s\n" "$(( uptime + x_ ))"
+    else
+        ___x_cmd_cmds date +%s
+    fi
+}
+
+___x_cmd_epoch_get_(){
+    if [ -n "$EPOCHSECONDS" ]; then
+        x_="$EPOCHSECONDS"
+    elif [ -n "$EPOCHREALTIME" ]; then
+        x_="${EPOCHREALTIME%.*}"
+    elif [ -r "/proc/uptime" ]; then
+        ___x_cmd btime_
+        local uptime
+        read -r uptime</proc/uptime
+        uptime="${uptime%%.*}"
+        x_="$(( uptime + x_ ))"
+    else
+        x_="$(___x_cmd_cmds date +%s)"
+    fi
+}
+
+___x_cmd_epoch_ms(){
+    local x_
+    ___x_cmd_epoch_ms_ || return 1
+    printf "%s\n" "$x_"
+}
+
+___x_cmd_epoch_ms_(){
+    if [ -n "$EPOCHREALTIME" ]; then
+        x_=$EPOCHREALTIME
+        x_=${x_%.*}${x_#*.}
+        x_=${x_%???????}
+    elif [ -r "/proc/uptime" ]; then
+        ___x_cmd btime_
+        local uptime
+        read -r uptime</proc/uptime
+        uptime="${uptime%% *}"
+        x_=$((  ${uptime%%.*} + x_ ))${uptime##*.}0
+    elif ___x_cmd hascmd zsh; then
+        x_=$( zsh --no-rcs -c 'zmodload zsh/datetime; echo $EPOCHREALTIME' )
+        x_=${x_%.*}${x_#*.}
+        x_=${x_%???????}
+    else
+        x_="$(___x_cmd_cmds date +%s%3N)"
+        case "$x_" in
+            *3N)    x_="${x_%3N}000"            ;;
+        esac
+    fi
+}
+
+___x_cmd_epoch_real(){
+    local x_
+    ___x_cmd_epoch_real_ || return 1
+    printf "%s\n" "$x_"
+}
+
+___x_cmd_epoch_real_(){
+    if [ -n "$EPOCHREALTIME" ]; then
+        x_="${EPOCHREALTIME}"
+    elif [ -r "/proc/uptime" ]; then
+        ___x_cmd btime_
+        local uptime
+        read -r uptime</proc/uptime
+        uptime="${uptime%% *}"
+        x_="$(( uptime + x_ )).${x_#*.}00000000"
+    elif ___x_cmd hascmd zsh; then
+        x_=$( zsh --no-rcs -c 'zmodload zsh/datetime; echo $EPOCHREALTIME' )
+    else
+        x_="$(___x_cmd_cmds date +%s.%10N)"
+        case "$x_" in
+            *.10N)  x_="${x_%.10N}.0000000000"  ;;
+        esac
+    fi
+}
+
+___x_cmd_epoch_real3(){
+    local x_
+    ___x_cmd_epoch_real3_ || return 1
+    printf "%s\n" "$x_"
+}
+
+___x_cmd_epoch_real3_(){
+    ___x_cmd_epoch_real_ || return $?
+    x_="${x_%???????}"
+}
+
+# Section: day subcmd
+# Returns the current integer day number (epoch seconds / 86400, floored).
+# Same value for all calls within the same UTC day.
+# day_ is the internal efficiency variant (sets x_ without printing).
+
+___x_cmd_epoch_day(){
+    local x_
+    ___x_cmd_epoch_day_ || return 1
+    printf "%s\n" "$x_"
+}
+
+___x_cmd_epoch_day_(){
+    ___x_cmd_epoch_get_ || return $?
+    x_=$(( x_ / 86400 ))
+}

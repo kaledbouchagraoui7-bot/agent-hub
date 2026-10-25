@@ -1,0 +1,414 @@
+{
+"#name"
+:
+{
+"bfind"
+:
+null
+,
+"zh"
+:
+"默认剪枝噪音目录的 BFS 封装，浅层优先，为 AI Agent 设计"
+,
+"en"
+:
+"BFS wrapper with default prune, shallow-first, for AI agents"
+}
+,
+"#synopsis"
+:
+[
+{
+"x bfind [prune-args] [--depth N] [--] [path] [find-expr]"
+:
+null
+}
+,
+{
+"x bfind --dfs2bfs"
+:
+null
+}
+,
+{
+"x bfind ."
+:
+null
+}
+,
+{
+"x bfind --depth 5 ."
+:
+null
+}
+,
+{
+"x bfind --prune vendor -- . -type f"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"与 x find 共享剪枝规则的广度优先搜索，浅层优先，适合逐步深入探索目录结构"
+,
+"en"
+:
+"Breadth-first search sharing prune rules with x find, shallow results first, ideal for incremental exploration"
+}
+,
+"#tip"
+:
+[
+{
+"en"
+:
+"Shares the same three-dimension prune model as x find: (1) hidden dirs, (2) project noise, (3) HOME platform dirs. See x find --help for details.\n"
+,
+"zh"
+:
+"与 x find 共享三维剪枝模型：(1) 隐藏目录，(2) 项目噪音，(3) HOME 平台目录。详见 x find --help。\n"
+}
+,
+{
+"en"
+:
+"Default depth is 3. Use --depth to go deeper. For git projects, prefer git ls-files and git grep.\n"
+,
+"zh"
+:
+"默认搜索 3 层。用 --depth 加深。在 git 项目中优先使用 git ls-files 和 git grep。\n"
+}
+]
+,
+"--dfs2bfs"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"将 stdin 的 DFS 路径重排为 BFS 顺序输出"
+,
+"en"
+:
+"Reorder DFS paths from stdin into BFS order"
+}
+,
+"#subcmd"
+:
+true
+}
+,
+"--depth"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"设置最大深度（默认3）"
+,
+"en"
+:
+"Set maximum depth (default 3)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"深度值"
+,
+"en"
+:
+"Depth value"
+}
+}
+}
+,
+"--unhide"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"放行指定隐藏目录（支持 : 分隔多值）"
+,
+"en"
+:
+"Exempt hidden dirs from prune (supports : separator)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"隐藏目录名（如 .vscode:.claude）"
+,
+"en"
+:
+"Hidden dir name (e.g. .vscode:.claude)"
+}
+}
+}
+,
+"--prune"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"追加排除目录（支持 : 分隔多值）"
+,
+"en"
+:
+"Add prune targets (supports : separator)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目录名（如 vendor:venv）"
+,
+"en"
+:
+"Dir name (e.g. vendor:venv)"
+}
+}
+}
+,
+"--unhide-all"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"不排除任何隐藏目录"
+,
+"en"
+:
+"Do not exclude any hidden directories"
+}
+}
+,
+"--reset-prune"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"清空项目噪音列表（隐藏目录排除和 HOME 排除不受影响）"
+,
+"en"
+:
+"Clear project noise list (hidden dir prune and HOME prune unaffected)"
+}
+}
+,
+"--no-homeprune"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"关闭 $HOME 目录下的自动排除"
+,
+"en"
+:
+"Disable automatic HOME directory prune"
+}
+}
+,
+"--all"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示所有结果（不限制深度）"
+,
+"en"
+:
+"Show all results (unlimited depth)"
+}
+}
+,
+"-v|--verbose"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示当前生效的排除列表"
+,
+"en"
+:
+"Show active prune lists"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x bfind ."
+,
+"zh"
+:
+"BFS 搜索当前目录（默认3层）"
+,
+"en"
+:
+"BFS search current directory (default 3 layers)"
+}
+,
+{
+"cmd"
+:
+"x bfind --depth 5 ."
+,
+"zh"
+:
+"5层搜索"
+,
+"en"
+:
+"5-layer search"
+}
+,
+{
+"cmd"
+:
+"x bfind --all ."
+,
+"zh"
+:
+"显示全部结果"
+,
+"en"
+:
+"Show all results"
+}
+,
+{
+"cmd"
+:
+"x bfind --prune vendor:target -- . -name \"*.go\""
+,
+"zh"
+:
+"排除 vendor 和 target，查找 .go 文件"
+,
+"en"
+:
+"Exclude vendor and target, find .go files"
+}
+,
+{
+"cmd"
+:
+"x bfind --no-homeprune ~"
+,
+"zh"
+:
+"HOME 搜索，关闭 HOME 排除"
+,
+"en"
+:
+"HOME search, disable HOME prune"
+}
+,
+{
+"cmd"
+:
+"x bfind --unhide-all --reset-prune --no-homeprune -- ."
+,
+"zh"
+:
+"三维全关，等同 raw find（BFS 模式）"
+,
+"en"
+:
+"All three dimensions off, raw find (BFS mode)"
+}
+,
+{
+"cmd"
+:
+"find . -name \"*.go\" | x bfind --dfs2bfs"
+,
+"zh"
+:
+"将 find 的 DFS 结果转为 BFS 顺序"
+,
+"en"
+:
+"Convert DFS find output to BFS order"
+}
+,
+{
+"cmd"
+:
+"x find . -type f | x bfind --dfs2bfs"
+,
+"zh"
+:
+"将 x find 的结果按深度重排"
+,
+"en"
+:
+"Reorder x find results by depth"
+}
+,
+{
+"cmd"
+:
+"grep -rl \"TODO\" . | x bfind --dfs2bfs"
+,
+"zh"
+:
+"将 grep 匹配文件按浅层优先排列"
+,
+"en"
+:
+"List grep-matched files shallow-first"
+}
+]
+}
+

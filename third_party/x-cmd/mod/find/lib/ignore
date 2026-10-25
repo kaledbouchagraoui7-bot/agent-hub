@@ -1,0 +1,112 @@
+
+# --- Dimension 1: Hidden dirs (prune .* by default, --unhide to exempt) ---
+
+___X_CMD_FIND_UNHIDE=""
+
+___x_cmd_find_unhide_add_multi(){
+    local x_
+    ___x_cmd line fromcolon_ "$1"
+    ___X_CMD_FIND_UNHIDE="${___X_CMD_FIND_UNHIDE}${x_}"
+}
+
+# --- Dimension 2: Project noise (prune known non-hidden dirs, --prune to add) ---
+
+___X_CMD_FIND_PRUNE='node_modules
+__pycache__
+'
+
+___x_cmd_find_prune_add_multi(){
+    local x_
+    ___x_cmd line fromcolon_ "$1"
+    ___X_CMD_FIND_PRUNE="${___X_CMD_FIND_PRUNE}${x_}"
+}
+
+# --- Dimension 3: HOME prune (auto-exclude platform dirs under $HOME) ---
+
+___x_cmd_find_homeprune_add(){
+    while [ $# -gt 0 ]; do
+        ___X_CMD_FIND_HOMEPRUNE="${___X_CMD_FIND_HOMEPRUNE}${1}${___X_CMD_UNSEENCHAR_NEWLINE}"
+        shift
+    done
+}
+
+___x_cmd_find_homeprune(){
+    local rootfp="$1"
+
+    local x_
+    ___x_cmd abspath_ "$rootfp" ||  N=find M="Unknown rootfp -> $rootfp" log:ret:64
+
+    case "$HOME" in
+        "${x_}")   ;;
+        *)                  return 0 ;;
+    esac
+
+    ___x_cmd os name_
+    case "$x_" in
+        darwin) ___x_cmd_find_homeprune_add \
+                    Applications Library Desktop Documents Pictures Movies Music Public ;;
+        linux)  ___x_cmd_find_homeprune_add ;;
+        win)    ___x_cmd_find_homeprune_add AppData "Application Data" ;;
+    esac
+}
+
+# --- Prune expression generation ---
+
+___x_cmd_find_prune_expr(){
+    local rootfp="$1"
+    local prune_hidden="$2"
+
+    x_=""
+    local prune=""
+    local sep=""
+
+    local rootfp_q
+    ___x_cmd_shq1_ "$rootfp"
+    rootfp_q="$x_"
+
+    # Dimension 1: Hidden (.* except ., with --unhide exemptions)
+    if [ -n "$prune_hidden" ]; then
+        local hidden_expr="! -path ${rootfp_q} -name '.*' ! -name ."
+        if [ -n "$___X_CMD_FIND_UNHIDE" ]; then
+            while IFS= read -r uname; do
+                [ -n "$uname" ] || continue
+                ___x_cmd_shq1_ "${uname}"
+                hidden_expr="${hidden_expr} ! -name ${x_}"
+            done <<A
+$___X_CMD_FIND_UNHIDE
+A
+        fi
+        prune="${prune}${sep}${hidden_expr} -prune"
+        sep=" -o "
+    fi
+
+    # Dimension 2: Project noise
+    if [ -n "$___X_CMD_FIND_PRUNE" ]; then
+        while IFS= read -r pname; do
+            [ -n "$pname" ] || continue
+            ___x_cmd_shq1_ "${pname}"
+            prune="${prune}${sep}! -path ${rootfp_q} -name ${x_} -prune"
+            sep=" -o "
+        done <<A
+$___X_CMD_FIND_PRUNE
+A
+    fi
+
+    # Dimension 3: HOME prune
+    if [ -n "$___X_CMD_FIND_HOMEPRUNE" ]; then
+        while IFS= read -r hname; do
+            [ -n "$hname" ] || continue
+            ___x_cmd_shq1_ "${rootfp%/}/${hname}"
+            prune="${prune}${sep}! -path ${rootfp_q} -path ${x_} -prune"
+            sep=" -o "
+        done <<A
+$___X_CMD_FIND_HOMEPRUNE
+A
+    fi
+
+    if [ -n "$prune" ]; then
+        x_="! '(' ${prune} ')' "
+    else
+        x_=""
+    fi
+}

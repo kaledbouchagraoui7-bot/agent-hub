@@ -1,0 +1,63 @@
+# shellcheck shell=dash
+
+# Reference: https://open.feishu.cn/document/server-docs/group/chat/members/get
+
+___x_cmd_feishu_group_member_ls(){
+    local page_size="50"
+    local member_id_type="open_id"
+    local format=
+    local chatid=
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)              ___x_cmd help -m feishu group member ls ; return 0 ;;
+            --json)                 format="json";    shift ;;
+            --page)                 page_size="$2";   arg:2:shift ;;
+            --id-type)              member_id_type="$2"; arg:2:shift ;;
+            --chatid)               chatid="$2";      arg:2:shift ;;
+            -*)                     N=feishu M="Unknown option -> $1" log:ret:64 ;;
+            *)                      chatid="$1";      shift ;;
+        esac
+    done
+
+    [ -n "$chatid" ] || N=feishu M="Usage: x feishu group member ls --chatid <chatid> [--json] [--page N] [--id-type open_id|union_id|user_id]" log:ret:64
+
+    local x_=""  cur_token=""
+    ____x_cmd_tenant_token || return $?
+    cur_token="$x_"
+
+    local page_token=""
+    ___x_cmd mkdirp "$___X_CMD_FEISHU_TMP"
+
+    while true; do
+        local url="https://open.feishu.cn/open-apis/im/v1/chats/${chatid}/members?page_size=${page_size}&member_id_type=${member_id_type}"
+        if [ -n "$page_token" ]; then
+            local enc_token
+            enc_token="$(printf "%s" "$page_token" | ___x_cmd url encode)"
+            url="${url}&page_token=${enc_token}"
+        fi
+
+        local resp
+        resp="$(___x_cmd curl -s "$url" -H "Authorization: Bearer $cur_token")"
+
+
+        local msg="" code="" has_more=""
+        ___x_cmd jo env . msg=.msg code=.code has_more=.data.has_more page_token=.data.page_token <<A
+$resp
+A
+
+        if [ -n "$code" ] && [ "$code" != "0" ]; then
+            N=feishu M="Failed to get members: $msg" log:ret:1
+        fi
+
+        if [ "$format" = "json" ]; then
+            printf "%s\n" "$resp"
+        else
+            printf "%s\n" "$resp" \
+                | ___x_cmd jo .data.items                                           \
+                | ___x_cmd jo 2c          .member_id    .name                       \
+                | ___x_cmd csv totsv
+        fi
+
+        [ "$has_more" = "true" ] || break
+    done
+}

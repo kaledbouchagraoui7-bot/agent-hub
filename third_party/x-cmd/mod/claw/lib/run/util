@@ -1,0 +1,217 @@
+# shellcheck shell=dash
+
+___x_cmd_claw_run___msg_line_count_(){
+    local botdata="$1"
+    x_=""; ___x_cmd line count_ "$botdata"
+    if [ -z "$x_" ] || [ "$x_" -le 0 ]; then
+        claw:warn "[UTIL] message total lines ($x_) not greater than 0, retrying"
+        ___x_cmd line count_ "$botdata"
+        if [ -z "$x_" ] || [ "$x_" -le 0 ]; then
+            claw:error "[UTIL] message total lines ($x_) still not greater than 0, exiting"
+            return 1
+        fi
+    fi
+}
+
+___x_cmd_claw_run___detect_im_(){
+    x_=""
+    local im
+    for im in weixin feishu telegram qywx; do
+        ___x_cmd "$im" --isready || continue
+        x_="$im"
+        return 0
+    done
+    return 1
+}
+
+# Escape a value for safe storage as a single TSV field.
+# Input is taken from $1; the escaped result is placed in $x_.
+# Escapes: backslash, tab, and newline.
+___x_cmd_claw_run___tsv_escape_(){
+    local value="${1:-}"
+    x_="$( printf '%s' "$value" | ___x_cmd_cmds_awk '
+        BEGIN { ORS = "" }
+        {
+            gsub(/\\/, "\\\\")
+            gsub(/\t/, "\\t")
+            if (NR > 1) printf "\\n"
+            printf "%s", $0
+        }
+    ' )"
+}
+
+___x_cmd_claw_run___activate_im(){
+    local im="${1:-""}"
+    local chatid="${2:-""}"
+    [ -n "$im" ] || N=claw M="Please provide IM platform name" log:ret:64
+
+    if [ -n "$chatid" ]; then
+        local imfile="" x_=""
+        claw:info "[CONNECT] Activating IM platform $im:$chatid"
+        imfile="$___X_CMD_CLAW_BOT_CONNECT_DIR/$im/$chatid"
+        ___x_cmd ensurefp "$imfile"
+        x_=""; ___x_cmd epoch get_
+        printf "%s\n" "$x_" > "$imfile"
+    else
+        claw:info "[CONNECT] Activating IM platform $im"
+        ___x_cmd mkdirp "$___X_CMD_CLAW_BOT_CONNECT_DIR/$im"
+    fi
+}
+
+___x_cmd_claw_run___deactivate_im(){
+    local im="${1:-""}"
+    local chatid="${2:-""}"
+    [ -n "$im" ] || N=claw M="Please provide IM platform name" log:ret:64
+
+    if [ -n "$chatid" ]; then
+        claw:info "[CONNECT] Deactivating IM platform $im:$chatid"
+        ___x_cmd rmrf "$___X_CMD_CLAW_BOT_CONNECT_DIR/$im/$chatid"
+    else
+        claw:info "[CONNECT] Deactivating IM platform $im"
+        ___x_cmd rmrf "$___X_CMD_CLAW_BOT_CONNECT_DIR/$im"
+    fi
+}
+
+___x_cmd_claw_run___list_activate(){
+    [ -d "$___X_CMD_CLAW_BOT_CONNECT_DIR" ] || return 0
+
+    local imdir="" chatid=""
+    for imdir in "$___X_CMD_CLAW_BOT_CONNECT_DIR"/*; do
+        [ -d "$imdir" ] || continue
+        for chatid in "$imdir"/*; do
+            [ -f "$chatid" ] || continue
+            printf "%s=%s\n" "${imdir##*/}" "${chatid##*/}"
+        done
+    done 2>/dev/null
+}
+
+___x_cmd_claw_run___ensureagent(){
+    ___x_cmd agent isready || {
+        if ___x_cmd_runmode_allow_manual; then
+            local tipstr; tipstr="$(___x_cmd ui style yellow)'x claw init'$(___x_cmd ui style end)"
+            claw:info "[MAIN] Agent not initialized -- running $tipstr automatically"
+            ___x_cmd claw init || return $?
+            ___x_cmd agent --is-setup || ___x_cmd agent setup
+        else
+            claw:error "[MAIN] Agent is not ready. Please run 'x claw init' to setup the agent first."
+            return 1
+        fi
+    }
+}
+
+___x_cmd_claw_run___ensure_im_service(){
+    ___x_cmd_claw_run___ensureagent || return $?
+
+    local im="${1:-"weixin"}"
+    local chatid="$2"
+    case "$im" in
+        weixin|telegram)
+            ___x_cmd tailer sub "$___X_CMD_ROOT_DATA/$im/sub" x-claw-default "$___X_CMD_CLAW_BOT_MQ" || return $?
+            ___x_cmd "$im" bot service ensure || return $?
+            ;;
+        qywx)
+            ___x_cmd tailer sub "$___X_CMD_ROOT_DATA/$im/sub" x-claw-default "$___X_CMD_CLAW_BOT_MQ" || return $?
+            ___x_cmd qywx abot service ensure || return $?
+            ;;
+
+        feishu)
+            ___x_cmd tailer sub "$___X_CMD_ROOT_DATA/$im/sub" x-claw-default "$___X_CMD_CLAW_BOT_MQ" || return $?
+            case "$chatid" in
+                ou_*)   ___x_cmd feishu abot service ensure --admin             || return $? ;;
+                oc_*)   ___x_cmd feishu abot service ensure --group "$chatid"   || return $? ;;
+                groups) ___x_cmd feishu abot service ensure --group             || return $? ;;
+                "")     ___x_cmd feishu abot service ensure --admin             || return $? ;;
+            esac
+            ;;
+        manager)
+            # Manager is a local interactive platform, no external service needed
+            ;;
+        *)  claw:error "[CONNECT] Unsupported IM platform $im"
+            return 1
+            ;;
+    esac
+}
+
+___x_cmd_claw_run___im_service_status(){
+    local im="${1:-"weixin"}"
+    local chatid="$2"
+    local status_=""
+
+    case "$im" in
+        weixin|telegram)
+            status_="$(___x_cmd "$im" bot service status 2>/dev/null)" || status_="unknown"
+            ;;
+        qywx)
+            status_="$(___x_cmd qywx abot service status 2>/dev/null)" || status_="unknown"
+            ;;
+        feishu)
+            case "$chatid" in
+                ou_*)   status_="$(___x_cmd feishu abot service status --admin 2>/dev/null)" || status_="unknown" ;;
+                oc_*)   status_="$(___x_cmd feishu abot service status --group "$chatid" 2>/dev/null)" || status_="unknown" ;;
+                groups) status_="$(___x_cmd feishu abot service status --group 2>/dev/null)" || status_="unknown" ;;
+                "")     status_="$(___x_cmd feishu abot service status --admin 2>/dev/null)" || status_="unknown" ;;
+                *)      status_="unknown" ;;
+            esac
+            ;;
+        manager)
+            printf "%s\n" "local"
+            return 0
+            ;;
+        *)      status_="unknown" ;;
+    esac
+
+    [ -n "$status_" ] || status_="unknown"
+    printf "%s\n" "$status_"
+}
+
+___x_cmd_claw_run___isalive_im_service(){
+    local status_=""
+    status_="$(___x_cmd_claw_run___im_service_status "$@" 2>/dev/null)" || return 1
+
+    case "$status_" in
+        alive|running)  return 0 ;;
+        *)              return 1 ;;
+    esac
+}
+
+___x_cmd_claw_run___stop_im_service(){
+    local im="${1:-"weixin"}"
+    local chatid="$2"
+    local imdir="$___X_CMD_CLAW_BOT_CONNECT_DIR/$im"
+    case "$im" in
+        weixin|telegram)
+            ___x_cmd fsiter --dirempty "$imdir" || return 0
+            ___x_cmd "$im" bot service stop || return $?
+            ;;
+        qywx)
+            ___x_cmd fsiter --dirempty "$imdir" || return 0
+            ___x_cmd "$im" abot service stop || return $?
+            ;;
+        feishu)
+            case "$chatid" in
+                ou_*)   ___x_cmd feishu abot service stop --admin           || return $? ;;
+                oc_*)   ___x_cmd feishu abot service stop --group "$chatid" || return $?
+                        if ___x_cmd fsiter --dirempty "$imdir"; then
+                            ___x_cmd feishu abot service stop --group 2>/dev/null || true
+                        fi
+                        ;;
+                groups) ___x_cmd feishu abot service stop --group           || return $? ;;
+                "")     ___x_cmd feishu abot service stop --admin           || return $? ;;
+            esac
+            ;;
+        manager)
+            # Manager is local, no external service to stop
+            return 0
+            ;;
+        *)  claw:error "[CONNECT] Unsupported IM platform $im"
+            return 1
+            ;;
+    esac
+
+    claw:info "[CONNECT] IM platform service stopped $im (no active chats)"
+}
+
+# ISO date lacks day-of-week info; include it so agents don't need to calculate.
+___x_cmd_claw_run___util___current_time(){
+    LC_ALL=C ___x_cmd_cmds date +"%Y-%m-%d (%a) %H:%M:%S%z"
+}

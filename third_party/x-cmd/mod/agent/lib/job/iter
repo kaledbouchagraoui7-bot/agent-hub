@@ -1,0 +1,467 @@
+# shellcheck shell=dash disable=2269
+# Job iteration engine and response evaluation.
+
+# Continue job iterations until completion, failure, or max iterations.
+# Inherits from caller (___x_cmd_agent_job_exec): max_iterations, inrow, continuous, harness, debug
+___x_cmd_agent_job___iter(){
+    local jobdir="$1"
+    if [ -z "$jobdir" ]; then
+        N=agent M="No job directory found" log:ret:64
+    fi
+
+    if [ ! -d "$jobdir" ]; then
+        N=agent M="Job directory not found: $jobdir" log:ret:1
+    fi
+
+    local descfile="$jobdir/DESC.md"
+    local planfile="$jobdir/PLAN.md"
+    local agentfile="$jobdir/AGENTS.md"
+    local donefile="$jobdir/DONE.md"
+
+    if [ ! -r "$agentfile" ]; then
+        N=agent M="AGENTS.md not found in $jobdir" log:ret:1
+    fi
+
+    if [ ! -r "$planfile" ]; then
+        N=agent M="PLAN.md not found in $jobdir" log:ret:1
+    fi
+
+    if ___x_cmd_is_stdout2tty && ___x_cmd_runmode_allow_manual; then
+        # Display PLAN content before starting iterations
+        ___x_cmd ui sep
+        printf "\033[1mPlan:\033[0m\n"
+        ___x_cmd_cmds cat "$planfile"
+        ___x_cmd ui sep
+    fi
+
+    local iter=0
+    local no_progress=0
+    local content=""
+    local vlid=""
+    local response_file=""
+    local summaryfile="$jobdir/SUMMARY.md"
+    local loop_context=""
+    local session_id=""
+    local req_exit=0
+
+    # Generate a session ID for continuous mode
+    if [ -n "$continuous" ]; then
+        session_id="$(___x_cmd rand uuid)"
+        agent:info "Continuous mode enabled, using session - $session_id"
+    fi
+
+    while [ "$iter" -lt "$max_iterations" ] && [ ! -f "$donefile" ]; do
+        iter="$((iter + 1))"
+        agent:info "Starting iteration $iter (max - $max_iterations)"
+
+        vlid="$(___x_cmd date vlid)"
+        response_file="$jobdir/$vlid.response.md"
+
+        loop_context="$(___x_cmd_agent_job___build_loop_context "$jobdir" "$iter" "$max_iterations" "$no_progress" "$inrow")"
+
+        descfile="$descfile" planfile="$planfile" agentfile="$agentfile" donefile="$donefile" summaryfile="$summaryfile" jobdir="$jobdir" iter="$iter" vlid="$vlid" inrow="$inrow" max_iterations="$max_iterations" loop_context="$loop_context" response_file="$response_file" \
+        content="$( ___x_cmd_agent_job___get_prompt iter )"
+
+        [ -n "$content" ] || {
+            agent:error "Failed to load iter prompt template"
+            req_exit=1
+            break
+        }
+
+        local debug_opt=""
+        [ -z "$debug" ] || debug_opt="--debug"
+        if [ -n "$session_id" ]; then
+            ___x_cmd agent request --harness "$harness" $debug_opt --session "$session_id" --file "$agentfile" --file "$planfile" "$content" || { req_exit=$?; break; }
+        else
+            ___x_cmd agent request --harness "$harness" $debug_opt --file "$agentfile" --file "$planfile" "$content" || { req_exit=$?; break; }
+        fi
+
+        ___x_cmd_agent_job_iter___eval_response "$jobdir" "$response_file" "$iter" "$inrow" "$donefile" "$max_iterations" "$vlid" "$harness" || break
+    done
+
+    if [ -f "$donefile" ]; then
+        # Ensure a SUMMARY.md exists for notification consumers.
+        if [ ! -f "$jobdir/SUMMARY.md" ]; then
+            ___x_cmd_agent_job___write_summary_md "$jobdir"
+        fi
+        # Standardize status.yml status field to COMPLETE
+        x_status="COMPLETE"
+        # Update status.yml with final completion annotations
+        ___x_cmd_agent_job_status_write "$jobdir" "$iter" "$max_iterations" "$vlid" "$response_file" "$inrow" "$no_progress" "$harness" "$donefile"
+        agent:info "Job completed successfully. Final report - $donefile"
+        return 0
+    fi
+
+    # Failure / interrupted path: generate ERROR.md
+    local error_status="failed"
+    local error_type="failure"
+    local error_summary="Job stopped unexpectedly"
+    local error_details=""
+
+    if [ "$iter" -ge "$max_iterations" ]; then
+        error_status="max_iterations_reached"
+        error_type="max_iterations"
+        error_summary="Maximum iterations ($max_iterations) reached without completing the task"
+    elif [ "$no_progress" -ge "$inrow" ]; then
+        error_status="stopped"
+        error_type="stopped"
+        error_summary="No progress detected for $inrow consecutive iterations"
+    elif [ "$req_exit" -ne 0 ]; then
+        error_status="failed"
+        error_type="failure"
+        error_summary="AI request failed in iteration $iter (exit code $req_exit)"
+        error_details="The underlying agent request returned a non-zero exit code. Check the response file and harness logs for details."
+    fi
+
+    ___x_cmd_agent_job___write_error_md "$jobdir" "$error_status" "$error_type" "$error_summary" "$error_details" "$req_exit"
+
+    # Standardize the status.yml status field to FAILED for downstream parsers
+    x_status="FAILED"
+
+    # Update status.yml with final failure annotations
+    ___x_cmd_agent_job_status_write "$jobdir" "$iter" "$max_iterations" "$vlid" "$response_file" "$inrow" "$no_progress" "$harness" "$donefile"
+
+    if [ "$iter" -ge "$max_iterations" ]; then
+        N=agent M="Maximum iterations reached" log:ret:1
+    fi
+
+    agent:info "Job stopped (incomplete). Iteration responses saved in $jobdir/*.response.md"
+    return 1
+}
+
+# Evaluate a single AI response file and update job status.
+# Inherits no_progress from ___x_cmd_agent_job___iter (caller).
+___x_cmd_agent_job_iter___eval_response(){
+    local dir="$1"
+    local response_file="$2"
+    local iter="$3"
+    local inrow="$4"
+    local donefile="$5"
+    local max_iterations="$6"
+    local vlid="$7"
+    # local no_progress="$8"
+    local harness="$8"
+
+    local x_status=""
+    local x_tasks_completed=0
+    local x_files_modified=0
+    local x_tests_status="NOT_RUN"
+    local x_work_type=""
+    local x_exit_signal="false"
+    local x_recommendation=""
+
+    x_status=""; x_tasks_completed=0; x_files_modified=0; x_tests_status="NOT_RUN"; x_work_type=""; x_exit_signal="false"; x_recommendation=""
+    if [ -f "$response_file" ]; then
+        ___x_cmd_agent_job___parse_status_ "$dir" "$response_file"
+        ___x_cmd_agent_job___log_status
+    else
+        # Give a short grace period for the AI to write the file
+        ___x_cmd sleep 0.5 2>/dev/null || true
+        if [ -f "$response_file" ]; then
+            ___x_cmd_agent_job___parse_status_ "$dir" "$response_file"
+            ___x_cmd_agent_job___log_status
+        elif [ "$iter" -gt 1 ]; then
+            agent:warn "Response file not found for iteration $iter - $response_file"
+            x_status="BLOCKED"
+            x_exit_signal="false"
+            x_tasks_completed=0
+            x_files_modified=0
+        else
+            agent:info "First iteration response file not yet available, continuing"
+            x_status="IN_PROGRESS"
+            x_exit_signal="false"
+            x_tasks_completed=0
+            x_files_modified=0
+        fi
+    fi
+
+    # Write status file
+    ___x_cmd_agent_job_status_write "$dir" "$iter" "$max_iterations" "$vlid" "$response_file" "$inrow" "$no_progress" "$harness" "$donefile"
+
+    if [ "$x_status" = "COMPLETE" ] && [ "$x_exit_signal" = "true" ]; then
+        agent:info "Task completed according to AI status block"
+        if [ ! -f "$donefile" ]; then
+            agent:warn "AI signaled completion but did not create DONE.md. Task may be incomplete. Check $response_file for details"
+        fi
+        return 1
+    fi
+
+    if [ "$x_tasks_completed" -eq 0 ] && [ "$x_files_modified" -eq 0 ]; then
+        no_progress="$((no_progress + 1))"
+        agent:warn "No progress detected in iteration $iter ($no_progress/$inrow consecutive). AI reported 0 tasks completed and 0 files modified"
+    else
+        no_progress=0
+    fi
+
+    if [ "$no_progress" -ge "$inrow" ]; then
+        agent:info "No progress for $inrow consecutive iterations. Stopping iteration loop. Use 'x agent job iter' to resume if needed."
+        return 1
+    fi
+
+    return 0
+}
+
+# Build the loop context snippet embedded into the iteration prompt.
+___x_cmd_agent_job___build_loop_context(){
+    local dir="$1"
+    local iter="$2"
+    local max_iterations="$3"
+    local no_progress="$4"
+    local inrow="$5"
+
+    local done_count=0
+    done_count="$(
+        for f in "$dir"/*.response.md; do
+            [ -f "$f" ] || continue
+            printf "%s\n" "$f"
+        done 2>/dev/null | ___x_cmd_cmds wc -l
+    )"
+
+    printf "Iteration: %s / %s\n" "$iter" "$max_iterations"
+    printf "Previous iterations: %s\n" "$done_count"
+    printf "No-progress streak: %s / %s\n" "$no_progress" "$inrow"
+}
+
+# Parse the ---X_AGENT_STATUS--- block from an AI response file.
+# Sets global x_status, x_tasks_completed, x_files_modified, x_tests_status,
+# x_work_type, x_exit_signal, x_recommendation, x_todo_done, x_todo_remaining, x_response_count.
+___x_cmd_agent_job___parse_status_(){
+    local dir="$1"
+    local fp="$2"
+    local in_block=0
+    local line=""
+    local _status="" _tasks=0 _files=0 _tests="NOT_RUN" _work="" _exit="false" _rec="" x_=""
+
+    while IFS= read -r line; do
+        case "$line" in
+            "---X_AGENT_STATUS---")     in_block=1; continue ;;
+            "---END_X_AGENT_STATUS---") in_block=0; break ;;
+        esac
+        [ "$in_block" -eq 1 ] || continue
+
+        case "$line" in
+            STATUS:*)
+                _status="${line#STATUS: }"
+                x_=""; ___x_cmd str trim_ "$_status"
+                _status="$x_"
+                ;;
+            TASKS_COMPLETED_THIS_ITER:*)
+                _tasks="${line#TASKS_COMPLETED_THIS_ITER: }"
+                x_=""; ___x_cmd str trim_ "$_tasks"
+                _tasks="$x_"
+                ;;
+            FILES_MODIFIED:*)
+                _files="${line#FILES_MODIFIED: }"
+                x_=""; ___x_cmd str trim_ "$_files"
+                _files="$x_"
+                ;;
+            TESTS_STATUS:*)
+                _tests="${line#TESTS_STATUS: }"
+                x_=""; ___x_cmd str trim_ "$_tests"
+                _tests="$x_"
+                ;;
+            WORK_TYPE:*)
+                _work="${line#WORK_TYPE: }"
+                x_=""; ___x_cmd str trim_ "$_work"
+                _work="$x_"
+                ;;
+            EXIT_SIGNAL:*)
+                _exit="${line#EXIT_SIGNAL: }"
+                x_=""; ___x_cmd str trim_ "$_exit"
+                _exit="$x_"
+                ;;
+            RECOMMENDATION:*)
+                _rec="${line#RECOMMENDATION: }"
+                x_=""; ___x_cmd str trim_ "$_rec"
+                _rec="$x_"
+                ;;
+        esac
+    done < "$fp"
+
+    # [ "$in_block" -eq 0 ] &&
+    [ -n "$_status" ] && [ -n "$_exit" ] || return 1
+
+    x_status="$_status"
+    x_tasks_completed="$_tasks"
+    x_files_modified="$_files"
+    x_tests_status="$_tests"
+    x_work_type="$_work"
+    x_exit_signal="$_exit"
+    x_recommendation="$_rec"
+
+    x_todo_done=0
+    x_todo_remaining=0
+
+    # Count response files
+    x_response_count=$(
+        for f in "$dir"/*.response.md; do
+            [ -f "$f" ] || continue
+            printf "%s\n" "$f"
+        done 2>/dev/null | ___x_cmd_cmds wc -l
+    )
+    [ -z "$x_response_count" ] && x_response_count=0
+}
+
+# Write the unified status.yml file for a job.
+___x_cmd_agent_job_status_write(){
+    local dir="$1"
+    local iter="$2"
+    local max_iterations="$3"
+    local vlid="$4"
+    local response_file="$5"
+    local inrow="$6"
+    local no_progress="$7"
+    local harness="$8"
+    local donefile="$9"
+
+    local status_file="$dir/status.yml"
+    local done_flag="false"
+    local updated_at
+    local started_at=""
+    local exit_code=""
+    local error_summary=""
+    local summary_file=""
+    local done_file=""
+    local error_file=""
+    local job_status="PENDING"
+
+    local x_=; ___x_cmd epoch get_
+    updated_at="$x_"
+    [ -f "$donefile" ] && done_flag="true"
+
+    # Preserve started_at if already recorded, otherwise seed it now.
+    if [ -f "$status_file" ]; then
+        started_at="$(___x_cmd_cmds awk '/^started_at:/{print $2; exit}' "$status_file" 2>/dev/null)"
+    fi
+    [ -n "$started_at" ] || started_at="$updated_at"
+
+    # Final state annotations
+    if [ "$done_flag" = "true" ]; then
+        job_status="complete"
+        done_file="DONE.md"
+        [ -f "$dir/SUMMARY.md" ] && summary_file="SUMMARY.md"
+        [ -f "$dir/ERROR.md" ] || exit_code="0"
+    elif [ -f "$dir/ERROR.md" ]; then
+        job_status="failed"
+        error_file="ERROR.md"
+        error_summary="$(___x_cmd_cmds awk '/^## Summary$/{getline; print; exit}' "$dir/ERROR.md" 2>/dev/null)"
+        exit_code="$(___x_cmd_cmds awk '/^## Exit Code$/{getline; print; exit}' "$dir/ERROR.md" 2>/dev/null)"
+    elif [ "$iter" -gt 0 ]; then
+        job_status="running"
+    fi
+
+    printf "%s\n" \
+        "---" \
+        "iter: $iter" \
+        "max_iterations: $max_iterations" \
+        "vlid: $vlid" \
+        "response_file: $response_file" \
+        "" \
+        "# AI Status" \
+        "status: $x_status" \
+        "tasks_completed: $x_tasks_completed" \
+        "files_modified: $x_files_modified" \
+        "tests_status: $x_tests_status" \
+        "work_type: $x_work_type" \
+        "exit_signal: $x_exit_signal" \
+        "recommendation: $x_recommendation" \
+        "" \
+        "# TODO Progress" \
+        "todo_remaining: $x_todo_remaining" \
+        "todo_completed: $x_todo_done" \
+        "" \
+        "# Job State" \
+        "no_progress_streak: $no_progress" \
+        "inrow_threshold: $inrow" \
+        "response_count: $x_response_count" \
+        "done: $done_flag" \
+        "harness: $harness" \
+        "" \
+        "# Standard Status Fields" \
+        "job_status: ${job_status}" \
+        "exit_code: ${exit_code}" \
+        "error_summary: ${error_summary}" \
+        "summary_file: ${summary_file}" \
+        "done_file: ${done_file}" \
+        "error_file: ${error_file}" \
+        "" \
+        "# Metadata" \
+        "started_at: $started_at" \
+        "updated_at: $updated_at" \
+        > "$status_file"
+}
+
+# Log the parsed AI status line.
+___x_cmd_agent_job___log_status(){
+    local exit_info=""
+    [ "$x_exit_signal" = "true" ] && exit_info=" [EXIT]"
+    agent:info "[$x_status]$exit_info | $x_recommendation"
+}
+
+# Write a structured ERROR.md in the job directory.
+# Usage: ___x_cmd_agent_job___write_error_md <jobdir> <status> <error_type> <summary> [details] [exit_code]
+___x_cmd_agent_job___write_error_md(){
+    local jobdir="$1"
+    local status="${2:-failed}"
+    local error_type="${3:-failure}"
+    local summary="${4:-Job failed}"
+    local details="${5:-}"
+    local exit_code="${6:-}"
+    local error_time
+
+    error_time="$(___x_cmd date iso 2>/dev/null)" || error_time="$(___x_cmd_cmds date -Iseconds 2>/dev/null)" || error_time="unknown"
+
+    {
+        printf '# Error Summary\n\n'
+        printf '## Status\n%s\n\n' "$status"
+        printf '## Exit Code\n%s\n\n' "${exit_code:-unknown}"
+        printf '## Error Time\n%s\n\n' "$error_time"
+        printf '## Error Type\n%s\n\n' "$error_type"
+        printf '## Summary\n%s\n\n' "$summary"
+        if [ -n "$details" ]; then
+            printf '## Details\n%s\n\n' "$details"
+        fi
+
+        # Include last response reference if available
+        local last_response=""
+        last_response="$(___x_cmd_cmds ls "$jobdir"/*.response.md 2>/dev/null | ___x_cmd_cmds sort | ___x_cmd_cmds tail -n 1)"
+        if [ -n "$last_response" ] && [ -f "$last_response" ]; then
+            printf '## Last Response\nFile: %s\n\n' "${last_response##*/}"
+        fi
+    } > "$jobdir/ERROR.md"
+}
+
+# Fallback SUMMARY.md generator when the AI did not create one.
+# Usage: ___x_cmd_agent_job___write_summary_md <jobdir>
+___x_cmd_agent_job___write_summary_md(){
+    local jobdir="$1"
+    local job_id="${jobdir##*/}"
+    local desc
+    desc="$(___x_cmd_agent_job___get_desc_ "$jobdir")"
+    local completion_time
+    completion_time="$(___x_cmd date iso 2>/dev/null)" || completion_time="$(___x_cmd_cmds date -Iseconds 2>/dev/null)" || completion_time="unknown"
+
+    local result_bullets="- Job completed successfully"
+    if [ -f "$jobdir/DONE.md" ]; then
+        # Try to extract the first meaningful paragraph from DONE.md as result bullets
+        local done_excerpt=""
+        done_excerpt="$(___x_cmd_cmds awk '
+            /^#/ { next }
+            /^[[:space:]]*$/ { next }
+            { print "- " $0; exit }
+        ' "$jobdir/DONE.md" 2>/dev/null)"
+        [ -z "$done_excerpt" ] || result_bullets="$done_excerpt"
+    fi
+
+    {
+        printf '# Summary\n\n'
+        printf '## Job ID\n%s\n\n' "$job_id"
+        printf '## Status\ncompleted\n\n'
+        printf '## Completion Time\n%s\n\n' "$completion_time"
+        printf '## Description\n%s\n\n' "$desc"
+        printf '## Result\n%s\n\n' "$result_bullets"
+        printf '## Key Outputs\n'
+        printf -- '- File: %s\n' "$jobdir/DONE.md"
+        printf -- '- Command: x agent job status --job-id %s\n' "$job_id"
+    } > "$jobdir/SUMMARY.md"
+}

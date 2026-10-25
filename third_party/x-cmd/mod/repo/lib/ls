@@ -1,0 +1,52 @@
+___x_cmd_repo_ls(){
+    [ $# -gt 0 ]    ||  set -- --auto
+
+    local fmt=auto
+    while [ $# -gt 0 ]; do
+        case "${1}" in
+            -h|--help)  ___x_cmd help -m repo ls "$@" ; return 0 ;;
+            --raw|--tsv|--csv|--app|--auto)
+                        fmt=${1#--};    shift ;;
+            *)          break ;;
+        esac
+    done
+
+    ___x_cmd_repo_ls___"$fmt" "$@"
+}
+
+___x_cmd_repo_ls___raw(){
+    {
+        [ -d "$___X_CMD_REPO_ROOT/.bare" ] && \
+            ___x_cmd fsiter --glob "$___X_CMD_REPO_ROOT/.bare" "*/*/*.git"
+
+        ___x_cmd fsiter --glob "$___X_CMD_REPO_ROOT" "*/*/*/.git/config"
+    }
+}
+
+___x_cmd_repo_ls___xsv(){
+    ___x_cmd_repo_ls___raw | ___x_cmd_cmds awk      \
+        -v sep="${SEP:-"$___X_CMD_UNSEENCHAR_HT"}"    \
+        -f "${___X_CMD_ROOT_MOD}/repo/lib/awk/ls-fmt.awk"
+}
+
+___x_cmd_repo_ls___tsv(){
+    SEP="\t"    ___x_cmd_repo_ls___xsv
+}
+
+___x_cmd_repo_ls___csv(){
+    SEP=","     ___x_cmd_repo_ls___xsv
+}
+
+___x_cmd_repo_ls___app(){
+    ___X_CMD_CSV_APP_SHBIN_CODE="xrc repo"    \
+        ___x_cmd csv app --clear --return var   \
+            ___x_cmd_repo_ls___csv "$@"
+}
+
+___x_cmd_repo_ls___auto(){
+    if [ -t 1 ]; then
+        ___x_cmd_repo_ls___app "$@"
+    else
+        ___x_cmd_repo_ls___tsv
+    fi
+}

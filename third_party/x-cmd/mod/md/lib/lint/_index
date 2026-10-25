@@ -1,0 +1,36 @@
+
+# x md lint — markdown linting
+#
+#   x md lint checkfence <files...>   check fenced code blocks in given files
+#   x md lint checkfence -            check from stdin
+#   x md lint checkfence              check from stdin (pipe-friendly)
+#
+# Sole rule for now: orphan-fence — ``` / ~~~ fences that are opened but
+# never closed. Returns non-zero if any checked file has an orphan fence.
+
+___x_cmd_md_lint(){
+    [ "$#" -gt 0 ] || set -- --help
+    local op="$1"; shift
+    case "$op" in
+        checkfence)         ___x_cmd_md_lint_checkfence "$@" ;;
+        -h|--help)          ___x_cmd help -m md lint ; return 0 ;;
+        *)                  md:error "unknown md lint subcommand: $op"; return 64 ;;
+    esac
+}
+
+___x_cmd_md_lint_checkfence(){
+    local rule="$___X_CMD_ROOT_MOD/md/lib/lint/orphan-fence.awk"
+
+    # "-"        : the markdown document itself is on stdin (MODE=stdin)
+    # <files...> : those files are the list (a few files)
+    # (nothing)  : a file list is streamed on stdin (many files, no ARG_MAX)
+    case "${1:-}" in
+        -h|--help)  ___x_cmd help -m md lint checkfence ; return 0 ;;
+        -)          ___x_cmd_cmds_awk -v MODE=stdin -f "$rule" ;;
+        *)          if [ "$#" -gt 0 ]; then
+                        printf '%s\n' "$@" | ___x_cmd_cmds_awk -f "$rule"
+                    else
+                        ___x_cmd_cmds_awk -f "$rule"
+                    fi ;;
+    esac
+}

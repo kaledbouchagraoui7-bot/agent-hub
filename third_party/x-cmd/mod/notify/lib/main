@@ -1,0 +1,93 @@
+# shellcheck shell=dash
+
+___x_cmd_notify___main(){
+    [ "$#" -gt 0 ] ||   set - -h
+
+    local _msg="" _title="X-CMD Notify" _icon=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      x help -m notify >&2;                 return ;;
+            --title|-t)     shift; _title="$1" ;;
+            --icon|-i)      shift; _icon="$1" ;;
+            -*)             ;;
+            *)              [ -z "$_msg" ] && _msg="$1" ;;
+        esac
+        shift
+    done
+
+    ___x_cmd_notify___run "${_msg:-"msg from 'x notify'"}" "$_title" "$_icon"
+}
+
+___x_cmd_notify___run(){
+    local x_
+    ___x_cmd os name_
+    case "$x_" in
+        win|darwin)
+            "___x_cmd_notify___${x_}" "$@"
+            ;;
+        linux)
+            if ___x_cmd os is wsl; then
+                ___x_cmd_notify___win  "$@"
+                return
+            fi
+            ___x_cmd_notify___linux "$@"
+            ;;
+        *)
+            ;;
+    esac
+}
+
+___x_cmd_notify___darwin(){
+    local msg="${1:-"msg from 'x notify'"}"
+    local title="${2:-"X-CMD Notify"}"
+    # NOTE: macOS `display notification` does not support custom icons.
+
+    msg=$(printf "%s" "$msg" | ___x_cmd_cmds sed 's/\\/\\\\/g; s/"/\\"/g')
+    title=$(printf "%s" "$title" | ___x_cmd_cmds sed 's/\\/\\\\/g; s/"/\\"/g')
+
+    ___x_cmd_cmds osascript -e \
+        "display notification \"$msg\" with title \"$title\""
+}
+
+___x_cmd_notify___linux(){
+    local msg="${1:-"msg from 'x notify'"}"
+    local title="${2:-"X-CMD Notify"}"
+    local icon="${3:-}"
+
+    if [ -n "$icon" ]; then
+        ___x_cmd_cmds notify-send -i "$icon" "$title" "$msg"
+    else
+        ___x_cmd_cmds notify-send "$title" "$msg"
+    fi
+}
+
+___x_cmd_notify___win(){
+    local msg="${1:-"msg from 'x notify'"}"
+    local title="${2:-"X-CMD Notify"}"
+    local icon="${3:-}"
+
+    msg="$(printf "%s" "$msg" | sed "s/'/''/g")"
+    title="$(printf "%s" "$title" | sed "s/'/''/g")"
+    icon="$(printf "%s" "$icon" | sed "s/'/''/g")"
+
+    ___x_cmd pwsh -NoProfile -NonInteractive -Command "
+Add-Type -AssemblyName System.Windows.Forms
+function DisplayNotification([string]\$msg, [string]\$title, [string]\$icon) {
+    \$action = New-Object System.Windows.Forms.NotifyIcon
+    if ([string]::IsNullOrEmpty(\$icon)) {
+        \$path = (Get-Process -id \$pid).Path
+        \$action.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon(\$path)
+    } else {
+        \$action.Icon = [System.Drawing.Icon]::new(\$icon)
+    }
+    \$action.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
+    \$action.BalloonTipText = \$msg
+    \$action.BalloonTipTitle = \$title
+    \$action.Visible = \$true
+    \$action.ShowBalloonTip(1)
+}
+
+DisplayNotification -msg '${msg}' -title '${title}' -icon '${icon}'
+" > /dev/null 2>&1
+
+}

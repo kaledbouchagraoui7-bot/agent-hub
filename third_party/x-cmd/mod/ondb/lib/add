@@ -1,0 +1,50 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_add(){
+    local type="" id="" name="" file="" dir="" no_schema=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb add "$@" ; return 0 ;;
+            --type)     type="$2"; arg:2:shift ;;
+            --id)       id="$2"; arg:2:shift ;;
+            --name)     name="$2"; arg:2:shift ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --no-schema) no_schema=1; shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    [ -n "$type" ] || { N=ondb M="--type is required" log:ret:64; return; }
+
+    if [ -n "$dir" ]; then
+        ___x_cmd mkdirp "$dir"
+        ___x_cmd_ondb_logpath_write "$dir"
+        file="$x_"
+    elif [ -z "$file" ]; then
+        file="ondb.tsv"
+    fi
+
+    if [ -z "$id" ]; then
+        ___x_cmd uuid get_
+        id="$( printf '%s' "$x_" | ___x_cmd_cmds tr '[:upper:]' '[:lower:]' )"
+    fi
+
+    local ms; ms="$( x epoch ms )"
+
+    local TAB; TAB="$(printf '\t')"
+    local line="add${TAB}${type}${TAB}${id}${TAB}${ms}"
+    [ -n "$name" ] && line="${line}${TAB}name${TAB}${name}"
+
+    local prop key val
+    for prop in "$@"; do
+        key="${prop%%=*}"
+        val="${prop#*=}"
+        line="${line}${TAB}${key}${TAB}${val}"
+    done
+
+    printf '%s\n' "$line" >> "$file"
+    rm -f "${file%.tsv}.lines"
+    printf "id\t%s\n" "$id"
+}

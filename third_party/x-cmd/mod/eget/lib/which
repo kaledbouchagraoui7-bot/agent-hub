@@ -1,0 +1,54 @@
+# shellcheck shell=dash
+
+# which: find cached binary path
+# which_: set x_ to cached binary path (pure shell, no subshells)
+
+___x_cmd_eget_which(){
+    case "${1:-}" in -h|--help) ___x_cmd help -m eget which; return 0 ;; esac
+    local x_
+    ___x_cmd_eget_which_ "$@"
+    if [ -n "$x_" ]; then
+        printf "%s\n" "$x_"
+    else
+        N=eget M="No cached binary found for ${1:-} — run 'x eget snap ${1:-}' first" log:ret:1
+    fi
+}
+
+___x_cmd_eget_which_(){
+    local target="${1:-}" _forge="${2:-github}" _tag="${3:-}"
+
+    ___x_cmd_eget_normalize_ "$target" "$_forge" "$_tag"
+    local _norm="$x_"
+    target="${_norm%%
+*}"; local _rest="${_norm#*
+}"
+    _forge="${_rest%%
+*}"; _tag="${_rest#*
+}"
+
+    local owner="${target%%/*}"
+    local repo="${target#*/}"
+    [ -n "$owner" ] && [ -n "$repo" ] || { x_=""; return 1; }
+
+    local snap_base="$___X_CMD_EGET_DATA/snap/${owner}--${repo}"
+    [ -d "$snap_base" ] || { x_=""; return 1; }
+
+    x_=""
+    # Resolve version directory: explicit tag > .default-version > first dir
+    local _ver=""
+    if [ -n "$_tag" ]; then
+        _ver="$_tag"
+    elif [ -f "$snap_base/.default-version" ]; then
+        read -r _ver < "$snap_base/.default-version"
+    else
+        ___x_cmd_fsiter___dir1_ "$snap_base" 2>/dev/null || true
+        [ -n "$x_" ] && _ver="$x_"
+    fi
+
+    if [ -n "$_ver" ] && [ -d "$snap_base/$_ver/bin" ]; then
+        local _bin_dir="$snap_base/$_ver/bin"
+        ___x_cmd_fsiter___file1_ "$_bin_dir" 2>/dev/null && \
+            [ -n "$x_" ] && [ -x "$_bin_dir/$x_" ] && { x_="$_bin_dir/$x_"; return 0; }
+    fi
+    return 1
+}

@@ -1,0 +1,95 @@
+
+# claw = memory + soul + note + tailer-mq + cron
+
+xrc:mod:lib     claw   run/heartbeat   run/msg run/slash run/pending_ack run/agentrequest run/workspace run/session run/prompt run/state run/notify run/util run/log run/status
+
+___X_CMD_CLAW_DIR="$___X_CMD_ROOT_DATA/claw"
+___X_CMD_CLAW_BOT_WS="$___X_CMD_CLAW_DIR/workspace/default"
+___X_CMD_CLAW_BOT_MQ="$___X_CMD_CLAW_BOT_WS/.x-cmd/tailer-mq"
+___X_CMD_CLAW_BOT_DATA="$___X_CMD_CLAW_BOT_WS/.x-cmd/data"
+___X_CMD_CLAW_BOT_HEARTBEAT="$___X_CMD_CLAW_BOT_DATA/heartbeat"
+___X_CMD_CLAW_BOT_CONNECT_DIR="$___X_CMD_CLAW_BOT_DATA/connect"
+___X_CMD_CLAW_BOT_STDOUT_LOG_DIR="$___X_CMD_CLAW_BOT_DATA/logs"
+
+___X_CMD_CLAW_WEIXIN_SESSION_TIMEOUT=86400
+___X_CMD_CLAW_WEIXIN_REMIND_BEFORE=1800
+___X_CMD_CLAW_WEIXIN_REMIND_MARKER="$___X_CMD_CLAW_BOT_DATA/weixin_24h_remind"
+
+# Feature flag for slash commands.
+# Default is enabled; set ___X_CMD_CLAW_SLASH_ENABLED=0 to disable.
+___X_CMD_CLAW_SLASH_ENABLED="${___X_CMD_CLAW_SLASH_ENABLED:-1}"
+
+___x_cmd_claw_runstart(){(
+    export ___X_CMD_LOG_C_TF="$___X_CMD_LOG_C_TF"
+    [ -n "$___X_CMD_LOG_C_TF" ] || [ -t 2 ] || ___X_CMD_LOG_C_TF=0
+    ___x_cmd log timestamp epoch
+
+    if [ -n "$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR" ]; then
+        local logfp="$___X_CMD_CLAW_BOT_RECENT_STDOUT_LOG_DIR/runner.log"
+        ___x_cmd ensurefp "$logfp"
+        exec >>"$logfp" 2>&1
+    fi
+
+    claw:info "[MAIN] X-Claw agent runtime active — awaiting instructions and ready to act"
+    if ! ___x_cmd worker isalive --ns x-claw-default-worker --name heartbeat-generator; then
+        claw:info "[HB] Starting heartbeat worker"
+        ___x_cmd worker run --ns x-claw-default-worker --name heartbeat-generator -- ___x_cmd_claw_run___heartbeat_generator "$___X_CMD_CLAW_BOT_MQ"
+    fi
+
+    (
+        trap '' INT
+
+        ___X_CMD_TAILER_HANDLE="___x_cmd_claw_run___mq___dispatch" \
+        ___x_cmd tailer run "$___X_CMD_CLAW_BOT_MQ"
+    ) || {
+        local exitcode="$?"
+        claw:warn "[MAIN] Tailer loop exited with code $exitcode — initiating teardown"
+        ___x_cmd_claw_run___teardown
+        return "$exitcode"
+    }
+
+    ___x_cmd_claw_run___teardown
+)}
+
+___x_cmd_claw_run___stop_all_workers(){
+    local worker_name=""
+    local worker_pid=""
+    local worker_fp=""
+    local worker_stime=""
+    local worker_state=""
+
+    claw:debug "[TEARDOWN] Stopping all ongoing workers in namespace: x-claw-default-worker"
+    ___x_cmd worker ls --ns x-claw-default-worker --tsv | while IFS="$___X_CMD_UNSEENCHAR_HT" read -r worker_name worker_pid worker_fp worker_stime worker_state; do
+        [ "$worker_state" = "ongoing" ] || continue
+        claw:debug "[TEARDOWN] Stopping worker: $worker_name (pid=$worker_pid)"
+        ___x_cmd worker stop --ns x-claw-default-worker --name "$worker_name" 2>/dev/null
+    done
+}
+
+___x_cmd_claw_run___teardown(){
+    claw:info "[TEARDOWN] Shutting down X-Claw runtime — stopping services and cleaning up state"
+
+    # claw:debug "[HB] Removing connect directory: $___X_CMD_CLAW_BOT_CONNECT_DIR"
+    # ___x_cmd rmrf "$___X_CMD_CLAW_BOT_CONNECT_DIR"
+
+    claw:debug "[HB] Removing agent unavailable state directories from $___X_CMD_CLAW_BOT_HEARTBEAT"
+    ___x_cmd rmrf "$___X_CMD_CLAW_BOT_HEARTBEAT/agent_unavailable"
+    ___x_cmd rmrf "$___X_CMD_CLAW_BOT_HEARTBEAT/error_notify"
+
+    claw:debug "[HB] Stopping tailer"
+    ___x_cmd tailer stop "$___X_CMD_CLAW_BOT_MQ" 2>/dev/null
+
+    ___x_cmd_claw_run___stop_all_workers
+}
+
+___x_cmd_claw_run___mq___dispatch(){
+    local msg="$1"
+    case "$msg" in
+        HEARTBEAT:*)
+            ___x_cmd_claw_run___mq___dispatch_heartbeat "${msg#*:}" || true ;;
+        weixin:*|qywx:*|feishu:*|telegram:*)
+            ___x_cmd_claw_run___mq___dispatch_chat "$msg" "user"    || true ;;
+
+        # other agents.
+    esac
+}

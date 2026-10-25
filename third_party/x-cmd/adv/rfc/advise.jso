@@ -1,0 +1,400 @@
+{
+"#name"
+:
+{
+"rfc"
+:
+null
+,
+"en"
+:
+"Modules designed for RFC documentation"
+,
+"zh"
+:
+"为 RFC 文档设计的模块"
+}
+,
+"#desc"
+:
+{
+"en"
+:
+"RFC documents cover a wide range of Internet protocols, procedures, processes, and concepts, and are the primary set of documents for Internet standards and practices."
+,
+"zh"
+:
+"RFC 文档覆盖了广泛的互联网协议、程序、过程和概念，是互联网标准和实践的主要文档集。"
+}
+,
+"#synopsis"
+:
+[
+"x rfc ls [--csv|--tsv|--app]"
+,
+"x rfc txt <id>"
+,
+{
+"x rfc"
+:
+"<query>"
+}
+,
+{
+"x rfc :"
+:
+"<query>"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x rfc ls"
+,
+"zh"
+:
+"管道默认输出 TSV,直接 grep/awk 处理"
+,
+"en"
+:
+"Default piped output is TSV — pipe straight into grep/awk/etc"
+}
+,
+{
+"cmd"
+:
+"x rfc ls --csv"
+,
+"zh"
+:
+"输出 CSV,适合 Excel/pandas 导入"
+,
+"en"
+:
+"Output CSV for Excel/pandas import"
+}
+,
+{
+"cmd"
+:
+"x rfc ls --app"
+,
+"zh"
+:
+"终端下用交互式 UI 浏览 RFC 文档"
+,
+"en"
+:
+"Browse RFC documents in an interactive TUI"
+}
+,
+{
+"cmd"
+:
+"x rfc txt 1003"
+,
+"zh"
+:
+"查看 RFC 1003 文档内容"
+,
+"en"
+:
+"View RFC 1003 document content"
+}
+,
+{
+"cmd"
+:
+"x rfc : csv"
+,
+"zh"
+:
+"在 RFC 网站搜索 csv 相关内容"
+,
+"en"
+:
+"Search csv on RFC website"
+}
+,
+{
+"cmd"
+:
+"x rfc :: http protocol"
+,
+"zh"
+:
+"使用 AI 搜索并总结 HTTP 协议"
+,
+"en"
+:
+"AI-assisted search for HTTP protocol"
+}
+]
+,
+"#subcmd:Query"
+:
+[
+"ls"
+,
+"txt"
+]
+,
+"#subcmd:Search"
+:
+[
+"ddgo|:"
+,
+"ddgoai|::"
+]
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"List all RFC documents"
+,
+"zh"
+:
+"列出 RFC 所有的文档"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x rfc ls --csv"
+,
+"zh"
+:
+"输出 CSV 导入 Excel/pandas"
+,
+"en"
+:
+"Output CSV for Excel/pandas import"
+}
+,
+{
+"cmd"
+:
+"x rfc ls --app"
+,
+"zh"
+:
+"tty 下启动交互式 TUI 浏览"
+,
+"en"
+:
+"Open interactive TUI for browsing in tty"
+}
+]
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"管道筛选 RFC:输出默认 TSV,直接 grep/awk/jq 处理"
+,
+"en"
+:
+"Pipe through grep/awk/jq? The default output is TSV"
+}
+,
+{
+"zh"
+:
+"做数据分析或导入 Excel/pandas:加 --csv 拿 CSV"
+,
+"en"
+:
+"Importing into Excel/pandas for analysis? Pass --csv for CSV"
+}
+,
+{
+"zh"
+:
+"tty 下想交互浏览:省略 flag,默认就是交互式 TUI"
+,
+"en"
+:
+"Want to browse interactively in the tty? Just omit the flag — TUI is the tty default"
+}
+]
+,
+"--csv"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Output as CSV (for spreadsheet or pandas import)"
+,
+"zh"
+:
+"输出 CSV (适合表格软件或 pandas 导入)"
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Output as TSV — default for piped use, kept explicit for clarity"
+,
+"zh"
+:
+"输出 TSV —— 管道默认格式,显式指定用"
+}
+}
+,
+"--app"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Open the interactive TUI (also the tty default)"
+,
+"zh"
+:
+"启动交互式 TUI (tty 时默认)"
+}
+}
+}
+,
+"txt"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"View RFC Documentation"
+,
+"zh"
+:
+"查阅 RFC 文档"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Document Number"
+,
+"zh"
+:
+"文档编号"
+}
+}
+}
+,
+"ddgo|:"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Search the RFC website for the specified content"
+,
+"zh"
+:
+"在 RFC 网站中搜索指定内容"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"content"
+,
+"zh"
+:
+"内容"
+}
+}
+}
+,
+"ddgoai|::"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Search for specific content on the RFC website and use AI to summarize it"
+,
+"zh"
+:
+"在 RFC 网站中搜索指定内容并使用 AI 总结"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"content"
+,
+"zh"
+:
+"内容"
+}
+}
+}
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

@@ -1,0 +1,45 @@
+{
+  "notes": 6,
+  "attachments": 1,
+  "internal_edges": 6,
+  "external_links": 0,
+  "unresolved_links": 0,
+  "unresolved_unique_targets": 0,
+  "orphans": 1,
+  "orphan_ratio": 0.1667,
+  "tags": 8,
+  "avg_degree": 2.0,
+  "median_degree": 2,
+  "max_degree": 4,
+  "density": 0.2,
+  "words": 836,
+  "bytes": 7040,
+  "top_hubs": [
+    {
+      "id": "90-Meta/Home.md",
+      "degree": 4
+    },
+    {
+      "id": "40-Projects/PRJ-001 Data Farm.md",
+      "degree": 3
+    },
+    {
+      "id": "90-Meta/Conventions.md",
+      "degree": 2
+    },
+    {
+      "id": "90-Meta/DATA-MODEL.md",
+      "degree": 2
+    },
+    {
+      "id": "AGENTS.md",
+      "degree": 1
+    },
+    {
+      "id": "00-Inbox/_about.md",
+      "degree": 0
+    }
+  ],
+  "duplicate_basenames": [],
+  "warnings": []
+}

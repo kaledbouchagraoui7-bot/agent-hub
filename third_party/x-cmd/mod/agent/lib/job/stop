@@ -1,0 +1,45 @@
+# shellcheck shell=dash
+
+___x_cmd_agent_job_stop(){
+    local jobid=""
+    local jobdir=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m agent job stop; return 0 ;;
+            --job-dir)      jobdir="$2" ; arg:2:shift ;;
+            --job-id)       jobid="$2" ; arg:2:shift ;;
+            *)              break ;;
+        esac
+    done
+
+    [ -n "$jobid" ] || N=agent M="Please specify the job id to stop." log:ret:64
+
+    agent:info "Stopping agent job id[$jobid]"
+
+    ___x_cmd worker stop --ns 'x-agent-job' --name "$jobid"
+
+    # Mark the job as interrupted so ls/status can distinguish it from actively running jobs.
+    local resolved_jobdir
+    resolved_jobdir="$(___x_cmd_agent_job___resolve_dir_ "$jobdir" "$jobid")"
+    if [ -n "$resolved_jobdir" ] && [ -d "$resolved_jobdir" ]; then
+        ___x_cmd_agent_job___mark_interrupted "$resolved_jobdir"
+    fi
+}
+
+
+# Mark a job as interrupted in its status.yml.
+# Used by x agent job stop so downstream consumers can distinguish interrupted from active.
+___x_cmd_agent_job___mark_interrupted(){
+    local jobdir="$1"
+    local status_file="$jobdir/status.yml"
+    [ -f "$status_file" ] || return 0
+
+    local tmpfile="$status_file.tmp"
+    if ___x_cmd_cmds grep -q "^job_status:" "$status_file"; then
+        ___x_cmd_cmds sed 's/^job_status:.*/job_status: interrupted/' "$status_file" > "$tmpfile" && \
+            ___x_cmd_cmds mv "$tmpfile" "$status_file"
+    else
+        printf "job_status: interrupted\n" >> "$status_file"
+    fi
+}

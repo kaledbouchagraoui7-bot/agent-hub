@@ -1,0 +1,466 @@
+{
+"file"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"文件管理 — 上传、下载、查看云端文件"
+,
+"en"
+:
+"File management — upload, download, and view cloud files"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/file.jso"
+}
+,
+"share"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"分享管理 — 创建、列出、更新、删除云端文件的分享链接"
+,
+"en"
+:
+"Share management — create, list, update, and delete share links for cloud files"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/share.jso"
+}
+,
+"rag"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"RAG 知识库 — 搜索、上传、管理个人知识库文档"
+,
+"en"
+:
+"RAG knowledge base — search, upload, and manage personal knowledge documents"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/rag.jso"
+}
+,
+"ai"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"AI 聊天与 Agent 服务"
+,
+"en"
+:
+"AI chat and agent services"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/ai.jso"
+}
+,
+"cc"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"云端编译 — 将 Go、Zig、Rust 等脚本编译为二进制文件"
+,
+"en"
+:
+"Cloud compile — compile Go, Zig, Rust and other scripts into binaries"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/cc.jso"
+}
+,
+"login"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"登录/注册账户"
+,
+"en"
+:
+"Login/register account"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/login.jso"
+}
+,
+"account"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"账户管理 — 查看信息、重命名、绑定、升级套餐"
+,
+"en"
+:
+"Account management — view info, rename, bind, upgrade plan"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/account.jso"
+}
+,
+"access"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"访问控制 — 设置文件的公开或指定用户访问权限"
+,
+"en"
+:
+"Access control — set files as public or grant access to specific users"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/access.jso"
+}
+,
+"org"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"组织管理 — 创建/删除组织，管理组织成员"
+,
+"en"
+:
+"Organization management — create/delete organizations, manage members"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/org.jso"
+}
+,
+"keypair"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"密钥管理 — 生成、上传、下载加密密钥对"
+,
+"en"
+:
+"Key management — generate, upload, download encryption key pairs"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/keypair.jso"
+}
+,
+"site"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"AI 站点 — 查询 Skill 模板，创建和管理 AI 生成的网页"
+,
+"en"
+:
+"AI Site — query Skill templates, create and manage AI-generated web pages"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/sitepage.jso"
+}
+,
+"logout"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"登出账户，清除本地 token 和密钥"
+,
+"en"
+:
+"Logout account, clear local token and keys"
+}
+}
+,
+"info"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看账户信息（用户名、区域、邮箱、套餐、空间用量）"
+,
+"en"
+:
+"View account info (name, region, email, plan, storage usage)"
+}
+}
+,
+"bind"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"绑定邮箱，用于接收通知和邮箱登录"
+,
+"en"
+:
+"Bind email for notifications and email login"
+}
+}
+,
+"_advise"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"补全专用命令，直接调用无效"
+,
+"en"
+:
+"Completion-only command, no effect when called directly"
+}
+,
+"$ref"
+:
+"x-advise://hub/data/_advise.jso"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x hub file put <local_path> <remote_path>"
+,
+"zh"
+:
+"上传本地文件到云端"
+,
+"en"
+:
+"Upload a local file to the cloud"
+}
+,
+{
+"cmd"
+:
+"x hub file get <remote_path>"
+,
+"zh"
+:
+"从云端下载文件到本地"
+,
+"en"
+:
+"Download a file from the cloud"
+}
+,
+{
+"cmd"
+:
+"x hub file ls [<path>]"
+,
+"zh"
+:
+"列出云端指定目录下的文件，默认为根目录"
+,
+"en"
+:
+"List files under the specified cloud directory, defaults to root"
+}
+,
+{
+"cmd"
+:
+"x hub file cat [<username>:]<path>"
+,
+"zh"
+:
+"查看云端文件内容"
+,
+"en"
+:
+"View cloud file contents"
+}
+,
+{
+"cmd"
+:
+"x hub share <remote_path>"
+,
+"zh"
+:
+"创建文件分享链接"
+,
+"en"
+:
+"Create a file share link"
+}
+,
+{
+"cmd"
+:
+"x hub rag ask <question>"
+,
+"zh"
+:
+"在知识库中搜索问题"
+,
+"en"
+:
+"Search the knowledge base for a question"
+}
+,
+{
+"cmd"
+:
+"x hub rag upload <file>"
+,
+"zh"
+:
+"上传文件到个人知识库"
+,
+"en"
+:
+"Upload a file to personal knowledge base"
+}
+,
+{
+"cmd"
+:
+"x hub cc <file>"
+,
+"zh"
+:
+"云端编译脚本为二进制文件"
+,
+"en"
+:
+"Cloud compile a script into binary"
+}
+,
+{
+"cmd"
+:
+"x hub info"
+,
+"zh"
+:
+"查看账户信息和空间使用"
+,
+"en"
+:
+"View account info and storage usage"
+}
+,
+{
+"cmd"
+:
+"x hub access set --public <path>"
+,
+"zh"
+:
+"将文件设为公开"
+,
+"en"
+:
+"Make a file public"
+}
+,
+{
+"cmd"
+:
+"x hub site skill ls"
+,
+"zh"
+:
+"列出所有可用的 Skill 模板"
+,
+"en"
+:
+"List all available Skill templates"
+}
+,
+{
+"cmd"
+:
+"x hub site create --skill <skillId> --title <title> <file>"
+,
+"zh"
+:
+"使用 Skill 模板创建 AI 站点"
+,
+"en"
+:
+"Create an AI site using a Skill template"
+}
+]
+,
+"$ref"
+:
+"x-advise://hub/data/cfg.jso"
+}
+

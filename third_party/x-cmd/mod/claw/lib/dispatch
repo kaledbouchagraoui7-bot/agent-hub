@@ -1,0 +1,114 @@
+# shellcheck shell=dash
+
+# Known subcommands used for typo detection.
+# shellcheck disable=SC2034
+___X_CMD_CLAW_SUBCMD_LIST="service manager workspace harness start stop restart status log connect disconnect weixin feishu telegram qywx cron runstart runner agentrequest"
+
+# Dispatch unknown subcommand: suggest if it looks like a typo,
+# otherwise keep the legacy behavior of sending it to the manager.
+___x_cmd_claw___main___dispatch(){
+    local op="$1";      shift
+
+    case "$op" in
+        -*)     N=claw M="Unknown option: $op" log:ret:64
+                return 64 ;;
+    esac
+
+    local suggestion=""
+    ___x_cmd_claw___main___suggest_ "$op"
+    suggestion="$x_"
+
+    if [ -n "$suggestion" ]; then
+        claw:error -h "Run 'x claw -h' for available subcommands" \
+            "Unknown subcommand: '$op'. Did you mean 'x claw $suggestion'?"
+        return 64
+    fi
+
+    ___x_cmd_claw_manager "$op" "$@"
+}
+
+# Return the closest known subcommand if it looks like a typo.
+# Result is stored in x_.
+___x_cmd_claw___main___suggest_(){
+    local op="$1"
+    local cmd
+    local dist
+
+    # Expand the space-separated list into positional parameters.
+    # This works across bash/dash/zsh because the eval re-parses the string.
+    # shellcheck disable=SC2086,SC2294
+    eval "set -- $___X_CMD_CLAW_SUBCMD_LIST"
+
+    # First, check if the input is a prefix of a known subcommand.
+    # This catches abbreviations like "stat" -> "status" before "start".
+    local prefix_match=""
+    local prefix_len_diff=999
+    for cmd; do
+        case "$cmd" in
+            "$op"*)     dist=$((${#cmd} - ${#op}))
+                        [ "$dist" -le 2 ] || continue
+                        [ "$dist" -lt "$prefix_len_diff" ] || continue
+                        prefix_len_diff="$dist"
+                        prefix_match="$cmd" ;;
+        esac
+    done
+
+    if [ -n "$prefix_match" ]; then
+        x_="$prefix_match"
+        return 0
+    fi
+
+    # Otherwise, use Levenshtein distance for typo detection.
+    # Require at least 2 common prefix characters to avoid unrelated short
+    # matches such as "run" -> "cron".
+    local best_dist=999
+    local best_common=0
+    local best_cmd=""
+    local common
+    for cmd; do
+        # shellcheck disable=SC2046
+        set -- $(___x_cmd_claw___main___levenshtein "$op" "$cmd")
+        dist="$1"; common="$2"
+        [ "$dist" -lt "$best_dist" ] || continue
+        best_dist="$dist"
+        best_common="$common"
+        best_cmd="$cmd"
+    done
+
+    if [ "$best_dist" -le 3 ] && [ "${#best_cmd}" -ge 3 ] && [ "$best_common" -ge 2 ]; then
+        x_="$best_cmd"
+    else
+        x_=""
+    fi
+}
+
+# Compute Levenshtein distance and common prefix length between two strings.
+# Output format: "<distance> <common_prefix_length>"
+___x_cmd_claw___main___levenshtein(){
+    local a="$1"
+    local b="$2"
+    ___x_cmd_cmds awk -v a="$a" -v b="$b" '
+    BEGIN {
+        m = length(a); n = length(b)
+        min_len = m < n ? m : n
+        common = 0
+        for (k = 1; k <= min_len; k++) {
+            if (substr(a, k, 1) != substr(b, k, 1)) break
+            common++
+        }
+        for (i = 0; i <= m; i++) d[i,0] = i
+        for (j = 0; j <= n; j++) d[0,j] = j
+        for (i = 1; i <= m; i++) {
+            ca = substr(a, i, 1)
+            for (j = 1; j <= n; j++) {
+                cb = substr(b, j, 1)
+                cost = (ca == cb) ? 0 : 1
+                x = d[i-1,j] + 1
+                y = d[i,j-1] + 1
+                z = d[i-1,j-1] + cost
+                d[i,j] = x < y ? (x < z ? x : z) : (y < z ? y : z)
+            }
+        }
+        print d[m,n], common
+    }'
+}

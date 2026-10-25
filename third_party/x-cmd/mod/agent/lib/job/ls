@@ -1,0 +1,359 @@
+# shellcheck shell=dash
+# List all jobs.
+
+___x_cmd_agent_job_ls(){
+    local filter="all"
+    local parent_dir=""
+    local format=""
+    local ids_only=""
+    if ___x_cmd_is_stdout2tty && ___x_cmd_runmode_allow_manual ; then
+        format="app"
+    else
+        format="tsv"
+    fi
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m agent job ls; return 0 ;;
+            --job-dir)      parent_dir="$2" ;        arg:2:shift ;;
+            --active)       filter="active";        shift ;;
+            --completed)    filter="completed";     shift ;;
+            --failed)       filter="failed";        shift ;;
+            --csv)          format="csv";           shift ;;
+            --tsv)          format="tsv";           shift ;;
+            --yml)          format="yml";           shift ;;
+            --app)          format="app";           shift ;;
+            --ids)          ids_only=1;             shift ;;
+            *)              break ;;
+        esac
+    done
+
+    # Default parent directory
+    [ -n "$parent_dir" ] || parent_dir="$___X_CMD_AGENT_JOB_DIR"
+
+    if [ -n "$ids_only" ]; then
+        ___x_cmd_agent_job_ls___ids "$filter" "$parent_dir"
+        return
+    fi
+
+    case "$format" in
+        csv)    ___x_cmd_agent_job_ls___csv "$filter" "$parent_dir" ;;
+        tsv)    ___x_cmd_agent_job_ls___tsv "$filter" "$parent_dir" ;;
+        yml)    ___x_cmd_agent_job_ls___yml "$filter" "$parent_dir" ;;
+        app)    ___x_cmd_agent_job_ls___app "$filter" "$parent_dir" ;;
+    esac
+}
+
+# Internal: print only sorted job IDs (one per line), no header.
+# Respects the same --active/--completed/--failed filters as other formats.
+___x_cmd_agent_job_ls___ids(){
+    local filter="${1:-all}"
+    local parent_dir="${2:-$___X_CMD_AGENT_JOB_DIR}"
+
+    if [ ! -d "$parent_dir" ]; then
+        return 0
+    fi
+
+    local job_path=""
+    ___x_cmd_agent_job_ls___sorted_paths "$parent_dir" | while IFS= read -r job_path; do
+        [ -d "$job_path" ] || continue
+
+        ___x_cmd_agent_job_ls___parse_job_info "$job_path"
+
+        case "$filter" in
+            active)     [ "$x_job_status" = "active" ] || continue ;;
+            completed)  [ "$x_job_status" = "completed" ] || continue ;;
+            failed)     [ "$x_job_status" = "failed" ] || continue ;;
+        esac
+
+        printf '%s\n' "${job_path##*/}"
+    done
+}
+
+# Generate CSV output (base format for other converters)
+___x_cmd_agent_job_ls___csv(){
+    local filter="${1:-all}"
+    local parent_dir="${2:-$___X_CMD_AGENT_JOB_DIR}"
+
+    if [ ! -d "$parent_dir" ]; then
+        return 0
+    fi
+
+    local job_id="" job_path=""
+
+    # Header
+    printf "job_id,status,progress,iter,harness,time,description\n"
+
+    ___x_cmd_agent_job_ls___sorted_paths "$parent_dir" | while IFS= read -r job_path; do
+        [ -d "$job_path" ] || continue
+
+        job_id="${job_path##*/}"
+
+        # Parse job info
+        ___x_cmd_agent_job_ls___parse_job_info "$job_path"
+
+        # Apply filter
+        case "$filter" in
+            active)     [ "$x_job_status" = "active" ] || continue ;;
+            completed)  [ "$x_job_status" = "completed" ] || continue ;;
+            failed)     [ "$x_job_status" = "failed" ] || continue ;;
+        esac
+
+        # Format time from the job's last update timestamp
+        local ts time_str="-"
+        ts="$(___x_cmd_agent_job___get_job_time_ "$job_path")"
+        time_str="$(___x_cmd_agent_job___format_time_ "$ts")"
+
+        # Format description for CSV (collapse newlines, quote if needed)
+        local csv_desc="$x_job_desc"
+        csv_desc="$(printf "%s" "$csv_desc" | ___x_cmd_cmds tr '\n' ' ')"
+        case "$csv_desc" in
+            *,* | *[\"]*)
+                csv_desc="\"$(printf "%s" "$csv_desc" | ___x_cmd_cmds sed 's/"/""/g')\""
+                ;;
+        esac
+
+        printf "%s,%s,%s,%s,%s,%s,%s\n" \
+            "$job_id" "$x_job_status" "$x_job_progress" "$x_job_iter" "$x_job_harness" "$time_str" "$csv_desc"
+    done
+}
+
+# Convert CSV to TSV
+___x_cmd_agent_job_ls___tsv(){
+    ___x_cmd_agent_job_ls___csv "$1" "$2" | ___x_cmd csv totsv
+}
+
+# Generate YAML output (AI-friendly, no colors)
+___x_cmd_agent_job_ls___yml(){
+    local filter="${1:-all}"
+    local parent_dir="${2:-$___X_CMD_AGENT_JOB_DIR}"
+
+    if [ ! -d "$parent_dir" ]; then
+        return 0
+    fi
+
+    local job_id="" job_path=""
+    local first=1
+
+    ___x_cmd_agent_job_ls___sorted_paths "$parent_dir" | while IFS= read -r job_path; do
+        [ -d "$job_path" ] || continue
+
+        job_id="${job_path##*/}"
+
+        # Parse job info
+        ___x_cmd_agent_job_ls___parse_job_info "$job_path"
+
+        # Apply filter
+        case "$filter" in
+            active)     [ "$x_job_status" = "active" ] || continue ;;
+            completed)  [ "$x_job_status" = "completed" ] || continue ;;
+            failed)     [ "$x_job_status" = "failed" ] || continue ;;
+        esac
+
+        # Format time from the job's last update timestamp
+        local ts time_str="-"
+        ts="$(___x_cmd_agent_job___get_job_time_ "$job_path")"
+        time_str="$(___x_cmd_agent_job___format_time_ "$ts")"
+
+        if [ "$first" -eq 1 ]; then
+            first=0
+        fi
+
+        printf -- '- job_id: "%s"\n' "$job_id"
+        printf '  status: "%s"\n' "$x_job_status"
+        printf '  progress: %s\n' "$x_job_progress"
+        printf '  iter: %s\n' "$x_job_iter"
+        printf '  harness: "%s"\n' "$x_job_harness"
+        printf '  time: "%s"\n' "$time_str"
+        printf '  description: |\n'
+        printf '%s\n' "$x_job_desc" | ___x_cmd_cmds sed 's/^/    /'
+    done
+}
+
+___x_cmd_agent_job_ls___app()(
+    local parent_dir="${2:-$___X_CMD_AGENT_JOB_DIR}"
+    local ___X_CMD_CSV_APP_DATA_job_id=
+    local ___X_CMD_CSV_APP_SHBIN_CODE=
+    ___X_CMD_CSV_APP_SHBIN_CODE="xrc agent" \
+        ___x_cmd csv app --return var --clear ___x_cmd_agent_job_ls___csv "$1" "$parent_dir" || return $?
+
+    [ -n "$___X_CMD_CSV_APP_DATA_job_id" ] || return 1
+
+    local job_dir="$parent_dir/$___X_CMD_CSV_APP_DATA_job_id"
+    agent:info "Selected job dir -> $job_dir"
+
+    local action=""
+    ___x_cmd ui select ,action "Select action for job '$___X_CMD_CSV_APP_DATA_job_id':" \
+        "status       - Show job details and progress" \
+        "delete       - Remove this job permanently" \
+        "return       - Go back to job list" || return $?
+
+    case "${action%% *}" in
+        status)     ___x_cmd_agent_job_status --job-dir "$job_dir" ;;
+        delete)
+            ___x_cmd ui yesno -r "Delete job '$___X_CMD_CSV_APP_DATA_job_id'?" || return 0
+            ___x_cmd rmrf "$job_dir" && \
+                agent:info "Job '$___X_CMD_CSV_APP_DATA_job_id' deleted"
+            ;;
+        return)     return 0 ;;
+    esac
+)
+
+# Parse job info from a job directory
+# Sets: x_job_status, x_job_progress, x_job_iter, x_job_harness, x_job_desc
+___x_cmd_agent_job_ls___parse_job_info(){
+    local job_path="$1"
+
+    x_job_status="unknown"
+    x_job_progress="0"
+    x_job_iter="0"
+    x_job_harness="-"
+    x_job_desc="[no description]"
+    x_job_done=""
+    x_job_exit_code=""
+    x_job_id="${job_path##*/}"
+
+    # Try to read from status.yml first
+    if [ -f "$job_path/status.yml" ]; then
+        ___x_cmd_agent_job_ls___parse_status_yml "$job_path/status.yml"
+    fi
+
+    # Detect failed jobs, but do not override an explicit interrupted state
+    if [ "$x_job_status" != "completed" ] && [ "$x_job_status" != "interrupted" ]; then
+        if [ -f "$job_path/ERROR.md" ]; then
+            x_job_status="failed"
+        elif [ -n "$x_job_exit_code" ] && [ "$x_job_exit_code" != "0" ]; then
+            x_job_status="failed"
+        elif [ "$x_job_done" = "false" ] && [ -n "$x_job_id" ] && ! ___x_cmd worker isalive --ns 'x-agent-job' --name "$x_job_id" >/dev/null 2>&1; then
+            x_job_status="failed"
+        fi
+    fi
+
+    # Fallback: infer status from files
+    if [ "$x_job_status" = "unknown" ]; then
+        if [ -f "$job_path/DONE.md" ]; then
+            x_job_status="completed"
+            x_job_progress="100"
+        elif [ -f "$job_path/PLAN.md" ]; then
+            x_job_status="active"
+        fi
+    fi
+
+    # Get description from DESC.md
+    if [ -f "$job_path/DESC.md" ]; then
+        x_job_desc="$(___x_cmd_agent_job___get_desc_ "$job_path")"
+    fi
+}
+
+# Parse status.yml
+# Sets: x_job_status, x_job_progress, x_job_iter, x_job_harness
+___x_cmd_agent_job_ls___parse_status_yml(){
+    local status_file="$1"
+
+    local iter="" max_iter="" todo_done="" todo_remaining="" done_flag="" harness="" exit_code="" job_status=""
+
+    while IFS= read -r line; do
+        case "$line" in
+            "iter:"*)           iter="${line#*: }"; iter="${iter%%" "*}" ;;
+            "max_iterations:"*) max_iter="${line#*: }" ;;
+            "todo_completed:"*) todo_done="${line#*: }" ;;
+            "todo_remaining:"*) todo_remaining="${line#*: }" ;;
+            "done:"*)           done_flag="${line#*: }" ;;
+            "harness:"*)        harness="${line#*: }" ;;
+            "exit_code:"*)      exit_code="${line#*: }" ;;
+            "job_status:"*)     job_status="${line#*: }" ;;
+        esac
+    done < "$status_file" 2>/dev/null
+
+    x_job_done="$done_flag"
+    x_job_exit_code="$exit_code"
+
+    # Set iter
+    [ -n "$iter" ] && x_job_iter="$iter"
+
+    # Set harness
+    [ -n "$harness" ] && x_job_harness="$harness"
+
+    # Calculate progress
+    if [ -n "$todo_done" ] && [ -n "$todo_remaining" ]; then
+        local total=$((todo_done + todo_remaining))
+        if [ "$total" -gt 0 ]; then
+            x_job_progress="${todo_done}00"
+            x_job_progress=$((x_job_progress / total))
+        fi
+    fi
+
+    # Determine status (job_status in status.yml takes precedence)
+    if [ -n "$job_status" ]; then
+        x_job_status="$job_status"
+        [ "$x_job_status" = "completed" ] && x_job_progress="100"
+    elif [ "$done_flag" = "true" ]; then
+        x_job_status="completed"
+        x_job_progress="100"
+    elif [ -n "$iter" ] && [ "$iter" -gt 0 ]; then
+        x_job_status="active"
+    fi
+}
+
+
+# Get the best available "last updated" timestamp for a job directory.
+# Tries status.yml updated_at first, then vlid-derived timestamp from job_id,
+# then directory mtime. Prints numeric epoch seconds (or 0 if unavailable).
+___x_cmd_agent_job___get_job_time_(){
+    local jobdir="$1"
+    local job_id="${jobdir##*/}"
+    local ts=""
+
+    if [ -f "$jobdir/status.yml" ]; then
+        ts="$(___x_cmd_cmds awk '/^updated_at:/{print $2; exit}' "$jobdir/status.yml" 2>/dev/null)"
+    fi
+
+    if [ -z "$ts" ] && [ ${#job_id} -ge 13 ]; then
+        ts="$(___x_cmd date vlid2ts "$job_id" 2>/dev/null)" || ts=""
+    fi
+
+    if [ -z "$ts" ]; then
+        ts="$(___x_cmd_cmds stat -c %Y "$jobdir" 2>/dev/null)" || ts=""
+    fi
+
+    printf "%s\n" "${ts:-0}"
+}
+
+# Format an epoch timestamp into "MM-DD hh:mm" for ls display.
+___x_cmd_agent_job___format_time_(){
+    local ts="$1"
+    if [ -z "$ts" ] || [ "$ts" = "0" ]; then
+        printf -- '-\n'
+        return
+    fi
+
+    local full_str=""
+    full_str="$(___x_cmd date str "$ts" 2>/dev/null)" || full_str=""
+    if [ -z "$full_str" ]; then
+        printf -- '-\n'
+        return
+    fi
+
+    full_str="${full_str#*-}"
+    local date_part="${full_str%%_*}"
+    local time_part="${full_str#*_}"
+    time_part="${time_part%:*}"
+    printf "%s %s\n" "$date_part" "$time_part"
+}
+
+# Print job directory paths under parent_dir sorted by most-recent update (descending).
+# Uses a tab-separated "timestamp<tab>path" stream sorted numerically, then splits
+# the two fields with IFS (no temp files, no cut).
+___x_cmd_agent_job_ls___sorted_paths(){
+    local parent_dir="$1"
+    [ -d "$parent_dir" ] || return 0
+
+    local job_path ts
+    for job_path in "$parent_dir"/*; do
+        [ -d "$job_path" ] || continue
+        ts="$(___x_cmd_agent_job___get_job_time_ "$job_path")"
+        printf '%s\t%s\n' "$ts" "$job_path"
+    done | ___x_cmd_cmds sort -rn | while IFS="$___X_CMD_UNSEENCHAR_HT" read -r ts job_path; do
+        printf '%s\n' "$job_path"
+    done
+}

@@ -1,0 +1,154 @@
+# shellcheck shell=dash
+
+xrc:mod:lib     repo   bare
+xrc:mod:lib     repo   barefetch
+xrc:mod:lib     repo   card
+xrc:mod:lib     repo   starhistory
+xrc:mod:lib     repo   pulse
+xrc:mod:lib     repo   init
+xrc:mod:lib     repo   ls
+xrc:mod:lib     repo   loc
+xrc:mod:lib     repo   cardrender
+xrc:mod:lib     repo   prepare
+xrc:mod:lib     repo   update
+xrc:mod:lib     repo   util
+xrc:mod:lib     repo   which
+xrc:mod:lib     repo   fuzzywhich
+xrc:mod:lib     repo   wt
+
+___X_CMD_REPO_ROOT="${___X_CMD_REPO_ROOT:-"$HOME/.x-repo"}"
+
+___x_cmd_repo___main(){
+    [ "$#" -gt 0 ] ||   set -- ls
+
+    local op="$1";      shift
+    case "$op" in
+        -h|--help)      ___x_cmd help -m repo       "$@";       return 0 ;;
+        fe|fresh)       ___x_cmd_repo_fresh         "$@" ;;
+        c|code)         ___x_cmd_repo_code          "$@" ;;
+        t|tmux)         ___x_cmd_repo_tmux          "$@" ;;
+
+        ls|which|which_|update|edit|cd|fuzzywhich)
+                        ___x_cmd_repo_"$op"         "$@" ;      return $? ;;
+        bare)            ___x_cmd_repo_bare          "$@" ;;
+        barefetch)       ___x_cmd_repo_barefetch     "$@" ;;
+        init)            ___x_cmd_repo_init           "$@" ;;
+        card)            ___x_cmd_repo_card           "$@" ;;
+        starhistory)     ___x_cmd_repo_starhistory    "$@" ;;
+        pulse)           ___x_cmd_repo_pulse          "$@" ;;
+        loc)             ___x_cmd_repo_loc            "$@" ;;
+        cardrender)       ___x_cmd_repo_cardrender      "$@" ;;
+        wt-path)         ___x_cmd_repo_wt_path       "$@" ;;
+        prepare)         ___x_cmd_repo_prepare       "$@" ;;
+        wt)              ___x_cmd_repo_wt            "$@" ;;
+        *)              ___x_cmd_repo_cd "$op"      "$@" ;;
+    esac
+}
+
+# x repo gh/code -> c repo clone/update
+
+# Thin alias so callers can use a domain-specific name. The real
+# logic lives in ___x_cmd_repo_which_, which handles both exact
+# addresses and /-prefixed fuzzy queries.
+___x_cmd_repo_resolve_(){
+    ___x_cmd_repo_which_ "$1"
+}
+
+___x_cmd_repo_resolve(){
+    local x_
+    ___x_cmd_repo_resolve_ "$@" || return $?
+    printf "%s\n" "$x_"
+}
+
+___x_cmd_repo_fresh(){
+    [ $# -gt 0 ]    ||      set -- --help
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m repo fresh "$@" ; return $? ;;
+            *)              break ;;
+        esac
+    done
+
+    local id="$1"
+    local x_
+    ___x_cmd_repo_resolve_ "$id" || return $?
+
+    ___x_cmd eget snap sinelaw/fresh "$x_"
+}
+
+___x_cmd_repo_edit(){
+    case "${1-}" in
+        -h|--help)  ___x_cmd help -m repo edit "$@" ; return 0 ;;
+    esac
+
+    local id="$1"
+    local x_
+    ___x_cmd_repo_resolve_ "$id" || return $?
+
+    [ -d "$x_" ] || ___x_cmd_repo_update "$id" || return $?
+
+    ___x_cmd_cmds cd "$x_" || return $?
+    ___x_cmd_repo_open "$x_" || {
+        repo:info --url "$id" --filepath "$x_" "Fail to open -> $id"
+        return 0
+    }
+}
+
+# x repo cd <id>  -> resolve, update-clone if missing, then cd in.
+# Also serves as the default for `x repo <id>` (unknown subcommands
+# and bare ids both end up here via the `*)` arm of the dispatcher).
+___x_cmd_repo_cd(){
+    case "${1-}" in
+        -h|--help)  ___x_cmd help -m repo cd "$@" ; return 0 ;;
+    esac
+
+    local id="$1"
+    local x_
+    ___x_cmd_repo_resolve_ "$id" || return $?
+
+    [ -d "$x_" ] || ___x_cmd_repo_update "$id" || return $?
+
+    ___x_cmd cd "$x_" || return $?
+}
+
+___x_cmd_repo_code(){
+    case "${1-}" in
+        -h|--help)  ___x_cmd help -m repo code "$@" ; return 0 ;;
+    esac
+
+    local id="$1"
+    local x_
+    ___x_cmd_repo_resolve_ "$id" || return $?
+
+    [ -d "$x_" ] || ___x_cmd_repo_update "$id" || return $?
+
+    ___x_cmd code "$x_"
+}
+
+# Shallow wrapper: resolve + open a tmux session for the repo. All
+# session-naming logic (provider abbreviation, layout) lives in the
+# tmux module via `x tmux repo`; this function just forwards.
+___x_cmd_repo_tmux(){
+    case "${1-}" in
+        -h|--help)  ___x_cmd help -m repo tmux "$@" ; return 0 ;;
+    esac
+
+    ___x_cmd tmux repo "$@"
+}
+
+# Using editor choice.
+
+___x_cmd hascmd ___x_cmd_repo_open || ___x_cmd_repo_open(){
+    if ___x_cmd hascmd fresh; then
+        fresh "$1"
+    elif ___x_cmd hascmd code; then
+        code "$1"
+    elif ___x_cmd hascmd zed; then
+        zed "$1"
+    else
+        # using fresh editor.
+        # ___x_cmd vim "$1"
+        ___x_cmd eget snap sinelaw/fresh -- "$1"
+    fi
+}
+

@@ -1,0 +1,912 @@
+{
+"#name"
+:
+{
+"cosmo"
+:
+null
+,
+"en"
+:
+"Run the application built by Cosmopolitan"
+,
+"zh"
+:
+"运行 cosmo 系列的应用程序"
+}
+,
+"#desc"
+:
+{
+"en"
+:
+"The cosmo suite of applications refers to software tools compiled with the Cosmopolitan C Library. Cosmopolitan, an open-source project developed by Justine Tunney, aims to compile C/C++ programs into universal binaries capable of running across multiple operating systems like Windows, Linux, and macOS, all without the need for virtual machines or interpreters.\nFor more information about the Cosmopolitan project, please visit https://justine.lol/cosmopolitan/\n"
+,
+"zh"
+:
+"cosmo 系列的应用程序是指用 Cosmopolitan C Library 编译的软件工具。Cosmopolitan 是由 Justine Tunney 开发的开源项目，它旨在将 C/C++ 程序编译成能在 Windows、Linux、macOS 等多个操作系统上运行的通用二进制文件（无需虚拟机或解释器）。\n关于 Cosmopolitan 项目的更多介绍，请访问 https://justine.lol/cosmopolitan/\n"
+}
+,
+"#subcmd:common"
+:
+[
+"use|--use"
+,
+"unuse|--unuse"
+,
+"--ls|-l"
+,
+"--which|-w"
+,
+"--author|-a"
+]
+,
+"#subcmd:advanced"
+:
+[
+"--install|-i"
+,
+"--ape"
+,
+"--run"
+,
+"--ll"
+,
+"--add"
+]
+,
+"#tip"
+:
+[
+{
+"en"
+:
+"\"x cosmo <bin>\" by default utilizes the APE loader (automatically downloaded upon first use) to execute the binary, equivalent to \"x cosmo --aperun <bin>\".\n"
+,
+"zh"
+:
+"`x cosmo <bin>` 默认使用 APE 加载程序（首次使用时自动下载）来执行 bin，相当于 `x cosmo --ape run <bin>`\n"
+}
+]
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"application name"
+,
+"zh"
+:
+"应用程序名"
+}
+,
+"#exec:stdout"
+:
+"x cosmo --ll"
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"argument of the program"
+,
+"zh"
+:
+"程序的参数"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__comp_from_xcmd_or_origin"
+}
+,
+"use|--use"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Install the tool into the current user's global environment"
+,
+"zh"
+:
+"将工具安装到当前用户的全局环境中"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"application name"
+,
+"zh"
+:
+"应用程序名"
+}
+,
+"#exec:stdout"
+:
+"x cosmo --ll"
+}
+}
+,
+"unuse|--unuse"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Cancel the use of the specified program in the global environment"
+,
+"zh"
+:
+"取消在全局环境中使用指定程序"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"application name"
+,
+"zh"
+:
+"应用程序名"
+}
+}
+}
+,
+"--install|-i"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Install the application to the specified directory"
+,
+"zh"
+:
+"将应用程序安装到指定目录"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"application name"
+,
+"zh"
+:
+"应用程序名"
+}
+,
+"#exec:stdout"
+:
+"x cosmo --ll"
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"install dir"
+,
+"zh"
+:
+"安装目录"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__dir"
+}
+}
+,
+"--ape"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Use and Registration APE Loader"
+,
+"zh"
+:
+"使用和注册 APE 加载程序"
+}
+,
+"run"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Use the APE loader to run the specified application"
+,
+"zh"
+:
+"使用 APE 加载器运行指定的应用程序"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"application name"
+,
+"zh"
+:
+"应用程序名"
+}
+,
+"#exec:stdout"
+:
+"x cosmo --ll"
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"argument of the program"
+,
+"zh"
+:
+"程序的参数"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__comp_from_xcmd_or_origin"
+}
+}
+,
+"register"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"registering APE with binfmt_misc"
+,
+"zh"
+:
+"使用 binfmt_misc 注册 APE"
+}
+}
+}
+,
+"--run"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Run the specified application of the cosmo series"
+,
+"zh"
+:
+"运行 cosmo 系列的指定应用程序"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"application name"
+,
+"zh"
+:
+"应用程序名"
+}
+,
+"#exec:stdout"
+:
+"x cosmo --ll"
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"应用程序命令参数"
+,
+"en"
+:
+"Application command arguments"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__comp_from_xcmd_or_origin"
+}
+}
+,
+"--add"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Install and deploy the specified application"
+,
+"zh"
+:
+"安装部署指定应用程序"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"application name"
+,
+"zh"
+:
+"应用程序名"
+}
+,
+"#exec:stdout"
+:
+"x cosmo --ll"
+}
+}
+,
+"--ll"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"List all available applications"
+,
+"zh"
+:
+"列出所有可用的应用程序"
+}
+}
+,
+"--ls|-l"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"List applications in interactive mode"
+,
+"zh"
+:
+"以交互方式查看应用程序"
+}
+,
+"--all"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"List all available applications"
+,
+"zh"
+:
+"罗列所有可用的应用程序"
+}
+}
+,
+"--local"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"List all Downloaded applications"
+,
+"zh"
+:
+"罗列已下载的应用程序"
+}
+}
+}
+,
+"--which|-w"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Get the installation path of the specified application"
+,
+"zh"
+:
+"获取指定应用程序的安装路径"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"application name"
+,
+"zh"
+:
+"应用程序名"
+}
+,
+"#exec:stdout"
+:
+"___x_cmd_cosmo___ls_local"
+}
+}
+,
+"--author|-a"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"View more information about the authors of Cosmopolitan"
+,
+"zh"
+:
+"查看有关 Cosmopolitan 作者的更多信息"
+}
+}
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com/mod/cosmo"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com/mod/cosmo"
+}
+}
+,
+"#exec:stdout"
+:
+"xrc cosmo"
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x cosmo"
+,
+"en"
+:
+"Interactive selection of program to use"
+,
+"zh"
+:
+"交互式选择要使用的程序"
+,
+"de"
+:
+"Interaktive Auswahl des zu verwendenden Programms"
+,
+"es"
+:
+"Selección interactiva del programa que se utilizará"
+,
+"fr"
+:
+"Sélection interactive du programme à utiliser"
+,
+"it"
+:
+"Selezione interattiva del programma da utilizzare"
+,
+"pt"
+:
+"Seleção interativa do programa a ser usado"
+,
+"ru"
+:
+"Интерактивный выбор программы для использования"
+,
+"uk"
+:
+"Інтерактивний вибір програми для використання"
+,
+"ja"
+:
+"使用するプログラム対話的に選択"
+,
+"ko"
+:
+"사용할 프로그램 대화형 선택"
+,
+"cs"
+:
+"Interaktivní výběr programu k použití"
+,
+"pl"
+:
+"Interaktywny wybór programu do użycia"
+,
+"ro"
+:
+"Selectarea interactivă a programului de utilizat"
+,
+"tr"
+:
+"Kullanılacak program için etkileşimli seçim"
+,
+"vi"
+:
+"Chọn chương trình để sử dụng theo cách tương tác"
+,
+"th"
+:
+"เลือกโปรแกรมที่จะใช้แบบโต้ตอบ"
+,
+"id"
+:
+"Pemilihan interaktif program yang akan digunakan"
+}
+,
+{
+"cmd"
+:
+"x cosmo lua"
+,
+"en"
+:
+"Use cosmo's lua"
+,
+"zh"
+:
+"使用 cosmo 的 lua 二进制"
+,
+"de"
+:
+"Verwenden Sie die Lua von cosmo"
+,
+"es"
+:
+"Usar el lua de cosmo"
+,
+"fr"
+:
+"Utilisez le lua de cosmo"
+,
+"it"
+:
+"Usa il lua di cosmo"
+,
+"pt"
+:
+"Use o lua do cosmo"
+,
+"ru"
+:
+"Используйте lua из cosmo"
+,
+"uk"
+:
+"Використовуйте lua з cosmo"
+,
+"ja"
+:
+"cosmo の lua を使用"
+,
+"ko"
+:
+"cosmo의 lua 사용"
+,
+"cs"
+:
+"Použijte lua z cosmo"
+,
+"pl"
+:
+"Użyj lua z cosmo"
+,
+"ro"
+:
+"Utilizați lua din cosmo"
+,
+"tr"
+:
+"cosmo'nun lua'sını kullanın"
+,
+"vi"
+:
+"Sử dụng lua của cosmo"
+,
+"th"
+:
+"ใช้ lua ของ cosmo"
+,
+"id"
+:
+"Gunakan lua dari cosmo"
+}
+,
+{
+"cmd"
+:
+"x cosmo -i lua <target directory>"
+,
+"en"
+:
+"Install lua to the specified directory"
+,
+"zh"
+:
+"将 lua 安装到指定目录"
+,
+"de"
+:
+"Installieren Sie Lua in das angegebene Verzeichnis"
+,
+"es"
+:
+"Instalar lua en el directorio especificado"
+,
+"fr"
+:
+"Installer lua dans le répertoire spécifié"
+,
+"it"
+:
+"Installa lua nella directory specificata"
+,
+"pt"
+:
+"Instalar lua no diretório especificado"
+,
+"ru"
+:
+"Установить lua в указанный каталог"
+,
+"uk"
+:
+"Встановити lua у вказаний каталог"
+,
+"ja"
+:
+"lua を指定したディレクトリにインストールする"
+,
+"ko"
+:
+"lua를 지정된 디렉터리에 설치"
+,
+"cs"
+:
+"Nainstalovat lua do zadaného adresáře"
+,
+"pl"
+:
+"Zainstaluj lua w określonym katalogu"
+,
+"ro"
+:
+"Instalați lua în directorul specificat"
+,
+"tr"
+:
+"Lua'yı belirtilen dizine kurun"
+,
+"vi"
+:
+"Cài đặt lua vào thư mục đã chỉ định"
+,
+"th"
+:
+"ติดตั้ง lua ลงในไดเรกทอรีที่ระบุ"
+,
+"id"
+:
+"Pasang lua ke direktori yang ditentukan"
+}
+,
+{
+"cmd"
+:
+"x cosmo -i make"
+,
+"en"
+:
+"Use TUI to select a directory from the list of directories in the current PATH variable and install `make` to that directory"
+,
+"zh"
+:
+"以 TUI 方式在当前的 PATH 变量的目录列表中选择一个目录，并将 `make` 安装到该目录下"
+,
+"de"
+:
+"Verwenden Sie TUI, um ein Verzeichnis aus der Liste der Verzeichnisse in der aktuellen PATH-Variablen auszuwählen und `make` in dieses Verzeichnis zu installieren"
+,
+"es"
+:
+"Usar TUI para seleccionar un directorio de la lista de directorios en la variable PATH actual e instalar `make` en ese directorio"
+,
+"fr"
+:
+"Utilisez TUI pour sélectionner un répertoire dans la liste des répertoires de la variable PATH actuelle et installer `make` dans ce répertoire"
+,
+"it"
+:
+"Usa TUI per selezionare una directory dall'elenco delle directory nella variabile PATH corrente e installare `make` in quella directory"
+,
+"pt"
+:
+"Use TUI para selecionar um diretório da lista de diretórios na variável PATH atual e instalar `make` nesse diretório"
+,
+"ru"
+:
+"Используйте TUI, чтобы выбрать каталог из списка каталогов в текущей переменной PATH и установить `make` в этот каталог"
+,
+"uk"
+:
+"Використовуйте TUI, щоб вибрати каталог зі списку каталогів у поточній змінній PATH та встановити `make` у цей каталог"
+,
+"ja"
+:
+"TUI を使用して、現在の PATH 変数のディレクトリリストからディレクトリを選択し、そのディレクトリに `make` をインストールします"
+,
+"ko"
+:
+"TUI를 사용하여 현재 PATH 변수의 디렉터리 목록에서 디렉터리를 선택하고 해당 디렉터리에 `make`를 설치합니다"
+,
+"cs"
+:
+"Použijte TUI k výběru adresáře ze seznamu adresářů v aktuální proměnné PATH a nainstalujte `make` do tohoto adresáře"
+,
+"pl"
+:
+"Użyj TUI, aby wybrać katalog z listy katalogów w bieżącej zmiennej PATH i zainstalować `make` w tym katalogu"
+,
+"ro"
+:
+"Utilizați TUI pentru a selecta un director din lista de directoare din variabila PATH curentă și a instala `make` în acel director"
+,
+"tr"
+:
+"Geçerli PATH değişkenindeki dizin listesinden bir dizin seçmek ve `make` komutunu bu dizine kurmak için TUI'yi kullanın"
+,
+"vi"
+:
+"Sử dụng TUI để chọn một thư mục từ danh sách thư mục trong biến PATH hiện tại và cài đặt `make` vào thư mục đó"
+,
+"th"
+:
+"ใช้ TUI เพื่อเลือกไดเรกทอรีจากรายการไดเรกทอรีในตัวแปร PATH ปัจจุบัน และติดตั้ง `make` ไปยังไดเรกทอรีนั้น"
+,
+"id"
+:
+"Gunakan TUI untuk memilih direktori dari daftar direktori dalam variabel PATH saat ini dan pasang `make` ke direktori tersebut"
+}
+]
+}
+

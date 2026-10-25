@@ -1,0 +1,210 @@
+# shellcheck shell=dash
+
+# Smart asset detection with scoring algorithm
+#
+# Standard naming convention (recommended):
+#   {name}_{version}_{os}_{arch}.tar.gz
+#   e.g., rg_14.1.0_darwin_arm64.tar.gz
+#
+# Assets matching the standard convention get highest priority.
+# Otherwise, falls back to scoring-based heuristic matching.
+
+___x_cmd_eget_detect(){
+    local mode="${___X_CMD_EGET_DETECT_MODE:-two_step}"
+    case "$mode" in
+        scoring)   ___x_cmd_eget_detect_scoring "$@" ;;
+        scoring2)  ___x_cmd_eget_detect_scoring2 "$@" ;;
+        original)  ___x_cmd_eget_detect_original "$@" ;;
+        two_step)  ___x_cmd_eget_detect_two_step "$@" ;;
+        *)         ___x_cmd_eget_detect_two_step "$@" ;;
+    esac
+}
+
+# Two-step selection:
+#   1. scoring2 (strict, bidirectional — only assets designed for
+#      the target platform qualify);
+#   2. if scoring2 found nothing, emit a diagnostic — list every
+#      asset, plus the top 3 candidates by single-platform score
+#      with copy-paste `x eget download` commands — and return 1
+#      (never auto-pick a wrong-platform binary; the user chooses).
+#
+# Default mode. Set EGET_DETECT_MODE=scoring|scoring2|original to
+# override (single-pass, no fallback diagnostic).
+#
+# Args: assets system asset_filters repo [owner] [version] [tag]
+# owner/version/tag are diagnostic-only — when absent, the
+# diagnostic shows placeholders ("unknown" / "latest") instead of
+# crashing under `set -u`.
+___x_cmd_eget_detect_two_step(){
+    local assets="$1" system="$2" asset_filters="$3" repo="$4"
+    local owner="${5-}" version="${6-}" tag="${7-}"
+    ___x_cmd_eget_detect_scoring2 "$assets" "$system" "$asset_filters" "$repo" && return 0
+    ___x_cmd_eget_detect_recommend "$assets" "$system" "$asset_filters" "$repo" "$owner" "$version" "$tag"
+    return 1
+}
+
+# Run an awk algorithm against the asset list.
+# Args: algo_name (scoring|original) assets system asset_filters repo_name
+___x_cmd_eget_detect_run_awk(){
+    local algo_name="$1" assets="$2" system="$3" asset_filters="$4" repo_name="$5"
+
+    local os="${system%%/*}"
+    local arch="${system#*/}"
+    local arch_norm
+    case "$arch" in
+        x64|amd64|x86_64)   arch_norm="x64" ;;
+        x86|i386|i686)      arch_norm="386" ;;
+        arm64|aarch64)      arch_norm="arm64" ;;
+        arm|armv7l)          arch_norm="arm" ;;
+        *)                   arch_norm="$arch" ;;
+    esac
+
+    AWK_OS="$os" \
+    AWK_ARCH_NORM="$arch_norm" \
+    AWK_REPO="$repo_name" \
+    AWK_FILTERS="$asset_filters" \
+    AWK_VERBOSE="$___X_CMD_EGET_VERBOSE" \
+    awk -f "$___X_CMD_ROOT_MOD/eget/lib/awk/share.awk" \
+        -f "$___X_CMD_ROOT_MOD/eget/lib/awk/${algo_name}.awk" <<AIOEOF
+$assets
+AIOEOF
+}
+
+# Weighted scoring: each asset gets a number, highest wins (must
+# reach THRESHOLD=5). All weights and token tables live in awk;
+# see lib/awk/share.awk (tokens) and lib/awk/scoring.awk (weights).
+___x_cmd_eget_detect_scoring(){
+    ___x_cmd_eget_detect_run_awk scoring "$@"
+}
+
+# BISCORING: bidirectionally-scored single-platform selection.
+# Unlike scoring (which picks the highest-scoring asset on the
+# target platform regardless of cross-platform fit), scoring2
+# rejects fallbacks — an asset only counts for platform P if
+# its score on P equals its max across all 6 platforms (i.e.
+# the asset was DESIGNED for P). Surfaces upstream gaps
+# cleanly (e.g. h5i ships no darwin/amd64 binary).
+# Tokens + helpers are reused from lib/awk/share.awk; the
+# scoring logic itself lives in lib/awk/scoring2.awk.
+___x_cmd_eget_detect_scoring2(){
+    ___x_cmd_eget_detect_run_awk scoring2 "$@"
+}
+
+# --- Original eget algorithm (categorical tier matching) ---
+# Mirrors zyedidia/eget's detect.go: SystemDetector.Detect()
+# Assets are categorized into tiers, not scored:
+#   T1: OS+Arch both match → "matches"
+#   T2: OS match only       → "candidates"
+#   T3: Fallback (all)      → "all"
+# Tier selection: narrowest non-empty wins; multiple in one tier →
+# prefer one whose filename contains the repo name, else first.
+#
+# All matching tables live in lib/awk/share.awk (shared with scoring);
+# tier classification is in lib/awk/original.awk.
+
+___x_cmd_eget_detect_original(){
+    ___x_cmd_eget_detect_run_awk original "$@"
+}
+
+# Cross-platform map: score every asset against each of the 6
+# platforms (darwin/linux/win × arm64/amd64), emit TSV with each
+# platform's best candidate. Single awk pass — no extra HTTP.
+# Empty platform (no asset clears THRESHOLD) emits platform\t\t\t.
+# Args: assets system asset_filters repo_name
+___x_cmd_eget_detect_map(){
+    local assets="$1" system="$2" asset_filters="$3" repo_name="$4"
+    # system arg is unused here (map.awk handles its own platforms)
+    # but accepted for dispatcher symmetry.
+
+    AWK_REPO="$repo_name" \
+    AWK_FILTERS="$asset_filters" \
+    AWK_VERBOSE="$___X_CMD_EGET_VERBOSE" \
+    awk -f "$___X_CMD_ROOT_MOD/eget/lib/awk/share.awk" \
+        -f "$___X_CMD_ROOT_MOD/eget/lib/awk/map.awk" <<AIOEOF
+$assets
+AIOEOF
+}
+
+# Diagnostic fallback: emit a copy-paste-able recommendation when
+# scoring2 had no designed-for asset for the target platform.
+#
+# Args: assets system asset_filters repo [owner] [version] [tag]
+# owner/version/tag are diagnostic-only — when absent, the
+# diagnostic shows placeholders ("unknown" / "latest") instead of
+# crashing under `set -u`.
+#
+# Output (all via eget:info on stderr):
+#   - "No asset designed for <system> on <owner>/<repo> (release <version>)."
+#   - "Available assets:" + every asset line (name + size)
+#   - "Top 3 candidates (copy-paste one to run):" + filled-in
+#     `x eget download <owner>/<repo> --asset <name>[--tag <tag>]`
+#     commands, each tagged with its designed-for platform
+#   - "To list manually:" + lsasset / lsassetmap hints
+#
+# Never returns a selection — always returns 1 so the caller
+# surfaces its own "No matching asset found" error after the
+# diagnostic.
+___x_cmd_eget_detect_recommend(){
+    local assets="$1" system="$2" asset_filters="$3" repo="$4"
+    local owner="${5-}" version="${6-}" tag="${7-}"
+
+    eget:info "No asset designed for $system on $owner/$repo (release ${version:-latest})."
+
+    # ----- Available assets (every surviving line, name + size) -----
+    eget:info "Available assets:"
+    local _all_lines
+    _all_lines="$( printf '%s\n' "$assets" | awk -F'\t' '
+        NF >= 3 && $1 != "" {
+            sz = $3 + 0
+            printf "  %-64s  (%.1f MB)\n", $1, sz / 1048576
+        }
+    ' )"
+    if [ -n "$_all_lines" ]; then
+        printf '%s\n' "$_all_lines" | while IFS= read -r _line; do
+            [ -n "$_line" ] && eget:info "$_line"
+        done
+    else
+        eget:info "  (none)"
+    fi
+
+    # ----- Top 3 candidates by single-platform score -----
+    # Run recommend.awk with the same env as scoring2.awk (so the
+    # per-platform max calculation matches), then sort + emit
+    # filled-in commands. Use a raw repo name (not lowercased) so
+    # REPO_BONUS in the awk scores against the literal name.
+    local _scored
+    _scored="$( AWK_OS="${system%%/*}" \
+                AWK_ARCH_NORM="${system#*/}" \
+                AWK_REPO="$repo" \
+                AWK_FILTERS="$asset_filters" \
+                printf '%s\n' "$assets" | \
+                awk -f "$___X_CMD_ROOT_MOD/eget/lib/awk/share.awk" \
+                    -f "$___X_CMD_ROOT_MOD/eget/lib/awk/recommend.awk"
+    )" || true
+    # recommend.awk takes only AWK_OS/ARCH_NORM/REPO/FILTERS via
+    # share.awk — the line above stays in sync with that.
+
+    if [ -n "$_scored" ]; then
+        eget:info "Top 3 candidates (copy-paste one to run):"
+        local _top3
+        _top3="$( printf '%s\n' "$_scored" | sort -t$'\t' -k1,1 -rn | head -3 )"
+        printf '%s\n' "$_top3" | awk -F'\t' \
+            -v owner="$owner" -v repo="$repo" -v taga="$tag" '
+            NF >= 5 && $2 != "" {
+                cmd = "  x eget download " owner "/" repo " --asset " $2
+                if (taga != "") cmd = cmd " --tag " taga
+                printf "%s\n", cmd
+                printf "    (designed for: %s, score on target: %d)\n", $3, $1
+            }
+        ' | while IFS= read -r _line; do
+            [ -n "$_line" ] && eget:info "$_line"
+        done
+    fi
+
+    # ----- Manual exploration hints -----
+    eget:info "To list manually:"
+    eget:info "  x eget lsasset $owner/$repo"
+    eget:info "  x eget lsassetmap $owner/$repo"
+
+    return 1
+}

@@ -1,0 +1,124 @@
+
+c:
+  x-cmd: cd
+  advise: x-advise://cd/advise.jso
+  status: enable
+  category: cd
+xw:
+  x-cmd: ws
+  advise: x-advise://ws/advise.jso
+  status: enable
+  category: ws
+xx:
+  x-cmd: xx
+  advise: x-advise://xx/advise.jso
+  status: enable
+  category: xx
+xd:
+  x-cmd: docker
+  advise: x-advise://docker/advise.jso
+  status: enable
+  category: docker
+xg:
+  x-cmd: git
+  advise: x-advise://git/advise.jso
+  status: enable
+  category: git
+xwt:
+  x-cmd: webtop
+  advise: x-advise://webtop/advise.jso
+  status: enable
+  category: webtop
+i:
+  x-cmd: icmd
+  advise: "x-advise://icmd/advise.jso"
+  status: enable
+  category: icmd
+
+"a:":
+  x-cmd: chat --sendalias ""
+  advise: x-advise://chat/data/exec.jso
+  status: enable
+  category: chat
+a:gpt:
+  x-cmd: chat --sendalias gpt
+  advise: x-advise://chat/data/exec.jso
+  status: disable
+  category: openai
+
+a:gemini:
+  x-cmd: chat --sendalias gemini
+  advise: x-advise://chat/data/exec.jso
+  status: disable
+  category: gemini
+a:kimi:
+  x-cmd: chat --sendalias kimi
+  advise: x-advise://chat/data/exec.jso
+  status: disable
+  category: moonshot
+a:ds:
+  x-cmd: chat --sendalias ds
+  advise: x-advise://chat/data/exec.jso
+  status: disable
+  category: deepseek
+a:o:
+  x-cmd: chat --sendalias o
+  advise: x-advise://chat/data/exec.jso
+  status: disable
+  category: ollama
+a:l:
+  x-cmd: chat --sendalias l
+  advise: x-advise://chat/data/exec.jso
+  status: disable
+  category: llmf
+
+a:en:
+  x-cmd: writer --sendalias en
+  advise: x-advise://writer/advise.jso
+  status: enable
+  category: writer
+a:zh:
+  x-cmd: writer --sendalias zh
+  advise: x-advise://writer/advise.jso
+  status: enable
+  category: writer
+
+<darwin>:
+  m:
+    x-cmd: mac
+    advise: x-advise://mac/advise.jso
+    status: enable
+    category: mac
+
+  free:
+    x-cmd: free
+    advise: "x-advise://free/advise.jso"
+    status: enable
+    category: mac
+
+<termux>:
+  m:
+    x-cmd: termux
+    advise: x-advise://termux/advise.jso
+    status: enable
+    category: termux
+
+<win>:
+  m:
+    x-cmd: win
+    advise: x-advise://win/advise.jso
+    status: enable
+    category: win
+  xp:
+    x-cmd: pwsh
+    advise: x-advise://pwsh/advise.jso
+    status: enable
+    category: pwsh
+  wslr:
+    x-cmd: wsl ___x_cmdexe
+    status: enable
+    category: wsl
+  wslx:
+    x-cmd: wsl ___x_cmdexe command
+    status: enable
+    category: wsl

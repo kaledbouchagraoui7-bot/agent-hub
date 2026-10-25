@@ -1,0 +1,132 @@
+
+
+___x_cmd_cron_ls(){
+    [ $# -gt 0 ]    ||      set -- --auto
+
+    local format=auto
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m cron ls "$@" ; return 0 ;;
+            --tsv|--auto)   format="${1#--}" ; shift ;;
+            *)              break ;;
+        esac
+    done
+
+    ___x_cmd_cron_ls___"$format" "$@"
+}
+
+___x_cmd_cron_ls___auto(){
+    if ___x_cmd_is_stdout2tty; then
+        ___x_cmd_cron_ls___tsv "$@" # In the future we will use interactive app.
+    else
+        ___x_cmd_cron_ls___tsv "$@"
+    fi
+}
+
+___x_cmd_cron_ls___escape_value(){
+    # Escape newline as \n and tab as space for single-line TSV output.
+    ___x_cmd_cmds sed ':a;N;$!ba;s/\n/\\n/g' < "$1" | ___x_cmd_cmds tr "$___X_CMD_UNSEENCHAR_HT" ' '
+}
+
+___x_cmd_cron_ls___last_exec_info(){
+    local state_dir="$1"
+    local latest_ts
+    local exec_dir
+    local last_start=""
+    local last_end=""
+    local last_status=""
+    local last_exit_code=""
+
+    latest_ts="$(___x_cmd_cron_history___latest_ts "$state_dir")"
+    if [ -n "$latest_ts" ]; then
+        last_start="$latest_ts"
+        exec_dir="$state_dir/$latest_ts"
+        if [ -f "$exec_dir/end_time" ]; then
+            read -r last_end < "$exec_dir/end_time"
+        fi
+        if [ -f "$exec_dir/exit_code" ]; then
+            read -r last_exit_code < "$exec_dir/exit_code"
+            if [ "$last_exit_code" -eq 0 ]; then
+                last_status="success"
+            else
+                last_status="failure"
+            fi
+        else
+            last_status="running"
+        fi
+    fi
+
+    printf '%s\t%s\t%s\t%s\n' "$last_start" "$last_end" "$last_status" "$last_exit_code"
+}
+
+___x_cmd_cron_ls___tsv(){
+    local ns="DEFAULT"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --ns)   ns="$2" ; arg:2:shift ;;
+            *)      break ;;
+        esac
+    done
+
+    local dir="$___X_CMD_CRON/$ns/job"
+
+    if [ ! -d "$dir" ]; then
+        return 0
+    fi
+
+    local name
+    local cron_pat
+    local cron_cmd
+    local cron_desc
+    local once_flag
+    local last_start
+    local last_end
+    local last_status
+    local last_exit_code
+    local IFS
+    local x_
+
+    ___x_cmd fsiter --dir_ "$dir"
+    [ -n "$x_" ] || return 0
+
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "name" "pattern" "desc" "once" \
+        "last_start" "last_end" "last_status" "last_exit_code" \
+        "cmd"
+
+    IFS="$___X_CMD_UNSEENCHAR_NEWLINE"
+    while read -r name; do
+        [ -n "$name" ] || continue
+        read -r cron_pat < "$dir/$name/cron"
+
+        if [ -f "$dir/$name/cmd" ]; then
+            cron_cmd="$(___x_cmd_cron_ls___escape_value "$dir/$name/cmd")"
+        else
+            cron_cmd=""
+        fi
+
+        if [ -f "$dir/$name/once" ]; then
+            once_flag="once"
+        else
+            once_flag=""
+        fi
+
+        if [ -f "$dir/$name/desc" ]; then
+            cron_desc="$(___x_cmd_cron_ls___escape_value "$dir/$name/desc")"
+        else
+            cron_desc=""
+        fi
+
+        IFS="$___X_CMD_UNSEENCHAR_HT"
+        read -r last_start last_end last_status last_exit_code <<A
+$(___x_cmd_cron_ls___last_exec_info "$___X_CMD_CRON/$ns/state/$name")
+A
+
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+            "$name" "$cron_pat" "$cron_desc" "$once_flag" \
+            "$last_start" "$last_end" "$last_status" "$last_exit_code" \
+            "$cron_cmd"
+    done <<A
+$x_
+A
+}

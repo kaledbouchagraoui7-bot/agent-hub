@@ -1,0 +1,54 @@
+{
+"--team"
+:
+{
+"#synopsis"
+:
+"<team>"
+,
+"#desc"
+:
+{
+"en"
+:
+"<org_path>/<team_path> or <team_id>"
+,
+"zh"
+:
+"<组织地址>/<团队地址> 或者 <团队 ID>"
+}
+}
+,
+"--json|-j"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"output raw JSON data"
+,
+"zh"
+:
+"以 JSON 格式输出获取数据"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"username name"
+,
+"zh"
+:
+"用户名"
+}
+}
+}
+

@@ -1,0 +1,72 @@
+# shellcheck disable=SC2016
+# x time cmp "find . -iname '*[0-9].jpg'" "fd -HI '.*[0-9]\.jpg$'"
+# x time cmp -c 20 "echo hello" "printf hello"
+___x_cmd_time_cmp(){
+    arg:init time
+
+    local count=""
+    local outputmode=""
+    local budget=2      # budget default is two second.
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m time cmp "$@" ; return 0 ;;
+            -c)         count="$2";         arg:2:shift ;;
+            -b)         budget="$2" ;       arg:2:shift ;;
+
+            --csv)      outputmode=csv ;    shift ;;
+            --csv0)     outputmode=csv0 ;   shift ;;
+            --tsv)      outputmode=tsv ;    shift ;;
+            --tsv0)     outputmode=tsv0 ;   shift ;;
+            --tty)      outputmode=tty ;    shift ;;
+            --yml)      outputmode=yml ;    shift ;;
+            --*|-*)     N=time M="Unknown options -> $1" log:ret:64 ;;
+            *)          break
+        esac
+    done
+
+    # Default: csv app if tty, tsv if pipe
+    if [ -z "$outputmode" ]; then
+        if ___x_cmd_is_stdout2tty && ___x_cmd_runmode_allow_manual ; then
+            outputmode=app
+        else
+            outputmode=tsv
+        fi
+    fi
+
+    [ "$#" -ge 1 ] || {
+        time:error "cmp requires at least one command"
+        return 1
+    }
+
+    local all_results=""
+    local cmd result
+
+    for cmd in "$@"; do
+        if [ -n "$count" ]; then
+            result="$( ___x_cmd time stress -b "$budget" -c "$count" --tsv0 -- eval "$cmd" 2>/dev/null )"
+        else
+            result="$( ___x_cmd time stress -b "$budget" --tsv0 -- eval "$cmd" 2>/dev/null )"
+        fi
+        # TODO: Consider caching with x ccmd 10m --, but results may vary across directories
+        if [ -n "$result" ]; then
+            all_results="${all_results}${cmd}	${result}
+"
+        fi
+    done
+
+    if [ "$outputmode" = "app" ]; then
+        ___x_cmd_time_cmp___output "csv" "$all_results" | ___x_cmd csv app
+    else
+        ___x_cmd_time_cmp___output "$outputmode" "$all_results"
+    fi
+}
+
+___x_cmd_time_cmp___output(){
+    local outputmode="$1"
+    local data="$2"
+
+    ___x_cmd_cmds awk -v "mode=$outputmode" -f "${___X_CMD_ROOT_MOD}/time/lib/awk/cmp-report.awk" <<A
+$data
+A
+}

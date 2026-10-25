@@ -1,0 +1,206 @@
+{
+"#name"
+:
+{
+"en"
+:
+"Tools for previewing Markdown documents."
+,
+"zh"
+:
+"预览 Markdown 文档的工具。"
+}
+,
+"#desc"
+:
+{
+"en"
+:
+"Preview Markdown documents more gracefully with syntax highlighting."
+,
+"zh"
+:
+"通过语法高亮显示，更优雅地预览 Markdown 文档。"
+}
+,
+"highlight"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"syntax highlighting"
+,
+"zh"
+:
+"语法高亮"
+}
+}
+,
+"tty"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"TODO"
+,
+"zh"
+:
+"TODO"
+}
+}
+,
+"show"
+:
+{
+"#exec"
+:
+"___x_cmd_advise__file"
+}
+,
+"lint"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"检查 Markdown 文档（代码围栏配对等）"
+,
+"en"
+:
+"Lint Markdown documents (e.g. code-fence balance)"
+}
+,
+"checkfence"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"检查 ``` 与 ~~~ 代码围栏是否成对闭合"
+,
+"en"
+:
+"Check that ``` and ~~~ code fences are balanced and closed"
+}
+,
+"#synopsis"
+:
+[
+{
+"x md lint checkfence [files...] | -"
+:
+null
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x md lint checkfence README.md"
+,
+"zh"
+:
+"检查指定文件（少量文件可直接作参数）"
+,
+"en"
+:
+"Check a file (a few files can be passed as args)"
+}
+,
+{
+"cmd"
+:
+"find . -name \"*.md\" | x md lint checkfence"
+,
+"zh"
+:
+"从 stdin 流式读取文件名列表（适合大量文件，绕过参数长度限制）"
+,
+"en"
+:
+"Read a streaming file list from stdin (scales to many files, no ARG_MAX)"
+}
+,
+{
+"cmd"
+:
+"x md lint checkfence -"
+,
+"zh"
+:
+"直接检查 stdin 传入的单个文档"
+,
+"en"
+:
+"Check a single document piped on stdin"
+}
+]
+}
+}
+,
+"#tip:warn"
+:
+[
+{
+"zh"
+:
+"TODO 本项目尚未开始, 仍在设计阶段"
+,
+"en"
+:
+"TODO This project has not started yet, it is still in the design phase"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x md highlight <markdown filepath>"
+,
+"en"
+:
+"Preview the Markdown document for the target path."
+,
+"zh"
+:
+"预览目标路径的 Markdown 文档。"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

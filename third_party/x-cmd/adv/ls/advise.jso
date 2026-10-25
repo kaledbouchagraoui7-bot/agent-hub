@@ -1,0 +1,230 @@
+{
+"#name"
+:
+{
+"zh"
+:
+"ls 命令增强"
+,
+"en"
+:
+"Enhanced ls command"
+}
+,
+"#synopsis"
+:
+[
+{
+"x ls <subcommand>"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"增强版的 ls 命令，可以更方便地查看文件信息和系统信息"
+,
+"en"
+:
+"Enhanced version of ls command for viewing file and system information"
+}
+,
+":cpu"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看cpu信息"
+,
+"en"
+:
+"View cpu information"
+}
+}
+,
+":mem"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看虚拟内存信息"
+,
+"en"
+:
+"View virtual memory information"
+}
+}
+,
+":proc|:ps"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看进程信息"
+,
+"en"
+:
+"View process information"
+}
+}
+,
+":path"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看PATH信息"
+,
+"en"
+:
+"View PATH information"
+}
+}
+,
+":app"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"用app查看文件夹及文件"
+,
+"en"
+:
+"View folders and files with app"
+}
+}
+,
+"#n"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"文件路径"
+,
+"en"
+:
+"File path"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__file"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ls :app"
+,
+"zh"
+:
+"示例: 用app查看文件夹及文件信息"
+,
+"en"
+:
+"Example: View folders and files with interactive app"
+}
+,
+{
+"cmd"
+:
+"x ls :cpu"
+,
+"zh"
+:
+"示例: 查看cpu信息"
+,
+"en"
+:
+"Example: View cpu information"
+}
+,
+{
+"cmd"
+:
+"x ls :mem"
+,
+"zh"
+:
+"示例: 查看内存信息"
+,
+"en"
+:
+"Example: View memory information"
+}
+,
+{
+"cmd"
+:
+"x ls :proc"
+,
+"zh"
+:
+"示例: 查看进程信息"
+,
+"en"
+:
+"Example: View process information"
+}
+,
+{
+"cmd"
+:
+"x ls :path"
+,
+"zh"
+:
+"示例: 查看PATH信息"
+,
+"en"
+:
+"Example: View PATH information"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

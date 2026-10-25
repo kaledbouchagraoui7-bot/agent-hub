@@ -1,0 +1,82 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_get(){
+    local id="" dir="" fmt="tsv"
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb get "$@" ; return 0 ;;
+            --id)       id="$2"; arg:2:shift ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --tsv)      fmt="tsv"; shift ;;
+            --json)     fmt="json"; shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    [ -n "$id" ] || { N=ondb M="--id is required" log:ret:64; return; }
+
+    # Resolve backend explicitly
+    ___x_cmd_ondb_backend_resolve
+    local backend="$x_"
+
+    # SQLite path
+    if [ "$backend" = "sqlite" ]; then
+        ___x_cmd_ondb_db_path "$dir"
+        if [ -n "$x_" ]; then
+            local db="$x_"
+            ___x_cmd_ondb_db_esc id
+
+            if [ "$fmt" = "json" ]; then
+                local result
+                result="$( sqlite3 "$db" "SELECT COALESCE((SELECT json_object('id',id,'type',type,'ctime',ctime,'mtime',mtime,'properties',COALESCE((SELECT json_group_object(key,value) FROM props WHERE entity_id='$id'),'{}')) FROM entities WHERE id='$id'), '');" )"
+                [ -z "$result" ] && { N=ondb M="Entity not found: $id" log:ret:64; return; }
+                printf '%s\n' "$result"
+            else
+                local result
+                result="$( sqlite3 -separator '	' "$db" "SELECT 'id', '$id' UNION ALL SELECT 'type', type FROM entities WHERE id='$id' UNION ALL SELECT 'ctime', CAST(ctime AS TEXT) FROM entities WHERE id='$id' UNION ALL SELECT 'mtime', CAST(mtime AS TEXT) FROM entities WHERE id='$id' UNION ALL SELECT 'prop', key || '=' || value FROM props WHERE entity_id='$id';" )"
+                [ -z "$result" ] && { N=ondb M="Entity not found: $id" log:ret:64; return; }
+                printf '%s\n' "$result"
+            fi
+            return
+        fi
+    fi
+
+    # JS path
+    if [ "$backend" = "js" ] && command -v bun >/dev/null 2>&1; then
+        local input
+        if [ -n "$dir" ]; then
+            ___x_cmd_ondb_logpath_read "$dir"
+            input="$x_"
+        else
+            input="cat 'ondb.tsv'"
+        fi
+        eval "$input" | bun run "$___X_CMD_ROOT_MOD/ondb/lib/js/get.js" --id="$id"
+        return
+    fi
+
+    # Python path
+    if [ "$backend" = "python" ] && command -v python3 >/dev/null 2>&1; then
+        local input
+        if [ -n "$dir" ]; then
+            ___x_cmd_ondb_logpath_read "$dir"
+            input="$x_"
+        else
+            input="cat 'ondb.tsv'"
+        fi
+        eval "$input" | python3 "$___X_CMD_ROOT_MOD/ondb/lib/py/get.py" --id="$id"
+        return
+    fi
+
+    # AWK fallback
+    local input
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_read "$dir"
+        input="$x_"
+    else
+        input="cat 'ondb.tsv'"
+    fi
+
+    eval "$input" | ___x_cmd_ondb_cawk get -v ONTO_ID="$id" -v ONTO_FMT="$fmt"
+}

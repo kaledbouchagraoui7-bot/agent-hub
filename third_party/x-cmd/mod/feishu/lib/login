@@ -1,0 +1,202 @@
+# shellcheck shell=dash
+
+# Save login credentials and chat ID
+# Args: app_id app_secret open_id
+___x_cmd_feishu_login_save(){
+    local app_id="$1" app_secret="$2" open_id="$3"
+
+    ___x_cmd_feishu_cfg app_id="${app_id}" app_secret="${app_secret}"
+    feishu:info "Login successful. Credentials saved."
+
+    feishu:info "Saving chat ID for bot direct message..."
+    local chatid
+    chatid="$(___x_cmd feishu abot send --text --json --chatid "$open_id" "Login successful" | ___x_cmd jq -r '.data.chat_id // empty' 2>/dev/null)"
+
+    if [ -n "$chatid" ]; then
+        ___x_cmd_feishu_cfg chatid="${chatid}"
+    else
+        feishu:warn "Failed to save chat ID. Use 'x feishu --cfg chatid=<chatid>' to configure manually"
+    fi
+}
+
+___x_cmd_feishu_login(){
+    param:void
+
+    [ $# -gt 0 ] || set -- help
+    local op="$1" ;
+    case "$op" in
+        -h|--help)      ___x_cmd help -m feishu login "$@" ; return 0 ;;
+        --check)        shift ; ___x_cmd_feishu_login_check "$@" ; return $? ;;
+    esac
+
+    feishu:info "Starting Feishu bot login..."
+    feishu:info "Scan the QR code with Feishu App to login."
+
+    if ___x_cmd_runmode_allow_manual && ___x_cmd_is_stdout2tty ; then
+        ___x_cmd_feishu_login_tty
+    else
+        ___x_cmd_feishu_login_nowait
+    fi
+}
+
+# Interactive TTY login: blocking, streams QR + waits for scan result
+___x_cmd_feishu_login_tty(){
+    local event_name="" payload="" line=""
+    ___x_cmd curl -s -N "https://hub.x-cmd.net/api/v0/feishu/bot/create?feishu" | while IFS= read -r line; do
+        case "${line}" in
+            event:*)
+                event_name="${line#event: }"
+                ;;
+            data:*)
+                payload="${line#data: }"
+
+                case "${event_name}" in
+                    qr)
+                        local qr_url="" expire=""
+                        ___x_cmd jo env . qr_url=.qrUrl expire=.expireIn <<A
+$payload
+A
+                        [ -n "$qr_url" ] || continue
+                        feishu:info "QR code expires in ${expire} seconds"
+                        ___x_cmd qr run -s 1 -m 0 -t ANSIUTF8i "${qr_url}" || return $?
+                        ;;
+                    success)
+                        local app_id="" app_secret="" open_id=""
+                        ___x_cmd jo env . app_id=.appId app_secret=.appSecret open_id=.openId <<A
+$payload
+A
+                        [ -n "$app_id" ] || continue
+                        ___x_cmd_feishu_login_save "$app_id" "$app_secret" "$open_id"
+                        return
+                        ;;
+                    error)
+                        local status="" message=""
+                        ___x_cmd jo env . .status .message <<A
+$payload
+A
+                        feishu:error "Login failed: ${status}"
+                        [ -n "$message" ] && feishu:error "Message: ${message}"
+                        return 1
+                        ;;
+                esac
+                ;;
+        esac
+    done
+}
+
+# Non-blocking login: start curl in background, return QR URL + session immediately
+___x_cmd_feishu_login_nowait(){
+    local login_dir="$___X_CMD_FEISHU_TMP/login"
+    ___x_cmd mkdirp "$login_dir"
+
+    # Kill previous session if exists
+    local pid_file="$login_dir/pid"
+    if [ -f "$pid_file" ]; then
+        local old_pid
+        old_pid="$(cat "$pid_file")"
+        kill "$old_pid" 2>/dev/null
+        rm -f "$pid_file"
+    fi
+
+    # Clean up old output
+    local out="$login_dir/sse.out"
+    rm -f "$out"
+    ___x_cmd curl -s -N "https://hub.x-cmd.net/api/v0/feishu/bot/create?feishu" | while IFS= read -r line; do
+        case "${line}" in
+            data:*)
+                printf "%s\n" "${line#data: }" | ___x_cmd jq -r '
+                    if .qrUrl   then "qr_url=" + .qrUrl + "\nexpire=" + ((.expireIn // 0) | tostring)
+                    elif .appId then "status=ok\napp_id=" + .appId + "\napp_secret=" + .appSecret + "\nopen_id=" + (.openId // "")
+                    elif .status then "status=error\nerror_status=" + ((.status // 0) | tostring) + "\nmessage=" + (.message // "")
+                    else empty end
+                ' 2>/dev/null >> "$out"
+                ;;
+        esac
+    done &
+    local pid=$!
+
+    # Poll for QR URL (max 15s)
+    local qr_url="" i=0
+    while [ $i -lt 30 ]; do
+        if [ -f "$out" ]; then
+            qr_url="$(sed -n 's/^qr_url=//p' "$out" | head -1)"
+            [ -n "$qr_url" ] && break
+        fi
+        sleep 0.5
+        i=$((i + 1))
+    done
+
+    if [ -z "$qr_url" ]; then
+        feishu:error "Failed to get QR code. Please try again."
+        kill "$pid" 2>/dev/null
+        return 1
+    fi
+
+    local expire=""
+    expire="$(sed -n 's/^expire=//p' "$out" | head -1)"
+    [ -n "$expire" ] && feishu:info "QR code expires in ${expire} seconds"
+
+    ___x_cmd qr run -s 1 -m 0 -t ANSIUTF8i "${qr_url}"
+
+    printf "%s\n" "$pid" > "$pid_file"
+    feishu:info "Waiting for QR code scan. Use 'x feishu login --check' to check status."
+}
+
+___x_cmd_feishu_login_check(){
+    param:void
+
+    local login_dir="$___X_CMD_FEISHU_TMP/login"
+    local pid_file="$login_dir/pid"
+    local out="$login_dir/sse.out"
+
+    [ -f "$pid_file" ] || { feishu:error "No login session found. Run 'x feishu login' first."; return 1; }
+
+    local session_id
+    session_id="$(cat "$pid_file")"
+
+    [ -f "$out" ] || { feishu:error "No login session found. Run 'x feishu login' first."; return 1; }
+
+    # Check if the background curl process is still running
+    if kill -0 "$session_id" 2>/dev/null; then
+        feishu:info "Login pending. Waiting for QR code scan..."
+        printf "%s\n" "status=pending"
+        return 0
+    fi
+
+    # Process finished, parse the result
+    local status=""
+    status="$(sed -n 's/^status=//p' "$out" | tail -1)"
+
+    case "$status" in
+        ok)
+            local app_id="" app_secret="" open_id=""
+            app_id="$(sed -n 's/^app_id=//p' "$out" | tail -1)"
+            app_secret="$(sed -n 's/^app_secret=//p' "$out" | tail -1)"
+            open_id="$(sed -n 's/^open_id=//p' "$out" | tail -1)"
+
+            [ -n "$app_id" ] || { feishu:error "Login data incomplete"; return 1; }
+
+            ___x_cmd_feishu_login_save "$app_id" "$app_secret" "$open_id"
+
+            # Cleanup
+            rm -f "$out"
+            feishu:info "Login session completed."
+            printf "%s\n" "status=ok"
+            ;;
+        error)
+            local error_status="" message=""
+            error_status="$(sed -n 's/^error_status=//p' "$out" | tail -1)"
+            message="$(sed -n 's/^message=//p' "$out" | tail -1)"
+            feishu:error "Login failed: ${error_status}"
+            [ -n "$message" ] && feishu:error "Message: ${message}"
+            rm -f "$out"
+            printf "%s\n" "status=error"
+            return 1
+            ;;
+        *)
+            feishu:error "Unknown login result. Please try again."
+            rm -f "$out"
+            return 1
+            ;;
+    esac
+}

@@ -1,0 +1,1372 @@
+{
+"#name"
+:
+{
+"ondb"
+:
+null
+,
+"zh"
+:
+"类型化知识图谱 · 基于 TSV 追加日志的实体与关系管理"
+,
+"en"
+:
+"Typed knowledge graph · entity & relation management via TSV append-only log"
+}
+,
+"#synopsis"
+:
+[
+"x ondb add --type Person --name Alice [--id p_001] [--datadir dir]"
+,
+"x ondb get --id p_001 [--json]"
+,
+"x ondb set --id p_001 status=active"
+,
+"x ondb rm --id p_001"
+,
+"x ondb link --from proj_001 --rel has_task --to task_001 [--datadir dir]"
+,
+"x ondb unlink --from proj_001 --rel has_task --to task_001 [--datadir dir]"
+,
+"x ondb linked --id proj_001 [--rel has_task] [--direction incoming] [--json]"
+,
+"x ondb ls [--type Task] [--json]"
+,
+"x ondb query --type Task --where status=open [--where priority=high] [--json]"
+,
+"x ondb validate [--datadir dir]"
+,
+"x ondb compact [--datadir dir]"
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"基于 TSV 追加日志的类型化知识图谱工具。所有数据以 TSV 行追加到日志文件中，\n用 awk 完成查询、遍历和校验，无需 Python 依赖。\n\nTSV 日志格式（tab 分隔），每行一条指令：\n- add <type> <id> <epoch_ms> <key1> <val1> <key2> <val2>...  — 创建实体\n- set <id> <epoch_ms> <key> <val> [<key2> <val2>...]         — 更新属性\n- rm  <id> <epoch_ms>                                        — 删除实体\n- link <from> <rel> <to> <epoch_ms>                          — 建立关系\n- unlink <from> <rel> <to> <epoch_ms>                        — 移除关系\n- # 开头为注释，空行忽略\nID 默认使用 x uuid 生成，时间戳使用 x epoch ms 获取。\n文件管理：使用 --datadir <dir> (短选项 -d) 指定数据目录，自动管理 snapshot.<ms> + log.<ms> 模式。\n"
+,
+"en"
+:
+"Typed knowledge graph tool based on TSV append-only log. All data is appended as TSV lines,\nwith awk for querying, traversing and validation — no Python dependency.\n\nTSV log format (tab-separated), one directive per line:\n- add <type> <id> <epoch_ms> <key1> <val1> <key2> <val2>...  — create entity\n- set <id> <epoch_ms> <key> <val> [<key2> <val2>...]         — update property\n- rm  <id> <epoch_ms>                                        — delete entity\n- link <from> <rel> <to> <epoch_ms>                          — create relation\n- unlink <from> <rel> <to> <epoch_ms>                        — remove relation\n- # starts comment, empty lines ignored\nIDs default to x uuid; timestamps use x epoch ms.\nFile management: use --datadir <dir> (short: -d) for data directory with snapshot.<ms> + log.<ms> pattern.\n"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"日志是追加式的：执行命令时追加行到 graph.tsv 文件，查询时用 awk 全量重放计算当前状态。\n适合中小规模知识图谱（数千实体以内）；大规模场景建议迁移到 SQLite。\n"
+,
+"en"
+:
+"The log is append-only: commands append lines to graph.tsv; queries replay the full log via awk to compute current state.\nSuitable for small-to-medium graphs (up to thousands of entities); for larger graphs, consider SQLite.\n"
+}
+,
+{
+"zh"
+:
+"与 digraph 模块互补：ondb 管理实体和关系的 CRUD；digraph 管理执行状态和依赖调度。\n可用 x digraph next --file graph.tsv 在 ondb 日志上计算可执行结点。\n"
+,
+"en"
+:
+"Complementary to digraph: ondb manages entity & relation CRUD; digraph manages execution state and dependency scheduling.\nUse x digraph next --file graph.tsv to compute executable nodes on an ondb log.\n"
+}
+,
+{
+"zh"
+:
+"属性值中的 tab 用 \\t 转义，换行用 \\n 转义，反斜杠用 \\\\ 转义。\n"
+,
+"en"
+:
+"Escape tab as \\t, newline as \\n, and backslash as \\\\ in property values.\n"
+}
+,
+{
+"zh"
+:
+"使用 --datadir <dir> (短选项 -d) 指定数据目录后，数据文件为 dir/ondb.tsv，schema 文件为 dir/schema.tsv。\n目录模式支持 snapshot.<epoch_ms> + log.<epoch_ms> 增量管理，用 compact 压缩。\n"
+,
+"en"
+:
+"With --datadir <dir> (short: -d), data files go to dir/ondb.tsv and schema to dir/schema.tsv.\nDirectory mode supports snapshot.<epoch_ms> + log.<epoch_ms> incremental management; use compact to compress.\n"
+}
+,
+{
+"zh"
+:
+"直接写入 schema.tsv 定义约束后，validate 会自动检查：必填属性 (required)、禁止属性 (forbidden)、\n枚举值 (enum)、关系类型约束 (from_types/to_types)、基数约束 (cardinality)、无环约束 (acyclic)。\nschema.tsv 是普通 TSV 文件，可用 echo / cat / sed 等任何工具直接编辑。\n"
+,
+"en"
+:
+"Write schema.tsv directly to define constraints; validate automatically checks: required properties,\nforbidden properties, enum values, relation type constraints (from_types/to_types), cardinality, and\nacyclic constraints. schema.tsv is a plain TSV file — edit it with any tool (echo / cat / sed).\n"
+}
+,
+{
+"zh"
+:
+"SQLite 模式（默认关闭）：创建标记文件 $___X_CMD_ROOT_DATA/sqlite/mode/sqlite_enable 即可开启。\n开启后查询自动使用 SQLite 索引加速，compact 产出 ondb.db。不开启则保持 AWK 重放。\n"
+,
+"en"
+:
+"SQLite mode (off by default): create marker file $___X_CMD_ROOT_DATA/sqlite/mode/sqlite_enable to enable.\nQueries use SQLite indexes for acceleration; compact produces ondb.db. Without it, AWK replay is used.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb add --type Person --name Alice"
+,
+"zh"
+:
+"创建一个 Person 实体"
+}
+,
+{
+"cmd"
+:
+"x ondb add --datadir mydata --type Task --name \"Fix bug\" --id task_001"
+,
+"zh"
+:
+"创建 Task 并指定 ID 和数据目录"
+}
+,
+{
+"cmd"
+:
+"x ondb link --from proj_001 --rel has_task --to task_001"
+,
+"zh"
+:
+"关联项目与任务"
+}
+,
+{
+"cmd"
+:
+"x ondb unlink --from proj_001 --rel has_task --to task_001"
+,
+"zh"
+:
+"移除项目与任务的关系"
+}
+,
+{
+"cmd"
+:
+"x ondb ls --type Task"
+,
+"zh"
+:
+"列出所有 Task 实体"
+}
+,
+{
+"cmd"
+:
+"x ondb query --type Task --where status=open --json"
+,
+"zh"
+:
+"查询 status=open 的 Task，JSON 输出"
+}
+,
+{
+"cmd"
+:
+"x ondb linked --id proj_001 --direction incoming"
+,
+"zh"
+:
+"查看谁关联了 proj_001"
+}
+,
+{
+"cmd"
+:
+"x ondb get --id p_001 --json"
+,
+"zh"
+:
+"获取实体详情（JSON）"
+}
+,
+{
+"cmd"
+:
+"x ondb set --id task_001 status=done"
+,
+"zh"
+:
+"更新实体属性"
+}
+,
+{
+"cmd"
+:
+"x ondb validate --datadir mydata"
+,
+"zh"
+:
+"校验目录中的图谱与 schema"
+}
+,
+{
+"cmd"
+:
+"x ondb compact --datadir mydata"
+,
+"zh"
+:
+"压缩日志为快照"
+}
+]
+,
+"#subcmd:Entity"
+:
+[
+"add"
+,
+"get"
+,
+"set"
+,
+"rm"
+]
+,
+"#subcmd:Relation"
+:
+[
+"link"
+,
+"unlink"
+,
+"linked"
+]
+,
+"#subcmd:Query"
+:
+[
+"ls"
+,
+"query"
+]
+,
+"#subcmd:Manage"
+:
+[
+"compact"
+,
+"validate"
+]
+,
+"add"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"创建一个新实体并追加到日志文件。位置参数（-- 之后）作为 prop=val 属性对。"
+,
+"en"
+:
+"Create a new entity and append to the log file. Positional args (after --) are prop=val pairs."
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb add --type Person --name Alice"
+,
+"zh"
+:
+"创建 Person 实体（自动生成 UUID）"
+}
+,
+{
+"cmd"
+:
+"x ondb add --type Project --name \"My Project\" --id proj_001"
+,
+"zh"
+:
+"创建 Project 并指定 ID"
+}
+,
+{
+"cmd"
+:
+"x ondb add --type Task --name \"Write docs\" priority=high due=2026-06-01"
+,
+"zh"
+:
+"创建 Task 并设置多个属性"
+}
+,
+{
+"cmd"
+:
+"x ondb add --datadir mydata --type Person --name Bob --id p_002"
+,
+"zh"
+:
+"在指定数据目录创建实体"
+}
+]
+,
+"--type"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"实体类型（如 Person, Task, Project, Event, Document）"
+}
+}
+,
+"--id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定实体 ID（不指定则自动生成 UUID）"
+}
+}
+,
+"--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"实体名称（等同于 name=xxx 属性的简写）"
+}
+}
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径（使用 dir/ondb.tsv）"
+}
+}
+}
+,
+"get"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"根据 ID 获取实体的当前状态（重放日志计算最新属性）"
+,
+"en"
+:
+"Get current entity state by ID (replays log to compute latest properties)"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb get --id p_001"
+,
+"zh"
+:
+"获取 p_001 实体详情"
+}
+,
+{
+"cmd"
+:
+"x ondb get --id p_001 --json"
+,
+"zh"
+:
+"获取实体详情（JSON 格式）"
+}
+,
+{
+"cmd"
+:
+"x ondb get --datadir mydata --id task_001"
+,
+"zh"
+:
+"从指定目录获取实体"
+}
+]
+,
+"--id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"实体 ID"
+,
+"en"
+:
+"Entity ID"
+}
+}
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出"
+,
+"en"
+:
+"Output in TSV format"
+}
+}
+,
+"--json"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 JSON 格式输出"
+,
+"en"
+:
+"Output in JSON format"
+}
+}
+}
+,
+"set"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"更新实体属性，追加 set 行到日志。位置参数为 key=val 属性对，可同时更新多个属性。"
+,
+"en"
+:
+"Update entity properties, append a set line to the log. Positional args are key=val pairs; multiple properties can be updated at once."
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb set --id task_001 status=done"
+,
+"zh"
+:
+"将 task_001 状态设为 done"
+}
+,
+{
+"cmd"
+:
+"x ondb set --id p_001 email=alice@example.com phone=1234"
+,
+"zh"
+:
+"同时更新多个属性"
+}
+,
+{
+"cmd"
+:
+"x ondb set --datadir mydata --id task_001 priority=high"
+,
+"zh"
+:
+"更新指定目录中的实体属性"
+}
+]
+,
+"--id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"实体 ID"
+,
+"en"
+:
+"Entity ID"
+}
+}
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+}
+,
+"rm"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"删除实体，追加 rm 行到日志（关系不受影响，查询时自动跳过已删除实体）"
+,
+"en"
+:
+"Delete entity, append an rm line to the log (relations preserved but skipped in queries)"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb rm --id p_001"
+,
+"zh"
+:
+"删除 p_001 实体"
+}
+,
+{
+"cmd"
+:
+"x ondb rm --datadir mydata --id task_001"
+,
+"zh"
+:
+"删除指定目录中的实体"
+}
+]
+,
+"--id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"实体 ID"
+,
+"en"
+:
+"Entity ID"
+}
+}
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+}
+,
+"link"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"在两个实体间建立有向关系，追加 link 行到日志。\n位置参数（-- 之后）作为关系属性 key=val，key 不能包含 = 号。\n"
+,
+"en"
+:
+"Create a directed relation between two entities, append a link line to the log.\nPositional args (after --) are link properties as key=val; key must not contain =.\n"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb link --from proj_001 --rel has_task --to task_001"
+,
+"zh"
+:
+"建立项目到任务的关系"
+}
+,
+{
+"cmd"
+:
+"x ondb link --from p_001 --rel assigned_to --to task_001"
+,
+"zh"
+:
+"指派人员到任务"
+}
+,
+{
+"cmd"
+:
+"x ondb link --from task_001 --rel blocks --to task_002"
+,
+"zh"
+:
+"建立任务阻塞关系"
+}
+,
+{
+"cmd"
+:
+"x ondb link --from p_001 --rel attendee_of --to event_001 -- status=accepted"
+,
+"zh"
+:
+"建立带属性的关系（RSVP 状态）"
+}
+,
+{
+"cmd"
+:
+"x ondb link --datadir mydata --from p_001 --rel member_of --to team_001"
+,
+"zh"
+:
+"在指定目录建立关系"
+}
+]
+,
+"--from"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"起始实体 ID"
+,
+"en"
+:
+"Source entity ID"
+}
+}
+,
+"--rel"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"关系类型（如 has_task, assigned_to, blocks, member_of, depends_on）"
+}
+}
+,
+"--to"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目标实体 ID"
+,
+"en"
+:
+"Target entity ID"
+}
+}
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+}
+,
+"unlink"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"移除两个实体间的关系，追加 unlink 行到日志"
+,
+"en"
+:
+"Remove a relation between two entities, append an unlink line to the log"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb unlink --from proj_001 --rel has_task --to task_001"
+,
+"zh"
+:
+"移除项目与任务的关系"
+}
+,
+{
+"cmd"
+:
+"x ondb unlink --datadir mydata --from p_001 --rel assigned_to --to task_001"
+,
+"zh"
+:
+"移除指定目录中的关系"
+}
+]
+,
+"--from"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"起始实体 ID"
+,
+"en"
+:
+"Source entity ID"
+}
+}
+,
+"--rel"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"关系类型"
+}
+}
+,
+"--to"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目标实体 ID"
+,
+"en"
+:
+"Target entity ID"
+}
+}
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+}
+,
+"linked"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查询实体的关联实体（支持方向过滤和关系类型过滤）"
+,
+"en"
+:
+"Query related entities (with direction and relation type filters)"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb linked --id proj_001"
+,
+"zh"
+:
+"查看 proj_001 的所有关系"
+}
+,
+{
+"cmd"
+:
+"x ondb linked --id proj_001 --rel has_task"
+,
+"zh"
+:
+"只查看 has_task 关系"
+}
+,
+{
+"cmd"
+:
+"x ondb linked --id task_001 --direction incoming"
+,
+"zh"
+:
+"查看指向 task_001 的关系（谁关联了它）"
+}
+,
+{
+"cmd"
+:
+"x ondb linked --id proj_001 --direction both --json"
+,
+"zh"
+:
+"双向查询并以 JSON 输出"
+}
+,
+{
+"cmd"
+:
+"x ondb linked --datadir mydata --id task_001"
+,
+"zh"
+:
+"查询指定目录中的关系"
+}
+]
+,
+"--id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"实体 ID"
+,
+"en"
+:
+"Entity ID"
+}
+}
+,
+"--rel"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"关系类型过滤（不指定则显示所有关系）"
+}
+}
+,
+"--direction"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"方向过滤：outgoing（默认）、incoming、both"
+}
+}
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出"
+,
+"en"
+:
+"Output in TSV format"
+}
+}
+,
+"--json"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 JSON 格式输出"
+,
+"en"
+:
+"Output in JSON format"
+}
+}
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出实体（支持按类型过滤）"
+,
+"en"
+:
+"List entities (with optional type filter)"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb ls"
+,
+"zh"
+:
+"列出所有实体"
+}
+,
+{
+"cmd"
+:
+"x ondb ls --type Task"
+,
+"zh"
+:
+"只列出 Task 类型"
+}
+,
+{
+"cmd"
+:
+"x ondb ls --type Person --json"
+,
+"zh"
+:
+"列出 Person 并以 JSON 输出"
+}
+,
+{
+"cmd"
+:
+"x ondb ls --datadir mydata"
+,
+"zh"
+:
+"列出指定目录中的实体"
+}
+]
+,
+"--type"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"按类型过滤（如 Person, Task, Project）"
+}
+}
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出（默认）"
+,
+"en"
+:
+"Output in TSV format (default)"
+}
+}
+,
+"--json"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 JSON 格式输出"
+,
+"en"
+:
+"Output in JSON format"
+}
+}
+}
+,
+"query"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"按类型和属性值过滤查询实体。--where 可多次使用表示 AND 条件。"
+,
+"en"
+:
+"Query entities by type and property value filters. Use --where multiple times for AND conditions."
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb query --type Task --where status=open"
+,
+"zh"
+:
+"查询所有 status=open 的 Task"
+}
+,
+{
+"cmd"
+:
+"x ondb query --type Task --where status=open --where priority=high"
+,
+"zh"
+:
+"多条件 AND 查询"
+}
+,
+{
+"cmd"
+:
+"x ondb query --where status=active --json"
+,
+"zh"
+:
+"查询 status=active 的所有类型实体，JSON 输出"
+}
+,
+{
+"cmd"
+:
+"x ondb query --datadir mydata --type Person --where department=eng"
+,
+"zh"
+:
+"查询指定目录中的实体"
+}
+]
+,
+"--type"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"按类型过滤"
+}
+}
+,
+"--where"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"属性过滤条件（key=val），可多次使用表示 AND"
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出"
+,
+"en"
+:
+"Output in TSV format"
+}
+}
+,
+"--json"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 JSON 格式输出"
+,
+"en"
+:
+"Output in JSON format"
+}
+}
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+}
+,
+"validate"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"校验图谱完整性。基础检查包括悬空关系引用、重复 ID 等。\n当 schema.tsv 存在时，自动加载并校验：必填属性 (required)、禁止属性 (forbidden)、\n枚举值 (enum)、关系类型约束 (from_types/to_types)、基数约束 (cardinality)、无环约束 (acyclic)。\n"
+,
+"en"
+:
+"Validate graph integrity. Basic checks include dangling relation refs, duplicate IDs, etc.\nWhen schema.tsv exists, automatically loads and validates: required properties, forbidden properties,\nenum values, relation type constraints (from_types/to_types), cardinality, and acyclic constraints.\n"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb validate"
+,
+"zh"
+:
+"校验当前图谱"
+}
+,
+{
+"cmd"
+:
+"x ondb validate --datadir mydata"
+,
+"zh"
+:
+"校验指定目录（含 schema）"
+}
+]
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+}
+,
+"compact"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"将当前日志压缩为快照文件（snapshot.<epoch_ms>），后续变更将写入新的 log.<epoch_ms>"
+,
+"en"
+:
+"Compact current log into a snapshot file (snapshot.<epoch_ms>); subsequent changes go to new log.<epoch_ms>"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x ondb compact --datadir mydata"
+,
+"zh"
+:
+"压缩指定数据目录"
+}
+,
+{
+"cmd"
+:
+"x ondb compact --datadir mydata"
+,
+"zh"
+:
+"compact 同时产出 ondb.db（需开启 SQLite 模式）"
+}
+]
+,
+"-d"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"数据目录路径"
+}
+}
+}
+,
+"#other"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com/mod/ondb"
+,
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com/mod/ondb"
+}
+}
+

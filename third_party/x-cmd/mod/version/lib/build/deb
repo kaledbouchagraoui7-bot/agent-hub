@@ -1,0 +1,155 @@
+# shellcheck shell=dash disable=SC2016
+
+# Entry point
+___x_cmd_version_build_deb(){
+    local version="$1"
+    local versum="$2"
+    local mode="$3"
+
+    ___x_cmd_version_build_deb_builddir "$version" "$versum" || return "$?"
+
+    if [ "$mode" = "docker" ]; then
+        ___x_cmd_version_build_deb_docker "$version"
+    else
+        ___x_cmd_version_build_deb_local "$version"
+    fi
+}
+
+# Build deb
+___x_cmd_version_build_deb_docker(){
+    local version="$1"
+    printf "%s\n" 'FROM debian:latest
+RUN sed -i "s/deb.debian.org/mirrors.aliyun.com/g" /etc/apt/sources.list.d/debian.sources 2>/dev/null; \
+sed -i "s/deb.debian.org/mirrors.aliyun.com/g" /etc/apt/sources.list 2>/dev/null; \
+apt-get update && apt-get install -y --no-install-recommends lintian && \
+useradd -m builder
+WORKDIR /home/builder' > ".build/debian-builder.Dockerfile"
+
+    docker build -f ".build/debian-builder.Dockerfile" --tag debian-builder .
+    docker run --rm -v "$PWD/.build/deb:/home/builder/debbuild" debian-builder sh -c '
+    cd /home/builder/debbuild
+    dpkg-deb --root-owner-group --build x-cmd || exit 1
+
+    # Lint the built deb
+    echo "===== lintian x-cmd.deb ====="
+    lintian x-cmd.deb 2>&1 | tee lintian.x-cmd.deb.log || true
+' || return "$?"
+    local distfp="$___X_CMD_VERSION_BUILD_DATA/release/${version}/deb"
+    ___x_cmd mkdirp "$distfp"
+	___x_cmd_cmds cp -rf "$builddir/deb/x-cmd.deb" "$distfp/x-cmd_${version#v}_all.deb"
+
+}
+
+___x_cmd_version_build_deb_local()(
+    local version="$1"
+    cd ".build/deb"
+    dpkg-deb --build x-cmd || return "$?"
+)
+
+# Create build directory
+___x_cmd_version_build_deb_builddir(){
+    local version="$1"
+    local versum="$2"
+    local url="$(___x_cmd_version_build_info___ url)"
+
+    local builddir=".build/deb/x-cmd"
+    local docdir="$builddir/usr/share/doc/x-cmd"
+    ___x_cmd rm -rf "$builddir"
+    ___x_cmd mkdirp "$builddir/DEBIAN"
+    ___x_cmd mkdirp "$docdir"
+    ___x_cmd mkdirp "$builddir/usr/share/x-cmd/v"
+    cp -rf ".build/x-cmd-${version}.tgz" "$builddir/usr/share/x-cmd/v/${versum}.tgz"
+
+    printf "%s\n" 'Package: x-cmd
+Version: '"${version#v}"'
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: Li Junhao <l@x-cmd.com>
+Description: Shell Superpowers for AI Agents
+ A modern toolkit for POSIX shell (bash, zsh, ash, dash) — designed
+ to make shell as powerful as Python'\''s standard library.
+Homepage: '"${url}"'' > "$builddir/DEBIAN/control"
+
+    printf "%s\n" '
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: x-cmd
+Source: https://github.com/x-cmd/x-cmd
+
+Files: *
+Copyright: Copyright (c) 2026 Li Junhao
+License: Expat
+
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+'  > "$docdir/copyright"
+    ___x_cmd_cmds chmod 644 "$docdir/copyright"
+
+    {
+        printf "x-cmd (%s) unstable; urgency=low\n\n" "${version#v}"
+        printf "  * Initial release %s.\n\n" "${version#v}"
+        printf " -- Li Junhao <l@x-cmd.com>  %s\n" "$(date -Ru)"
+    } > "$docdir/changelog"
+    ___x_cmd_cmds chmod 644 "$docdir/changelog"
+    if command -v gzip >/dev/null 2>&1; then
+        gzip -9nf "$docdir/changelog"
+    fi
+
+    printf "%s\n" '#!/bin/sh
+post_install() {
+    set -e
+    local _pkgsum='"$versum"'
+    local _pkgdir="/usr/share/x-cmd/v/$_pkgsum"
+    local _pkgfile="/usr/share/x-cmd/v/$_pkgsum.tgz"
+    if [ ! -f "$_pkgfile" ]; then
+        printf "%s\n" "- I|x: Not found x-cmd pkg tgz file -> $_pkgfile" >/dev/tty
+        return 1
+    else
+        printf "%s\n" "- I|x: Unpacking $_pkgfile to $_pkgdir" >&2
+        mkdir -p "$_pkgdir"
+        tar -xzf "$_pkgfile" -C "$_pkgdir" || return 1
+
+        printf "%s\n" "- I|x: Linking $_pkgdir to /usr/share/x-cmd/v/latest" >&2
+        rm -rf "/usr/share/x-cmd/v/latest"
+        ln -sf "$_pkgdir" "/usr/share/x-cmd/v/latest" || return 1
+
+        printf "%s\n" "- I|x: Create /usr/bin/x-cmd" >&2
+        install -Dm755 "$_pkgdir/mod/x-cmd/lib/bin/x-cmd" "/usr/bin/x-cmd"
+        chmod +x "/usr/bin/x-cmd"
+    fi
+}
+
+
+post_install
+' > "$builddir/DEBIAN/postinst"
+
+    printf "%s\n" '#!/bin/sh
+
+post_remove() {
+    set -e
+    [ ! -f /usr/bin/x-cmd ]         || rm -rf /usr/bin/x-cmd
+    [ ! -f /usr/bin/x ]             || rm -rf /usr/bin/x
+    [ ! -f ~/.x-cmd.root ]          || rm -rf ~/.x-cmd.root
+}
+
+post_remove
+' > "$builddir/DEBIAN/postrm"
+
+    ___x_cmd_cmds chmod 755 "$builddir/DEBIAN/postinst"
+    ___x_cmd_cmds chmod 755 "$builddir/DEBIAN/postrm"
+}
+
+

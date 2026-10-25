@@ -1,0 +1,129 @@
+# shellcheck shell=dash disable=SC2016
+
+# https://wiki.archlinux.org/title/Creating_packages
+# https://man.archlinux.org/man/PKGBUILD.5#OPTIONS_AND_DIRECTIVES
+# pacman -U ./x-cmd.pkg.tar.zst
+
+___x_cmd_version_build_arch(){
+    local version="$1"
+    local versum="$2"
+    local mode="$3"
+
+    ___x_cmd_version_build_arch_builddir "$version" "$versum" || return "$?"
+
+    if [ "$mode" = "docker" ]; then
+        ___x_cmd_version_build_arch_docker "$@"
+    else
+        ___x_cmd_version_build_arch_local "$@"
+    fi
+}
+
+___x_cmd_version_build_arch_docker(){
+    local version="$1"
+    printf "%s\n" 'FROM archlinux:latest
+
+RUN echo '\''Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/$repo/os/$arch'\'' > /etc/pacman.d/mirrorlist && \
+    pacman-key --init && \
+    pacman-key --populate archlinux && \
+    pacman -Sy --noconfirm archlinux-keyring && \
+    pacman -Syu --noconfirm --needed base-devel sudo namcap
+RUN useradd -m builder && \
+    echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+USER builder
+WORKDIR /home/builder' > ".build/arch-builder.Dockerfile"
+
+    docker build -f ".build/arch-builder.Dockerfile" --tag arch-builder .
+    docker run --rm -v "$PWD/.build/arch:/home/builder/archlinuxbuild" arch-builder sh -c '
+    cd /home/builder/archlinuxbuild
+    sudo chown -R builder:builder .
+
+    # Lint PKGBUILD before building
+    echo "===== namcap PKGBUILD ====="
+    namcap PKGBUILD 2>&1 | tee namcap.PKGBUILD.log || true
+
+    # Build the package
+    makepkg || exit 1
+
+    # Lint the built package
+    echo "===== namcap x-cmd-*.pkg.tar.zst ====="
+    for pkg in x-cmd-*.pkg.tar.zst; do
+        [ -f "$pkg" ] || continue
+        namcap "$pkg" 2>&1 | tee "namcap.${pkg}.log" || true
+    done
+' || return "$?"
+
+    local distfp="$___X_CMD_VERSION_BUILD_DATA/release/${version}/arch"
+    ___x_cmd mkdirp "$distfp"
+    ___x_cmd_cmds cp -rf "$builddir/arch/x-cmd-${version}-0-any.pkg.tar.zst" "$distfp/x-cmd_${version#v}_all.pkg.tar.zst"
+
+}
+
+___x_cmd_version_build_arch_local()(
+    cd ".build/arch"
+    makepkg || return "$?"
+)
+
+___x_cmd_version_build_arch_builddir(){
+    local version="$1"
+    local versum="$2"
+    local url="$(___x_cmd_version_build_info___ url)"
+    local license="$(___x_cmd_version_build_info___ license)"
+    local summary="$(___x_cmd_version_build_info___ summary)"
+    local desc="$(___x_cmd_version_build_info___ desc)"
+
+    local builddir=".build/arch"
+    ___x_cmd rm -rf "$builddir"
+    ___x_cmd mkdirp "$builddir"
+    cp -rf ".build/x-cmd-${version}.tgz" "$builddir/x-cmd-${version}.tgz"
+
+    printf "%s\n" '
+# Contributor: Li Junhao <l@x-cmd.com>
+# Maintainer: Li Junhao <l@x-cmd.com>
+pkgname=x-cmd
+pkgver='"${version}"'
+_pkgsum='"$versum"'
+pkgrel=0
+
+pkgdesc="'"$summary"'"
+url="'"$url"'"
+arch=("any")
+license='\("$license"\)'
+
+
+source=("$pkgname-$pkgver.tgz")
+# source="$pkgname-$pkgver.tgz::https://oss.resource.x-cmd.com/x-cmd/release/dist/$pkgver/allinone.tgz"
+# source="$pkgname-$pkgver.tgz::https://raw.githubusercontent.com/x-cmd/release/main/dist/$pkgver/allinone.tgz"
+options=(!debug)
+sha512sums=("SKIP")
+
+package() {
+    install -Dm644 "$srcdir/$pkgname-$pkgver.tgz" "$pkgdir/usr/share/$pkgname/v/$_pkgsum.tgz"
+
+    local _pkgdir="$pkgdir/usr/share/x-cmd/v/$_pkgsum"
+    # Stage in $srcdir then cp -R --no-preserve=ownership into $pkgdir.
+    # The upstream tgz was built on GH Actions as uid 1001 (runner/runner);
+    # a plain `cp -a` would faithfully preserve that, and pacman refuses
+    # to install non-root-owned files. --no-preserve=ownership forces cp
+    # to chown every new file to the calling (fakeroot) user = root.
+    local _stage="$srcdir/staged"
+    install -dm755 "$_stage"
+    install -dm755 "$_pkgdir"
+    printf "%s\n" "- I|x: Unpacking and copying to $_pkgdir" >&2
+    tar -xzf "$pkgdir/usr/share/x-cmd/v/$_pkgsum.tgz" -C "$_stage"
+    cp -R --no-preserve=ownership "$_stage/." "$_pkgdir/"
+
+    printf "%s\n" "- I|x: Preparing license-files" >&2
+    install -Dm644 "$_pkgdir/LICENSE.txt" "$pkgdir/usr/share/licenses/$pkgname/LICENSE.txt"
+
+    printf "%s\n" "- I|x: Creating /usr/bin/x-cmd" >&2
+    install -Dm755 "$_pkgdir/mod/x-cmd/lib/bin/x-cmd" "$pkgdir/usr/bin/x-cmd"
+
+    printf "%s\n" "- I|x: Linking $_pkgsum to /usr/share/x-cmd/v/latest" >&2
+    ln -s "$_pkgsum" "$pkgdir/usr/share/x-cmd/v/latest"
+
+    printf "%s\n" "- I|x: Cleaning up $pkgdir/usr/share/x-cmd/v/$_pkgsum.tgz" >&2
+    rm -f "$pkgdir/usr/share/x-cmd/v/$_pkgsum.tgz"
+}
+
+' > "$builddir/PKGBUILD"
+}

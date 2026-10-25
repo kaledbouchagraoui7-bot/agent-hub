@@ -1,0 +1,72 @@
+# shellcheck shell=dash
+# Complex example test for ondb — covers full CRUD, links, query, compact
+
+___x_cmd_ondb___example_test(){
+    local testdir="/tmp/ondb-example-test-$$"
+    mkdir -p "$testdir"
+    trap 'rm -rf "$testdir"' EXIT
+
+    printf "=== ondb example test in %s ===\n" "$testdir"
+
+    # 1. Create a project memory ondb
+    printf "\n--- 1. Create entities (Project, Person, Task, Document) ---\n"
+    x ondb add -d "$testdir" --type Project --name "Website Redesign" --id proj_001 -- status=active
+    x ondb add -d "$testdir" --type Person --name "Alice" --id alice -- email=alice@example.com
+    x ondb add -d "$testdir" --type Person --name "Bob" --id bob -- email=bob@example.com
+    x ondb add -d "$testdir" --type Task --name "Design homepage" --id task_001 -- status=open priority=high
+    x ondb add -d "$testdir" --type Task --name "Write API docs" --id task_002 -- status=open priority=medium
+    x ondb add -d "$testdir" --type Document --name "API Design" --id doc_001 -- path=docs/api.md
+
+    # 2. Link them up
+    printf "\n--- 2. Create relations ---\n"
+    x ondb link -d "$testdir" --from proj_001 --rel has_task --to task_001
+    x ondb link -d "$testdir" --from proj_001 --rel has_task --to task_002
+    x ondb link -d "$testdir" --from proj_001 --rel has_doc --to doc_001
+    x ondb link -d "$testdir" --from task_001 --rel assigned_to --to alice
+    x ondb link -d "$testdir" --from task_002 --rel assigned_to --to bob
+    x ondb link -d "$testdir" --from task_001 --rel blocks --to task_002
+
+    # 3. List all
+    printf "\n--- 3. List all entities ---\n"
+    x ondb ls -d "$testdir"
+
+    # 4. List by type
+    printf "\n--- 4. List tasks ---\n"
+    x ondb ls -d "$testdir" --type Task
+
+    # 5. Get single entity
+    printf "\n--- 5. Get project ---\n"
+    x ondb get -d "$testdir" --id proj_001
+
+    # 6. Query outgoing links
+    printf "\n--- 6. What does project have? ---\n"
+    x ondb linked -d "$testdir" --id proj_001
+
+    # 7. Query incoming links
+    printf "\n--- 7. Who is assigned to task_001? ---\n"
+    x ondb linked -d "$testdir" --id task_001 --direction incoming
+
+    # 8. Update property
+    printf "\n--- 8. Update task status ---\n"
+    x ondb set -d "$testdir" --id task_001 status=done
+    x ondb get -d "$testdir" --id task_001
+
+    # 9. Query after update
+    printf "\n--- 9. Query open tasks ---\n"
+    x ondb query -d "$testdir" --type Task --where status=open
+
+    # 10. Compact
+    printf "\n--- 10. Compact ---\n"
+    x ondb compact -d "$testdir"
+    ls -la "$testdir"
+
+    # 11. Validate
+    printf "\n--- 11. Validate ---\n"
+    x ondb validate -d "$testdir"
+
+    # 12. Read after compact
+    printf "\n--- 12. Read after compact ---\n"
+    x ondb ls -d "$testdir"
+
+    printf "\n=== All tests passed ===\n"
+}

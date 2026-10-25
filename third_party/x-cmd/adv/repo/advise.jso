@@ -1,0 +1,1974 @@
+{
+"#name"
+:
+{
+"repo"
+:
+null
+,
+"zh"
+:
+"代码仓库管理器（agent 共享）"
+,
+"en"
+:
+"Code Repository Manager (agent-shared)"
+}
+,
+"#synopsis"
+:
+[
+{
+"x repo <name>"
+:
+null
+}
+,
+{
+"x repo ls [options]"
+:
+null
+}
+,
+{
+"x repo which owner/name"
+:
+null
+}
+,
+{
+"x repo which /owner/name"
+:
+null
+}
+,
+{
+"x repo which cb/owner/name"
+:
+null
+}
+,
+{
+"x repo which gl/owner/name"
+:
+null
+}
+,
+{
+"x repo cd owner/name"
+:
+null
+}
+,
+{
+"x repo fe owner/name"
+:
+null
+}
+,
+{
+"x repo c  owner/name"
+:
+null
+}
+,
+{
+"x repo t  owner/name"
+:
+null
+}
+,
+{
+"x repo prepare <id>..."
+:
+null
+}
+,
+{
+"x repo update <id>..."
+:
+null
+}
+,
+{
+"x repo card [options] <id>"
+:
+null
+}
+,
+{
+"x repo starhistory [--rebuild] <id>"
+:
+null
+}
+,
+{
+"x repo pulse <id>"
+:
+null
+}
+,
+{
+"x repo loc [options] <id>"
+:
+null
+}
+,
+{
+"x repo wt <id> <branch>"
+:
+null
+}
+,
+{
+"x repo wt ls <id>"
+:
+null
+}
+,
+{
+"x repo wt rm <id> <branch>"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"为 AI agent 统一管理代码仓库克隆路径（默认 ~/.x-repo/<provider>/<owner>/<name>，跨 agent 共享）"
+,
+"en"
+:
+"Unify code repository clone paths for AI agents (default ~/.x-repo/<provider>/<owner>/<name>, shared across agents)"
+}
+,
+"#meta"
+:
+{
+"default-subcmd"
+:
+"ls"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"除非用户另行指定或已有惯例，新克隆均按默认布局放置——便于多 agent 复用、`x repo` 发现，以及后续同步与共享缓存加速。\n"
+,
+"en"
+:
+"Unless the user specifies otherwise or an existing convention applies, place new clones under the default layout — enabling cross-agent reuse, `x repo` discoverability, and future sync / shared cache acceleration.\n"
+}
+,
+{
+"zh"
+:
+"不带格式选项时，交互终端以 csv app 浏览，管道或重定向则以 TSV 输出。"
+,
+"en"
+:
+"Without format flag, interactive terminal opens csv app; pipe or redirect outputs TSV."
+}
+,
+{
+"zh"
+:
+"打开 tmux：`x repo t <id>` 或 `x tmux repo <id>`，session 名按 `<provider>/<owner>/<name>` 命名（github.com→gh, codeberg.org→cb, gitlab.com→gl, gitee.com→gt, bitbucket.org→bb）。\n"
+,
+"en"
+:
+"Open in tmux: `x repo t <id>` or `x tmux repo <id>`. The session is named `<provider>/<owner>/<name>` (github.com→gh, codeberg.org→cb, gitlab.com→gl, gitee.com→gt, bitbucket.org→bb).\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x repo x-bash/repo"
+,
+"zh"
+:
+"默认: 解析后 cd 进本地仓库；不存在则 update 克隆"
+,
+"en"
+:
+"Default: resolve then cd into the local repo; update-clones if missing"
+}
+,
+{
+"cmd"
+:
+"x repo ls"
+,
+"zh"
+:
+"示例: 列出所有已克隆的仓库"
+,
+"en"
+:
+"Example: list all cloned repositories"
+}
+,
+{
+"cmd"
+:
+"x repo ls --raw"
+,
+"zh"
+:
+"原始路径: provider/org/repo 格式，适合脚本处理"
+,
+"en"
+:
+"Raw paths: provider/org/repo format, suitable for scripting"
+}
+,
+{
+"cmd"
+:
+"x repo ls --tsv"
+,
+"zh"
+:
+"TSV 格式: 带表头，适合管道和 awk 处理"
+,
+"en"
+:
+"TSV format: with headers, suitable for piping and awk"
+}
+,
+{
+"cmd"
+:
+"x repo ls --csv"
+,
+"zh"
+:
+"CSV 格式: 适合表格软件和数据库导入"
+,
+"en"
+:
+"CSV format: suitable for spreadsheets and database import"
+}
+,
+{
+"cmd"
+:
+"x repo which sh/re"
+,
+"zh"
+:
+"解析 owner/name 为本地路径 (owner 含 sh, name 含 re)"
+,
+"en"
+:
+"Resolve owner/name to the local path (owner contains sh, name contains re)"
+}
+,
+{
+"cmd"
+:
+"x repo which /sh/re"
+,
+"zh"
+:
+"which 的模糊模式: 前缀 / 走 fuzzywhich 解析"
+,
+"en"
+:
+"which in fuzzy mode: a leading / routes through fuzzywhich"
+}
+,
+{
+"cmd"
+:
+"x repo which x-bash/repo@feat~auth"
+,
+"zh"
+:
+"which 的 wt 模式: @<wtname> 直接解析到对应 worktree 路径（wtname 可以是 branch / tag / SHA / agent 名 / issue id）"
+,
+"en"
+:
+"which in wt mode: @<wtname> resolves directly to the worktree path (wtname can be branch / tag / SHA / agent name / issue id)"
+}
+,
+{
+"cmd"
+:
+"x repo cd x-bash/repo"
+,
+"zh"
+:
+"显式 cd: 与默认 x repo <name> 等价"
+,
+"en"
+:
+"Explicit cd: equivalent to the default x repo <name>"
+}
+,
+{
+"cmd"
+:
+"x repo fe x-bash/repo"
+,
+"zh"
+:
+"fresh 简写 (fe): 解析后用 fresh 编辑器打开"
+,
+"en"
+:
+"shortcut for fresh: resolve then open in the fresh editor"
+}
+,
+{
+"cmd"
+:
+"x repo c x-bash/repo"
+,
+"zh"
+:
+"code 简写 (c): 解析后用 vscode 打开; 不存在则 update 克隆"
+,
+"en"
+:
+"shortcut for code: resolve then open in vscode; update-clones if missing"
+}
+,
+{
+"cmd"
+:
+"x repo t x-bash/repo"
+,
+"zh"
+:
+"tmux 简写 (t): 打开（或新建）session :gh/x-bash/repo"
+,
+"en"
+:
+"shortcut for tmux: open (or create) session :gh/x-bash/repo"
+}
+,
+{
+"cmd"
+:
+"x repo update x-bash/repo x-bash/brew"
+,
+"zh"
+:
+"批量: 对每个 id 解析后 clone 或 update 一次"
+,
+"en"
+:
+"Batch: resolve each id and clone-or-update in turn"
+}
+,
+{
+"cmd"
+:
+"x repo prepare x-bash/repo x-bash/wsl"
+,
+"zh"
+:
+"多仓工作面准备: 每个 id clone 或 update 一次，并打印解析路径供 ../<sibling> 引用"
+,
+"en"
+:
+"Multi-repo workspace setup: clone-or-update each id and print resolved paths for ../<sibling> references"
+}
+,
+{
+"cmd"
+:
+"x repo card x-cmd/install"
+,
+"zh"
+:
+"仓库评分卡: 1 次 GraphQL（合并 16 个 search 计数）+ 1 次 REST /stats/commit_activity，输出 about/timeline/popularity/language/recent 五段，全程 API 不碰本地 clone"
+,
+"en"
+:
+"Repo scorecard: 1 GraphQL (carrying 16 aliased search counts) + 1 REST /stats/commit_activity, emits about/timeline/popularity/language/recent sections, fully API-driven — no local clone touched"
+}
+,
+{
+"cmd"
+:
+"x repo card --verbose jqlang/jq"
+,
+"zh"
+:
+"评分卡 + 代码行数: 在 card 之后追加 loc 的 CODE 表（会 clone/更新仓库）"
+,
+"en"
+:
+"Scorecard plus line counts: appends loc's CODE table after the card (clones/updates the repo)"
+}
+,
+{
+"cmd"
+:
+"x repo loc jqlang/jq"
+,
+"zh"
+:
+"代码行数: clone/更新后用 tokei 统计，按 code 降序列出各语言的 code/comments/blanks/files"
+,
+"en"
+:
+"Line counts: clone-or-update then count with tokei, listing code/comments/blanks/files per language sorted by code"
+}
+,
+{
+"cmd"
+:
+"x repo wt x-bash/repo feat/auth"
+,
+"zh"
+:
+"默认形式: 在 feat/auth 分支上创建或 attach worktree（分支不存在则从 HEAD 新建，存在则 attach）"
+,
+"en"
+:
+"Default form: create-or-attach a worktree on branch feat/auth (new branch from HEAD if absent, attaches otherwise)"
+}
+,
+{
+"cmd"
+:
+"x repo wt ls x-bash/repo"
+,
+"zh"
+:
+"列出该仓库的所有 worktree（裸库 + 默认 wt + 额外的 wt）"
+,
+"en"
+:
+"List all worktrees of the repo (bare + default wt + extras)"
+}
+,
+{
+"cmd"
+:
+"x repo wt rm x-bash/repo feat/auth"
+,
+"zh"
+:
+"优雅删除 worktree（走 git worktree remove，bare 的 worktrees/ 登记表同步更新）"
+,
+"en"
+:
+"Graceful remove (git worktree remove; bare's worktrees/ registry stays in sync)"
+}
+,
+{
+"cmd"
+:
+"x repo which x-bash/repo@feat~auth"
+,
+"zh"
+:
+"复盘 wt 路径: x repo which <id>@<wtname> 直接解析到对应 worktree"
+,
+"en"
+:
+"Reuse a wt path: x repo which <id>@<wtname> resolves directly to the worktree"
+}
+]
+,
+"#subcmd:common"
+:
+[
+"ls"
+,
+"which"
+,
+"cd"
+,
+"fresh"
+,
+"code"
+,
+"tmux"
+,
+"prepare"
+,
+"update"
+,
+"card"
+,
+"starhistory"
+,
+"pulse"
+,
+"loc"
+,
+"wt"
+]
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出所有已克隆的代码仓库"
+,
+"en"
+:
+"List all cloned code repositories"
+}
+,
+"--raw"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"原始路径输出（provider/org/repo）"
+,
+"en"
+:
+"Raw path output (provider/org/repo)"
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"TSV 表格格式输出（provider, owner, name, filepath）"
+,
+"en"
+:
+"TSV table format output (provider, owner, name, filepath)"
+}
+}
+,
+"--csv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"CSV 表格格式输出"
+,
+"en"
+:
+"CSV table format output"
+}
+}
+,
+"--app"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"交互式 csv app 浏览"
+,
+"en"
+:
+"Interactive csv app browser"
+}
+}
+,
+"--auto"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"自动模式（TTY→app, 管道→tsv）"
+,
+"en"
+:
+"Auto mode (TTY→app, pipe→tsv)"
+}
+}
+}
+,
+"which"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"将 owner/name 或 provider/owner/name 解析为本地克隆路径（前缀 / 走 fuzzywhich 模糊匹配）"
+,
+"en"
+:
+"Resolve owner/name or provider/owner/name to a local clone path (a leading / uses fuzzywhich for fuzzy matching)"
+}
+,
+"owner/name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"owner 与 name 可分别给出子串；任一为空视为通配。例如 which sh/re 命中 x-bash/re。支持 github.com/gh/codeberg.org/cb/gitlab.com/gl/gitee.com/gt/bitbucket.org/bb 前缀。"
+,
+"en"
+:
+"owner and name are independent substrings; an empty part is a wildcard. e.g. which sh/re matches x-bash/re. Supports github.com/gh/codeberg.org/cb/gitlab.com/gl/gitee.com/gt/bitbucket.org/bb prefixes."
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 which 帮助"
+,
+"en"
+:
+"Show which help"
+}
+}
+}
+,
+"cd"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"解析后 cd 进本地仓库路径（不存在则 update 克隆再 cd）"
+,
+"en"
+:
+"Resolve then cd into the local repo path (update-clones if missing)"
+}
+,
+"owner/name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"接受 / 前缀的模糊解析，例如 cd /x-bash/re"
+,
+"en"
+:
+"Accepts a /-prefixed fuzzy query, e.g. cd /x-bash/re"
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 cd 帮助"
+,
+"en"
+:
+"Show cd help"
+}
+}
+}
+,
+"fresh"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"解析后用 fresh 编辑器打开本地仓库"
+,
+"en"
+:
+"Resolve then open the local repo in the fresh editor"
+}
+,
+"owner/name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"解析失败则报错；调用方负责先 update 克隆（参见 x repo update）"
+,
+"en"
+:
+"Fails if the repo can't be resolved; caller is responsible for cloning first (see x repo update)"
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 fresh 帮助"
+,
+"en"
+:
+"Show fresh help"
+}
+}
+}
+,
+"code"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"解析后用 vscode 打开本地仓库（不存在则 update 克隆再打开）"
+,
+"en"
+:
+"Resolve then open the local repo in vscode (update-clones if missing)"
+}
+,
+"owner/name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"支持 / 前缀的模糊解析，例如 code /x-bash/re"
+,
+"en"
+:
+"Accepts a /-prefixed fuzzy query, e.g. code /x-bash/re"
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 code 帮助"
+,
+"en"
+:
+"Show code help"
+}
+}
+}
+,
+"tmux"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"解析后打开 tmux session（命名规则与 x tmux repo 一致，见 tip）"
+,
+"en"
+:
+"Resolve then open a tmux session (naming follows x tmux repo; see tip)"
+}
+,
+"owner/name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"浅包装：等价于 x tmux repo <id>；session 名由 tmux 模块决定"
+,
+"en"
+:
+"Shallow wrapper: equivalent to x tmux repo <id>; the tmux module owns the session name"
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 tmux 帮助"
+,
+"en"
+:
+"Show tmux help"
+}
+}
+}
+,
+"update"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"解析每个 id；本地存在则 update，不存在则 clone；接受多个 id"
+,
+"en"
+:
+"Resolve each id; update if a local clone exists, otherwise clone; accepts multiple ids"
+}
+,
+"id..."
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"可一次给多个 id（如 update x-bash/repo x-bash/brew），逐个处理。支持 github.com/gh/codeberg.org/cb/gitlab.com/gl/gitee.com/gt/bitbucket.org/bb 前缀。"
+,
+"en"
+:
+"Pass multiple ids at once (e.g. update x-bash/repo x-bash/brew) to process them in order. Supports github.com/gh/codeberg.org/cb/gitlab.com/gl/gitee.com/gt/bitbucket.org/bb prefixes."
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 update 帮助"
+,
+"en"
+:
+"Show update help"
+}
+}
+}
+,
+"prepare"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"为多仓协作准备本地工作面；每个 id clone 或 update 一次，并打印解析路径"
+,
+"en"
+:
+"Prepare a multi-repo local workspace; clone-or-update each id and print resolved paths"
+}
+,
+"id..."
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"每个 id 经 update_one 处理；输出每行一个解析后的主路径，供 ../<sibling> 引用"
+,
+"en"
+:
+"Each id goes through update_one; output is one resolved main path per line, ready for ../<sibling> references"
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 prepare 帮助"
+,
+"en"
+:
+"Show prepare help"
+}
+}
+}
+,
+"card"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"为仓库生成评分卡：1 次 GraphQL（合并 16 个 search 计数）+ 1 次 REST /stats/commit_activity，默认 --auto（TTY 表格 / 管道 YAML），全程 API，不碰本地 clone"
+,
+"en"
+:
+"Emit a repo scorecard: 1 GraphQL (carrying 24 aliased search counts + all-time totals) + 1 REST /stats/commit_activity, default --auto (TTY table / pipe YAML), API-only, no local clone touched"
+}
+,
+"id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仓库 id（如 x-cmd/install）；接受 owner/repo、gh/owner/repo、github.com/owner/repo；末尾 @wtname 会被剥离"
+,
+"en"
+:
+"Repo id (e.g. x-cmd/install); accepts owner/repo, gh/owner/repo, github.com/owner/repo; trailing @wtname is stripped"
+}
+}
+,
+"--days"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"追加一个自定义天数的统计窗口（默认 90；30/60/180/360/720 五个窗口恒在，重复值会被去掉）"
+,
+"en"
+:
+"Add one stats window of N days (default 90; the 30/60/180/360/720 windows are always present, and a duplicate value is collapsed)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"窗口天数，例如 45、270"
+,
+"en"
+:
+"Window length in days, e.g. 45 or 270"
+}
+}
+}
+,
+"--tty"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"强制以彩色表格形式输出"
+,
+"en"
+:
+"Force colored table output"
+}
+}
+,
+"--yml"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"强制输出裸 YAML"
+,
+"en"
+:
+"Force raw YAML output"
+}
+}
+,
+"--auto"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"自动选择输出格式（默认；TTY 走 --tty，管道/重定向走 --yml）"
+,
+"en"
+:
+"Auto-select output format (default; TTY -> --tty, pipe/redirect -> --yml)"
+}
+}
+,
+"--verbose|-v"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"追加 x repo loc 的代码行数统计（会 clone/更新本地仓库，是 card 唯一落盘的路径）"
+,
+"en"
+:
+"Append the x repo loc line counts (clones/updates the repo — card's only path that touches disk)"
+}
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"`--verbose` 直接复用 `x repo loc`：TTY 下在评分卡后追加同一张 CODE 表，YAML 下追加 `loc:` / `locTotal:` / `locPath:` 段（改名是为了不和 card 自己的 `total:` 撞段）。不加此选项时 card 依然全程只走 API、不碰磁盘。\n"
+,
+"en"
+:
+"`--verbose` delegates to `x repo loc`: on TTY it appends the same table after the scorecard, in YAML it appends `loc:` / `locTotal:` / `locPath:` (renamed so nothing collides with card's own `total:`). Without the flag card remains strictly API-only and never touches disk.\n"
+}
+,
+{
+"zh"
+:
+"不再触碰本地 clone：head / lastCommit / commit 数 全部走 GitHub API，仓库还没 clone 时也能直接跑，不用先 `x repo <id>` 拉一份到本地。\n"
+,
+"en"
+:
+"No local clone dependency: head / lastCommit / commit counts all come from the GitHub API, so the card runs on repos you haven't cloned yet — no need to `x repo <id>` first.\n"
+}
+,
+{
+"zh"
+:
+"管道/重定向输出为 YAML；YAML 1.2 是 JSON 的超集（对这些标量字段而言），下游按字段抽取可以走 `yq`：例如 `x repo card x-cmd/install | yq '.popularity'`。\n"
+,
+"en"
+:
+"Pipe/redirect output is raw YAML; YAML 1.2 is a JSON superset for these scalar fields, so downstream extraction via `yq` works: e.g. `x repo card x-cmd/install | yq '.popularity'`.\n"
+}
+,
+{
+"zh"
+:
+"YAML 分段：`about:`（描述 / license / homepage / head / latest ver / 采集时刻）、`timeline:`（创建 / 最后提交 / 最后发布日）、`popularity:`（star / watcher / fork / release / contributor / pullRequest / issue）、`language:` + `totalLine`（linguist 字节构成）、`recent:`（last30d/60d/90d/180d/360d/720d 六个窗口的 release / 合并 PR / open PR / closed issue / open issue / commit 计数）、`total:`（同样六项指标的全量历史数）。\n"
+,
+"en"
+:
+"YAML sections: `about:` (description / license / homepage / head / latest ver / collected-at), `timeline:` (created / last commit / last release date), `popularity:` (star / watcher / fork / release / contributor / pullRequest / issue), `language:` + `totalLine` (linguist bytes), `recent:` (release / merged PR / open PR / closed issue / open issue / commit counts over the last 30d / 60d / 90d / 180d / 360d / 720d windows), `total:` (the same six metrics over the repo's whole history).\n"
+}
+,
+{
+"zh"
+:
+"**窗口指标怎么读**：`mergedPR` / `openPR` / `closedIssue` / `openIssue` 四项都按**创建时间**筛（`created:>since`），而 open / merged / closed 是**查询当下**的状态，不是窗口末尾那一刻的快照。所以 `last180d openPR: 47` 读作「180 天内创建的 PR 中现在还开着 47 个」，而不是「180 天前有 47 个 open」。推论：`openPR` / `openIssue` 是存量而非流量，窗口拉长会单调递增并收敛到当前 open 总数（即 `total:` 那一行）；`mergedPR + openPR + 关闭但未合并 = 该窗口创建的 PR 总数`，三者互斥但不互补。\n"
+,
+"en"
+:
+"**Reading the windowed metrics**: `mergedPR` / `openPR` / `closedIssue` / `openIssue` all filter on **creation time** (`created:>since`), while open / merged / closed is the state **at query time**, not a snapshot of the window's end. So `last180d openPR: 47` means \"47 of the PRs opened in the last 180 days are still open now\", not \"there were 47 open PRs 180 days ago\". Consequences: `openPR` / `openIssue` measure backlog, not flow — they rise monotonically with window length and converge on the current open total (the `total:` row); and `mergedPR + openPR + closed-unmerged = PRs created in that window`, the three being mutually exclusive but not exhaustive of each other.\n"
+}
+,
+{
+"zh"
+:
+"**GitHub 认证**：card 需要 token 才能稳（未鉴权时 GraphQL 降到 60 req/h）。优先 `gh auth login` 后由 `gh auth token` 提供；也可设置 `$GH_TOKEN` 或 `$GITHUB_TOKEN`。\n"
+,
+"en"
+:
+"**GitHub auth**: card needs a token to be reliable (anonymous GraphQL caps at 60 req/h). Token resolution order: `gh auth token`, then `$GH_TOKEN`, then `$GITHUB_TOKEN`.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x repo card jqlang/jq"
+,
+"zh"
+:
+"基本用法: 默认 --auto，TTY 输出彩色表格，管道/重定向输出 YAML（6 个固定窗口 + total 行）"
+,
+"en"
+:
+"Basic: default --auto renders a colored table on TTY, YAML on pipe/redirect (6 fixed windows plus a total row)"
+}
+,
+{
+"cmd"
+:
+"x repo card --verbose jqlang/jq"
+,
+"zh"
+:
+"带代码行数: 追加 x repo loc 的统计结果（唯一会落盘的路径）"
+,
+"en"
+:
+"With line counts: appends the x repo loc result (the only path that touches disk)"
+}
+,
+{
+"cmd"
+:
+"x repo card x-cmd/install | yq '.popularity'"
+,
+"zh"
+:
+"抽取 popularity 段: yq 拿结构化数据"
+,
+"en"
+:
+"Extract the popularity section via yq"
+}
+,
+{
+"cmd"
+:
+"x repo card --yml x-cmd/install > card.yml"
+,
+"zh"
+:
+"YAML 文件落地: --yml 锁定裸 YAML，重定向到文件供后续工具消费"
+,
+"en"
+:
+"Persist as YAML: --yml locks raw output, redirect to a file for downstream tooling"
+}
+]
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 card 帮助"
+,
+"en"
+:
+"Show card help"
+}
+}
+}
+,
+"starhistory"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"输出仓库 star 历史的 TSV（date\\tcount），写到 ~/.x-repo/.stat/<owner>/<repo>/star.tsv 并打印到 TTY"
+,
+"en"
+:
+"Emit a star-history TSV (date\tcount) to TTY and append to ~/.x-repo/.stat/<owner>/<repo>/star.tsv"
+}
+,
+"id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仓库 id（如 x-cmd/install）；接受 owner/repo、gh/owner/repo、github.com/owner/repo；末尾 @wtname 会被剥离"
+,
+"en"
+:
+"Repo id (e.g. x-cmd/install); accepts owner/repo, gh/owner/repo, github.com/owner/repo; trailing @wtname is stripped"
+}
+}
+,
+"--rebuild"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"强制重新走 stargazers 全量重建（覆盖 ~/.x-repo/.stat/<owner>/<repo>/star.tsv）；不传则 append 模式"
+,
+"en"
+:
+"Force full stargazer walk and rebuild the file (overwriting ~/.x-repo/.stat/<owner>/<repo>/star.tsv); without it, append mode is used"
+}
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"owner 仓库：走 stargazers 全量，按 starredAt 日期分桶取最大序号 —— 完整历史。非 owner 仓库自动降级：只记当前 stargazer_count + 今天日期，后续运行累积成时间序列。\n"
+,
+"en"
+:
+"On owner repos: full stargazer walk, bucket by starredAt date, max index per date — recovers the full history. On non-owner repos, automatic fallback: just records the current stargazer_count + today's date; subsequent runs accumulate the time series.\n"
+}
+,
+{
+"zh"
+:
+"文件不存在 = rebuild 模式；文件存在 = append 模式（fetch 当前 stargazer_count 加一行 today）。同一 date 多次 append 时保留 max count。\n"
+,
+"en"
+:
+"File absent = rebuild mode; file present = append mode (fetch current stargazer_count and add one row for today). Multiple appends on the same date keep the max count.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x repo starhistory x-bash/repo"
+,
+"zh"
+:
+"首次跑：rebuild 模式，walk 全量 stargazers，输出完整历史到 TTY + 写文件"
+,
+"en"
+:
+"First run: rebuild mode, full stargazer walk, write full history to TTY and the file"
+}
+,
+{
+"cmd"
+:
+"x repo starhistory x-bash/repo"
+,
+"zh"
+:
+"后续跑：append 模式，加一行 today 的 stargazer_count"
+,
+"en"
+:
+"Subsequent runs: append mode, add one row for today's stargazer_count"
+}
+,
+{
+"cmd"
+:
+"x repo starhistory --rebuild x-bash/repo"
+,
+"zh"
+:
+"强制 rebuild（覆盖现有文件）"
+,
+"en"
+:
+"Force rebuild (overwrite the existing file)"
+}
+]
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 starhistory 帮助"
+,
+"en"
+:
+"Show starhistory help"
+}
+}
+}
+,
+"pulse"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"输出仓库 9 列指标快照 TSV 到 TTY 并写入 ~/.x-repo/.stat/<owner>/<repo>/pulse.tsv，bucket 含 10 个年点 + 12 个月点 + 31 个日点"
+,
+"en"
+:
+"Emit a 9-column metric-snapshot TSV (date\trelease\tmergedPR\topenPR\tclosedIssue\topenIssue\tcommit\tpullRequest\tissue) at 53 historical bucket dates (10 yearly + 12 monthly + 31 daily) to TTY and append to ~/.x-repo/.stat/<owner>/<repo>/pulse.tsv"
+}
+,
+"id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仓库 id（如 x-cmd/install）；接受 owner/repo、gh/owner/repo、github.com/owner/repo；末尾 @wtname 会被剥离"
+,
+"en"
+:
+"Repo id (e.g. x-cmd/install); accepts owner/repo, gh/owner/repo, github.com/owner/repo; trailing @wtname is stripped"
+}
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"与 card 的区别：card 输出「过去 N 天的窗口 delta」，pulse 输出「历史某日的快照计数」。前者增量，后者时序。\n"
+,
+"en"
+:
+"vs `x repo card`: card outputs windowed deltas (e.g. last 30d PRs added); pulse outputs point-in-time snapshots at historical dates. card = delta, pulse = series.\n"
+}
+,
+{
+"zh"
+:
+"任意仓库可用（不要求 owner）。GraphQL 拆 6 个 round-trip（4 search 桶 + metadata），单次 rebuild ≈ 6 次 HTTP。append 模式仅生成 today 一行。\n"
+,
+"en"
+:
+"Works on any repo (owner not required). GraphQL is split into 6 round-trips (4 search groups + metadata); rebuild is ~6 HTTP calls. Append mode emits only today's row.\n"
+}
+,
+{
+"zh"
+:
+"commit 列目前为 0 占位（/stats/commit_activity 未在本次重构接入）。后续 story 单独补。\n"
+,
+"en"
+:
+"The `commit` column is currently a 0 placeholder (the /stats/commit_activity fetch was deferred from this refactor). A separate story will wire it up.\n"
+}
+,
+{
+"zh"
+:
+"文件不存在 = rebuild 模式；文件存在 = append 模式。同一 date 重复 append 时 dedup 保留原行。\n"
+,
+"en"
+:
+"File absent = rebuild mode; file present = append mode. Re-appending the same date keeps the existing row (dedup).\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x repo pulse x-bash/repo"
+,
+"zh"
+:
+"首次跑：rebuild 模式，写入 53 个 bucket 点的快照"
+,
+"en"
+:
+"First run: rebuild mode, writes 53 bucket-date snapshots"
+}
+,
+{
+"cmd"
+:
+"x repo pulse x-bash/repo"
+,
+"zh"
+:
+"后续跑：append 模式，加一行 today 的快照"
+,
+"en"
+:
+"Subsequent runs: append mode, add one row for today's snapshot"
+}
+,
+{
+"cmd"
+:
+"x repo pulse BurntSushi/ripgrep"
+,
+"zh"
+:
+"非 owner 仓库也可用：snapshot 完全靠 search API delta 反推"
+,
+"en"
+:
+"Works on non-owner repos too: snapshots are derived from search API deltas"
+}
+]
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 pulse 帮助"
+,
+"en"
+:
+"Show pulse help"
+}
+}
+}
+,
+"init"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"把空裸库推进到 initialized 状态：scaffold 一份最小 README，commit 后 push 到 main，再 attach 默认 wt"
+,
+"en"
+:
+"Push an empty bare from uninitialized to initialized: scaffold a minimal README, commit, push to main, then attach the default worktree"
+}
+,
+"id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仓库 id（如 x-bash/repo）；裸库不存在则先 clone --bare"
+,
+"en"
+:
+"Repo id (e.g. x-bash/repo); clones the bare first if it doesn't exist"
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 init 帮助"
+,
+"en"
+:
+"Show init help"
+}
+}
+}
+,
+"loc"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"统计本地克隆的代码行数（tokei）"
+,
+"en"
+:
+"Count lines of code in the local clone (tokei)"
+}
+,
+"id"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仓库 id；与 x repo 其他子命令同款解析，支持 owner/repo、gh/owner/repo、/ 前缀模糊匹配、以及 <id>@<wtname> 指向某个 worktree"
+,
+"en"
+:
+"Repo id; resolved like every other x repo subcommand — owner/repo, gh/owner/repo, a /-prefixed fuzzy query, or <id>@<wtname> to target a worktree"
+}
+}
+,
+"--tty"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"强制以彩色表格形式输出"
+,
+"en"
+:
+"Force colored table output"
+}
+}
+,
+"--yml"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"强制输出裸 YAML"
+,
+"en"
+:
+"Force raw YAML output"
+}
+}
+,
+"--auto"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"自动选择输出格式（默认；TTY 走 --tty，管道/重定向走 --yml）"
+,
+"en"
+:
+"Auto-select output format (default; TTY -> --tty, pipe/redirect -> --yml)"
+}
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"与 `x repo card` 的分工：card 全程只走 API、不碰磁盘；loc 是唯一会 clone/更新并读工作区的路径。两者的语言统计口径也不同 —— card 的 `language:` 是 GitHub linguist 的**字节数**（默认分支），loc 是本地工作区的**物理行数**，linguist 会跳过 vendored/generated 目录而 tokei 照数，所以对不上是正常的。\n"
+,
+"en"
+:
+"Division of labour with `x repo card`: card is API-only and never touches disk; loc is the one path that clones/updates and reads a working tree. Their language stats also measure different things — card's `language:` is GitHub linguist **bytes** on the default branch, loc is **physical lines** in the local tree. linguist skips vendored/generated paths that tokei counts, so the two are expected to disagree.\n"
+}
+,
+{
+"zh"
+:
+"`total.code` 是 tokei 自己的 Total，**不等于**各语言行数之和：嵌在其他文件里的代码（Markdown 代码块等）计入 Total，但不计入宿主语言的顶层计数。Total 才是「这个仓库多少行」的答案，因此原样输出，没有替换成看起来更整齐的求和。\n"
+,
+"en"
+:
+"`total.code` is tokei's own Total and does **not** equal the sum of the language rows: code embedded in other files (fenced blocks in Markdown, ...) counts toward Total but not toward its host language. Total is the honest answer to \"how many lines is this repo\", so it is reported as-is rather than replaced with the tidier-looking sum.\n"
+}
+,
+{
+"zh"
+:
+"仓库有未提交改动时更新会失败（merge 被挡），此时不会中断，而是按磁盘现状统计，YAML 里多一行 `stale: true`，表格头部也会标注 `(not refreshed)`。`<id>@<wtname>` 形式则从不触发更新，直接统计该 worktree 的当前状态。\n"
+,
+"en"
+:
+"A dirty working tree makes the refresh fail (the merge is blocked). That is not fatal: the tree is counted as it is on disk, the YAML gains a `stale: true` line, and the table header is annotated `(not refreshed)`. The `<id>@<wtname>` form never triggers a refresh at all — it counts that worktree as it stands.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x repo loc jqlang/jq"
+,
+"zh"
+:
+"基本用法: 默认 --auto，TTY 输出彩色表格，管道/重定向输出 YAML"
+,
+"en"
+:
+"Basic: default --auto renders a colored table on TTY, YAML on pipe/redirect"
+}
+,
+{
+"cmd"
+:
+"x repo loc --yml x-bash/repo | yq '.total'"
+,
+"zh"
+:
+"抽取合计: yq 拿 code / comments / blanks / files"
+,
+"en"
+:
+"Extract the total: code / comments / blanks / files via yq"
+}
+,
+{
+"cmd"
+:
+"x repo loc x-bash/repo@feat~auth"
+,
+"zh"
+:
+"统计某个 worktree: @<wtname> 直接指向对应工作区，且不会触发更新"
+,
+"en"
+:
+"Count a worktree: @<wtname> targets that tree directly and skips the refresh"
+}
+]
+}
+,
+"wt"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"管理 worktree：创建或 attach（默认）、显式 create、列出（ls）、删除（rm）；仅做 worktree 层面的包装，不参与 git fetch/merge"
+,
+"en"
+:
+"Manage worktrees: create-or-attach (default), explicit create, list (ls), remove (rm); a thin worktree-only wrapper, does not fetch or merge"
+}
+,
+"#synopsis"
+:
+[
+{
+"x repo wt <id> <branch>"
+:
+null
+}
+,
+{
+"x repo wt create <id> <branch>"
+:
+null
+}
+,
+{
+"x repo wt ls <id>"
+:
+null
+}
+,
+{
+"x repo wt rm <id> <branch>"
+:
+null
+}
+]
+,
+"#subcmd:wt"
+:
+[
+"create"
+,
+"ls"
+,
+"rm"
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x repo wt x-bash/repo feat/auth"
+,
+"zh"
+:
+"默认: 在 feat/auth 上创建或 attach（缺则从 HEAD 新建，存在则 attach）"
+,
+"en"
+:
+"Default: create-or-attach on feat/auth (new branch from HEAD if absent, attaches otherwise)"
+}
+,
+{
+"cmd"
+:
+"x repo wt ls x-bash/repo"
+,
+"zh"
+:
+"列出 worktree: 裸库 + 默认 wt + 额外的 wt"
+,
+"en"
+:
+"List worktrees: bare + default wt + extras"
+}
+,
+{
+"cmd"
+:
+"x repo wt rm x-bash/repo feat/auth"
+,
+"zh"
+:
+"优雅删除: git worktree remove；不要手动 rm -rf"
+,
+"en"
+:
+"Graceful remove via git worktree remove; never rm -rf directly"
+}
+]
+,
+"create"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"为 <id> 在 <branch> 上创建 worktree（显式 create）；等价于默认形式 x repo wt <id> <branch>"
+,
+"en"
+:
+"Create a worktree for <id> on <branch> (explicit form); equivalent to the default x repo wt <id> <branch>"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仓库 id，可带 / 前缀走 fuzzywhich"
+,
+"en"
+:
+"Repository id; accepts /-prefixed fuzzy query"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"要在其上创建或 attach worktree 的分支名；缺则从 HEAD 新建，存在则 attach"
+,
+"en"
+:
+"Branch on which to create or attach the worktree; created from HEAD if absent, attached otherwise"
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 create 帮助"
+,
+"en"
+:
+"Show create help"
+}
+}
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出 <id> 仓库的所有 worktree（裸库 + 默认 wt + 额外的 wt；裸库自己不出现在 git worktree list 里）"
+,
+"en"
+:
+"List all worktrees of <id> (bare + default wt + extras; the bare itself is not in git worktree list)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仓库 id，可带 / 前缀走 fuzzywhich"
+,
+"en"
+:
+"Repository id; accepts /-prefixed fuzzy query"
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 ls 帮助"
+,
+"en"
+:
+"Show ls help"
+}
+}
+}
+,
+"rm"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"优雅删除 <id> 上名为 <branch> 的 worktree；走 git worktree remove，bare 的 worktrees/ 登记表自动同步；不要手动 rm -rf"
+,
+"en"
+:
+"Graceful remove of the worktree for <branch> on <id>; uses git worktree remove and syncs bare's worktrees/ registry; never rm -rf directly"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"仓库 id，可带 / 前缀走 fuzzywhich"
+,
+"en"
+:
+"Repository id; accepts /-prefixed fuzzy query"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"要删除的 worktree 对应分支名；必须对应已 attach 的 worktree，否则 git 报错"
+,
+"en"
+:
+"Branch name of the worktree to remove; must match an attached worktree, otherwise git errors"
+}
+}
+,
+"-h"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 rm 帮助"
+,
+"en"
+:
+"Show rm help"
+}
+}
+}
+}
+}
+

@@ -1,0 +1,247 @@
+# shellcheck shell=dash
+
+# Section: Run a command or read stdin, capture to cache, show head/tail + metadata
+#
+# teeshot gives an AI/agent a skimmable sample of a long command's output —
+# enough to decide whether to dive into the full cache. The body is wrapped in
+# lightweight TEESHOT fences (HEAD / OMITTED / TAIL, or FULL when nothing is
+# cut) so an LLM can tell the sections apart. HEAD and TAIL carry their line
+# range; OMITTED and FULL are bare markers. Output is always this shape; there
+# is no toggle.
+#
+# Public entry: ___x_cmd_teeshot_run [opts] [--] <cmd>...
+#   --head N      first N lines (default 10)
+#   --tail M      last M lines (default 10)
+#   --no-cache    skip cache write, only display
+#   --            end of options, rest is the command
+# Reads from stdin if no cmd (or if stdin is a pipe and no cmd given).
+#
+# On success: echoes nothing extra; returns 0.
+# On cmd failure: returns the cmd's exit code, but still caches the partial output.
+
+# If $1 (a file) is non-empty and does NOT end in a newline, emit one newline.
+# Guarantees a closing fence lands on its own line regardless of the captured
+# output's trailing bytes.
+___x_cmd_teeshot_ensure_trailing_newline(){
+    [ -s "$1" ] || return 0
+    # `tail -c 1 | wc -l` is 1 iff the last byte is a newline.
+    [ "$(tail -c 1 "$1" | wc -l | tr -d ' ')" -eq 0 ] && printf '\n'
+}
+
+___x_cmd_teeshot_run(){
+    ___x_cmd_teeshot_util_init
+
+    local head_n=10
+    local tail_n=10
+    local use_cache=1
+    local cmd=()
+
+    # Section: Parse options
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --head)
+                head_n="${2:-10}"
+                [ $# -ge 2 ] && shift
+                ;;
+            --head=*)
+                head_n="${1#--head=}"
+                ;;
+            --tail)
+                tail_n="${2:-10}"
+                [ $# -ge 2 ] && shift
+                ;;
+            --tail=*)
+                tail_n="${1#--tail=}"
+                ;;
+            --no-cache)
+                use_cache=0
+                ;;
+            --)
+                shift
+                cmd=("$@")
+                break
+                ;;
+            -h|--help)
+                ___x_cmd help -m teeshot
+                return 0
+                ;;
+            --*)
+                N=teeshot M="Unknown option: $1" log:ret:64
+                ;;
+            *)
+                cmd=("$@")
+                break
+                ;;
+        esac
+        shift
+    done
+
+    # Section: Clamp head_n / tail_n to non-negative integers.
+    # Non-numeric or negative inputs collapse to 0 (render no lines) rather
+    # than producing broken "1--3" ranges downstream.
+    case "$head_n" in
+        ''|*[!0-9]*) head_n=0 ;;
+    esac
+    case "$tail_n" in
+        ''|*[!0-9]*) tail_n=0 ;;
+    esac
+
+    # Section: Decide capture mode
+    # If stdin is a pipe AND no cmd given → stdin mode
+    # If stdin is a pipe AND cmd given → cmd is the cmd, stdin passes through (we don't consume)
+    # If stdin is tty AND no cmd given → error
+    # If stdin is tty AND cmd given → run cmd
+
+    local capture_mode
+    local cmd_str
+    local stdin_hash=""
+
+    if [ "${#cmd[@]}" -eq 0 ]; then
+        # No cmd given — must read stdin
+        if [ -t 0 ]; then
+            N=teeshot M="No command and stdin is a terminal" log:ret:64
+        fi
+        capture_mode=stdin
+        cmd_str="(stdin)"
+    else
+        capture_mode=cmd
+        # Join cmd array back to string for hashing/display
+        cmd_str="${cmd[*]}"
+    fi
+
+    # Section: Capture output to a temp file, run cmd if needed
+    local tmp_out
+    tmp_out="$(mktemp "${TMPDIR:-/tmp}/teeshot.XXXXXX")" || {
+        N=teeshot M="Fail to create temp file" log:ret:1
+    }
+    # Ensure cleanup on exit
+    # shellcheck disable=SC2064
+    trap "rm -f '$tmp_out'" EXIT
+
+    local exit_code=0
+    if [ "$capture_mode" = "cmd" ]; then
+        # Run the cmd, capture stdout to tmp_out
+        "$@" > "$tmp_out" 2>/dev/null
+        exit_code=$?
+    else
+        # Read all stdin into tmp_out
+        cat > "$tmp_out"
+    fi
+
+    # Section: Compute cache id
+    if [ "$capture_mode" = "stdin" ]; then
+        if ___x_cmd hascmd sha256sum; then
+            stdin_hash="$(sha256sum "$tmp_out" | awk '{print substr($1, 1, 16)}')"
+        elif ___x_cmd hascmd shasum; then
+            stdin_hash="$(shasum -a 256 "$tmp_out" | awk '{print substr($1, 1, 16)}')"
+        else
+            stdin_hash="$(wc -c < "$tmp_out" 2>/dev/null | tr -d ' ')"
+        fi
+    fi
+
+    local id
+    id="$(___x_cmd_teeshot_id "$cmd_str" "$stdin_hash")"
+
+    # Section: Stats
+    local lines
+    lines="$(wc -l < "$tmp_out" | tr -d ' ')"
+    local bytes
+    bytes="$(wc -c < "$tmp_out" | tr -d ' ')"
+    local mtime
+    mtime="$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo unknown)"
+
+    # Section: Truncation + head/tail line ranges.
+    # total <= head_n + tail_n  → not truncated (show everything).
+    # Otherwise head covers 1..head_n, tail covers (total-tail_n+1)..total,
+    # and the gap between them is omitted. head_n=0 / tail_n=0 skip that
+    # section. head_range/tail_range are shown on the HEAD/TAIL fences.
+    local total="$lines"
+    local show_threshold=$(( head_n + tail_n ))
+    local truncated=0
+    local head_range=""
+    local tail_range=""
+    local tail_start=$(( total + 1 ))
+
+    if [ "$total" -gt "$show_threshold" ] 2>/dev/null; then
+        truncated=1
+        tail_start=$(( total - tail_n + 1 ))
+        [ "$head_n" -gt 0 ] && head_range="1-${head_n}"
+        [ "$tail_n" -gt 0 ] && tail_range="${tail_start}-${total}"
+    fi
+
+    # Section: Commit to cache (unless --no-cache)
+    # Day-bucketed: write to <cache_root>/<day>/<id>.{out,meta}
+    local cache_out="$___X_CMD_TEESHOT_TODAY_DIR/$id.out"
+    local cache_meta="$___X_CMD_TEESHOT_TODAY_DIR/$id.meta"
+
+    if [ "$use_cache" = "1" ]; then
+        cp "$tmp_out" "$cache_out"
+        {
+            printf 'cmd=%s\n' "$cmd_str"
+            printf 'exit=%s\n' "$exit_code"
+            printf 'lines=%s\n' "$lines"
+            printf 'bytes=%s\n' "$bytes"
+            printf 'mtime=%s\n' "$mtime"
+            printf 'day=%s\n' "$___X_CMD_TEESHOT_TODAY"
+            printf 'host=%s\n' "${HOSTNAME:-$(uname -n 2>/dev/null || echo unknown)}"
+            printf 'cwd=%s\n' "${PWD:-unknown}"
+            printf 'capture=%s\n' "$capture_mode"
+            if [ -n "$stdin_hash" ]; then
+                printf 'stdin_sha=%s\n' "$stdin_hash"
+            fi
+        } > "$cache_meta"
+    fi
+
+    # Section: Display
+    local size_human
+    size_human="$(___x_cmd_teeshot_fmt_bytes "$bytes")"
+
+    # Block 1: cache path + size (if cached)
+    if [ "$use_cache" = "1" ]; then
+        printf '[1] cache: %s (%s)\n' "$cache_out" "$size_human"
+    else
+        printf '[1] (not cached)\n'
+    fi
+    printf '    cmd:    %s\n' "$cmd_str"
+    if [ "$capture_mode" = "cmd" ]; then
+        printf '    exit:   %s\n' "$exit_code"
+    else
+        printf '    source: stdin\n'
+    fi
+    printf '    lines:  %s  bytes: %s  mtime: %s\n' "$lines" "$bytes" "$mtime"
+
+    # Section: head + tail output
+    # TEESHOT fences mark the sections an LLM needs to tell apart. HEAD and
+    # TAIL carry their line range (which slice of the original each is);
+    # OMITTED is a bare gap marker, FULL is bare. head_n=0 / tail_n=0 skip that
+    # section. The cache .meta still keeps head_range/tail_range/omitted for
+    # `--cache info`.
+    printf '\n'
+
+    if [ "$truncated" = "0" ]; then
+        # Not truncated: wrap the full output in a FULL fence.
+        printf '<!-- TEESHOT:FULL -->\n'
+        cat "$tmp_out"
+        ___x_cmd_teeshot_ensure_trailing_newline "$tmp_out"
+        printf '<!-- /TEESHOT:FULL -->\n'
+    else
+        # Truncated: HEAD / OMITTED / TAIL fences.
+        if [ "$head_n" -gt 0 ]; then
+            printf '<!-- TEESHOT:HEAD range="%s" -->\n' "$head_range"
+            head -n "$head_n" "$tmp_out"
+            printf '<!-- /TEESHOT:HEAD -->\n'
+        fi
+        printf '<!-- TEESHOT:OMITTED -->\n'
+        if [ "$tail_n" -gt 0 ]; then
+            printf '<!-- TEESHOT:TAIL range="%s" -->\n' "$tail_range"
+            tail -n "$tail_n" "$tmp_out"
+            ___x_cmd_teeshot_ensure_trailing_newline "$tmp_out"
+            printf '<!-- /TEESHOT:TAIL -->\n'
+        fi
+    fi
+
+    # Section: cleanup & return
+    rm -f "$tmp_out"
+    trap - EXIT
+    return "$exit_code"
+}

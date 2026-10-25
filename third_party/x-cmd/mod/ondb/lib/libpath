@@ -1,0 +1,27 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_libpath(){
+    local lang=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb libpath "$@" ; return 0 ;;
+            awk|py|python|js|sqlite)
+                lang="$1"
+                shift
+                ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    local base="$___X_CMD_ROOT_MOD/ondb/lib"
+    case "$lang" in
+        awk)    printf '%s\n' "$base/awk/ontology.awk" ;;
+        py|python)
+                printf '%s\n' "$base/py" ;;
+        js)     printf '%s\n' "$base/js" ;;
+        sqlite) printf '%s\n' "$base/sqlite/README.md" ;;
+        *)      printf '%s\n' "$base" ;;
+    esac
+}

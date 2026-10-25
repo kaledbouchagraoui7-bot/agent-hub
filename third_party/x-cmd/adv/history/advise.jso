@@ -1,0 +1,260 @@
+{
+"#name"
+:
+{
+"history"
+:
+null
+,
+"zh"
+:
+"为 history 设计的增强模块"
+,
+"en"
+:
+"Enhanced modules for history"
+}
+,
+"#synopsis"
+:
+[
+{
+"x history [subcmd] [options]"
+:
+null
+}
+,
+{
+"x history"
+:
+null
+}
+,
+{
+"x history -c"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"history 模块用于查看和管理命令历史记录。\n支持命令统计、预测、搜索等功能，帮助用户更高效地使用命令行历史。\n"
+,
+"en"
+:
+"The history module is used to view and manage command history.\nIt supports command statistics, prediction, search and other functions to help users use command line history more efficiently.\n"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x history"
+,
+"zh"
+:
+"Example: 显示命令历史列表"
+,
+"en"
+:
+"Example: Display command history list"
+}
+,
+{
+"cmd"
+:
+"x history -c"
+,
+"zh"
+:
+"Example: 清除所有命令历史"
+,
+"en"
+:
+"Example: Clear all command history"
+}
+,
+{
+"cmd"
+:
+"x history predict git push"
+,
+"zh"
+:
+"Example: 预测 'git push' 后的下一行命令"
+,
+"en"
+:
+"Example: Predict next command after 'git push'"
+}
+,
+{
+"cmd"
+:
+"x history s"
+,
+"zh"
+:
+"Example: 统计使用最多的命令"
+,
+"en"
+:
+"Example: Statistics most used commands"
+}
+,
+{
+"cmd"
+:
+"x history ls"
+,
+"zh"
+:
+"Example: 列出所有历史记录"
+,
+"en"
+:
+"Example: List all history entries"
+}
+,
+{
+"cmd"
+:
+"x history last"
+,
+"zh"
+:
+"Example: 获取上一条历史命令"
+,
+"en"
+:
+"Example: Get the last history command"
+}
+]
+,
+"s|stat"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Statistics history most used command"
+,
+"zh"
+:
+"统计 history 中使用最多的命令"
+}
+}
+,
+"predict"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Predicting the Next Line of Command for a given command"
+,
+"zh"
+:
+"预测指定命令的下一行命令"
+}
+,
+"-n"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Number of predictions to display"
+,
+"zh"
+:
+"显示预测的行数"
+}
+}
+}
+,
+"env"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"View current environment variable values related to history"
+,
+"zh"
+:
+"查看当前环境有关 history 的变量值"
+}
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"List all the values of history in the current Environment"
+,
+"zh"
+:
+"列出当前环境所有的 history 值"
+}
+}
+,
+"last|last_"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Get previous history command, last output to stdout, last_ stored in `x_` variable"
+,
+"zh"
+:
+"获取上一条历史命令，last 输出到 stdout，last_ 存放到 `x_` 变量里"
+}
+}
+,
+"#subcmd_help_tip"
+:
+false
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

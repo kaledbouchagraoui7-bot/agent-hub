@@ -1,0 +1,196 @@
+{
+"#synopsis"
+:
+[
+{
+"x claw log [--since <time>] [--last <n>] [--all] [--debug]"
+:
+null
+}
+]
+,
+"--since"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"只输出指定时间以来的日志"
+,
+"en"
+:
+"Show logs since the given time"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"时间（例如 1h, 30m, 2d, 1751174400, '2025-06-29 12:00'）"
+,
+"en"
+:
+"Time (e.g. 1h, 30m, 2d, 1751174400, \"2025-06-29 12:00\")"
+}
+}
+}
+,
+"--last"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"只输出最近 N 个顶层日志条目"
+,
+"en"
+:
+"Show only the last N top-level log entries"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"条目数（如 100）"
+,
+"en"
+:
+"Number of entries (e.g. 100)"
+}
+}
+}
+,
+"--all"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"输出完整历史日志（默认只显示最近 50 条）"
+,
+"en"
+:
+"Output full history (default shows last 50 entries)"
+}
+}
+,
+"--debug"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示 claw 模块的 debug 日志（默认隐藏）"
+,
+"en"
+:
+"Show claw module debug logs (hidden by default)"
+}
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"日志包含所有 IM 平台的消息处理和心跳记录。\n默认显示最近 50 条日志，并接入实时 tail。\n支持多行日志条目（如 Agent 输出）。\n默认会隐藏 `D|claw:` 的 debug 日志，使用 --debug 可显示全部。\n心搏日志带有 [HB] 前缀，便于区分。\n"
+,
+"en"
+:
+"Logs include message processing and heartbeat records for all IM platforms.\nShows the last 50 log entries by default, then follows live output.\nSupports multi-line entries (e.g. Agent output).\n`D|claw:` debug logs are hidden by default; use --debug to show them.\nHeartbeat logs are prefixed with [HB] for easy identification.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw log"
+,
+"zh"
+:
+"场景: 实时查看最近 50 条日志，排查最近的消息处理或心跳问题"
+,
+"en"
+:
+"Scenario: View the last 50 log entries in real time to troubleshoot recent message handling or heartbeat issues"
+}
+,
+{
+"cmd"
+:
+"x claw log --since 30m"
+,
+"zh"
+:
+"场景: 查看最近 30 分钟的日志"
+,
+"en"
+:
+"Scenario: View logs from the last 30 minutes"
+}
+,
+{
+"cmd"
+:
+"x claw log --last 100"
+,
+"zh"
+:
+"场景: 查看最近 100 条日志条目"
+,
+"en"
+:
+"Scenario: View the last 100 log entries"
+}
+,
+{
+"cmd"
+:
+"x claw log --all"
+,
+"zh"
+:
+"场景: 查看完整历史日志"
+,
+"en"
+:
+"Scenario: View full historical logs"
+}
+,
+{
+"cmd"
+:
+"x claw log --debug"
+,
+"zh"
+:
+"场景: 查看完整日志，包括 claw debug 信息"
+,
+"en"
+:
+"Scenario: View full logs including claw debug information"
+}
+]
+}
+

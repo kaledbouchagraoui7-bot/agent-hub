@@ -1,0 +1,181 @@
+# shellcheck shell=dash
+
+# upgrade — refresh use-tracked binaries to their latest release.
+#
+# Reads ~/.local/data/x-eget/use.list.tsv (one row per use-install),
+# asks each upstream forge for the latest release tag, compares against
+# the snap cache's .default-version, and re-installs when they differ.
+#
+# Mirrors `apt upgrade` / `brew upgrade` shape:
+#   x eget upgrade               # all tracked binaries
+#   x eget upgrade jq            # only entries matching binname or owner/repo
+#   x eget upgrade --dry-run     # report-only, no filesystem changes
+#
+# Limitation: only refreshes binaries in the default install dir
+# (~/.local/bin). Entries installed via `--to <custom-dir>` are listed in
+# the TSV but we don't know where the binary lives, so we skip them.
+# (Same known gap as USE-install-040 in use-design.rule.yml.)
+
+# Resolve target URL → forge + owner + repo. Sets _forge, _owner, _repo
+# in caller scope via globals (simpler than threading through positional
+# args in shell). Returns 1 on unrecognized URL.
+___x_cmd_eget_upgrade___parse_target_(){
+    local _t="$1"
+    _forge=""; _owner=""; _repo=""
+    case "$_t" in
+        https://github.com/*|http://github.com/*)    _forge="github" ;;
+        https://gitlab.com/*|http://gitlab.com/*)    _forge="gitlab" ;;
+        https://codeberg.org/*|http://codeberg.org/*) _forge="codeberg" ;;
+        *) return 1 ;;
+    esac
+    local _path="${_t#*://*/}"        # strip scheme + host
+    _path="${_path%/}"
+    _owner="${_path%%/*}"
+    _repo="${_path#*/}"
+    case "$_repo" in
+        */*) _repo="${_repo%%/*}" ;;  # strip any trailing /something
+    esac
+    [ -n "$_owner" ] && [ -n "$_repo" ]
+}
+
+___x_cmd_eget_upgrade(){
+    case "${1:-}" in -h|--help) ___x_cmd help -m eget upgrade; return 0 ;; esac
+
+    local _dry=0
+    local _all=0
+    local _filter=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --dry-run|-n) _dry=1 ;;
+            --all)        _all=1 ;;
+            -*)           N=eget M="upgrade: unknown option: $1" log:ret:64; return ;;
+            *)            [ -z "$_filter" ] && _filter="$1" ;;
+        esac
+        shift
+    done
+
+    # Safety: bare `x eget upgrade` with no args and no --all is ambiguous and
+    # could surprise users who meant to type a name. Require explicit intent.
+    if [ -z "$_filter" ] && [ "$_all" != "1" ]; then
+        N=eget M="upgrade: specify a name (e.g. 'x eget upgrade jq') or pass --all to upgrade every tracked binary" log:ret:64
+        return
+    fi
+
+    local _tsv="$___X_CMD_EGET_USE_TSV"
+    [ -f "$_tsv" ] || {
+        N=eget M="upgrade: no use-tracked binaries (run 'x eget use <name>' first)" log:ret:1
+        return
+    }
+
+    local x_=""
+    ___x_cmd os name_;  local _osname="$x_"
+    ___x_cmd os arch_;  local _osarch="$x_"
+    local _system="${_osname}/${_osarch}"
+
+    local _checked=0 _upgraded=0 _up_to_date=0 _failed=0 _skipped=0
+
+    # Dry-run header (matches the per-row format below).
+    [ "$_dry" = "1" ] && printf "BINARY\tREPO\tCURRENT\tLATEST\n"
+
+    local _target _binname _forge _owner _repo
+    while IFS="$(printf '\t')" read -r _target _binname; do
+        [ -n "$_target" ] || continue
+
+        ___x_cmd_eget_upgrade___parse_target_ "$_target" || {
+            eget:info "Skipping unrecognized target URL: $_target"
+            _skipped=$((_skipped + 1))
+            continue
+        }
+
+        # Filter: by binname (exact) OR by owner/repo (exact) OR by substring of repo path.
+        if [ -n "$_filter" ]; then
+            case "$_binname" in
+                "$_filter") : ;;
+                *)
+                    case "$_owner/$_repo" in
+                        "$_filter"|*"$_filter"*) : ;;
+                        *) continue ;;
+                    esac
+                    ;;
+            esac
+        fi
+
+        _checked=$((_checked + 1))
+
+        local _snap_base="$___X_CMD_EGET_DATA/snap/${_owner}--${_repo}"
+        local _current=""
+        [ -f "$_snap_base/.default-version" ] && _current="$( cat "$_snap_base/.default-version" 2>/dev/null )"
+
+        local _release_json _latest _api_err
+        _release_json="$( ___x_cmd_eget_api_release "$_forge" "$_owner" "$_repo" "" "0" "0" 2>/dev/null )"
+        if [ -z "$_release_json" ]; then
+            # API returned empty. Capture the actual error (re-run, ccmd-cached
+            # so cheap) so the log says *why* — not just "failed". Only the
+            # first line of stderr is kept; the rest is curl's --version
+            # banner / progress noise.
+            _api_err="$( ___x_cmd_eget_api_release "$_forge" "$_owner" "$_repo" "" "0" "0" 2>&1 1>/dev/null | head -1 )"
+            if [ "$_forge" = "github" ]; then
+                eget:info "API failed for $_owner/$_repo${_api_err:+ — $_api_err}; trying HTML fallback (expanded_assets)"
+                _release_json="$( ___x_cmd_eget_api_release_html "$_forge" "$_owner" "$_repo" "" )" || {
+                    eget:info "HTML fallback also failed for $_owner/$_repo"
+                    if ___x_cmd_eget_api_is_ratelimited "$_forge"; then
+                        eget:info "GitHub API rate-limited${___X_CMD_EGET_RATE_WAIT}. Set GITHUB_TOKEN for 5000/hr."
+                    fi
+                    _failed=$((_failed + 1))
+                    continue
+                }
+                eget:info "HTML fallback OK for $_owner/$_repo"
+            else
+                eget:info "Failed to fetch latest release for $_owner/$_repo (no HTML fallback for $_forge)${_api_err:+ — $_api_err}"
+                _failed=$((_failed + 1))
+                continue
+            fi
+        fi
+        _latest="$( printf "%s" "$_release_json" | ___x_cmd jq -r '.tag_name // empty' 2>/dev/null )"
+        if [ -z "$_latest" ]; then
+            eget:info "Release JSON for $_owner/$_repo has no tag_name (API or HTML fallback returned empty/invalid JSON)"
+            _failed=$((_failed + 1))
+            continue
+        fi
+
+        if [ "$_current" = "$_latest" ]; then
+            _up_to_date=$((_up_to_date + 1))
+            [ "$_dry" = "1" ] && printf "%s\t%s\t%s\t%s (up-to-date)\n" "$_binname" "$_owner/$_repo" "${_current:-?}" "$_latest"
+            continue
+        fi
+
+        if [ "$_dry" = "1" ]; then
+            printf "%s\t%s\t%s\t%s\n" "$_binname" "$_owner/$_repo" "${_current:-none}" "$_latest"
+            continue
+        fi
+
+        # Force re-fetch into snap cache (bypass the .default-version hit).
+        ___X_CMD_EGET_QUIET=1
+        ___X_CMD_EGET_UPDATE=1
+        local x_=""
+        ___x_cmd_eget_snap_cache_ "$_owner" "$_repo" "" "$_system" "" "$_forge" "" || {
+            eget:info "Failed to refresh cache for $_owner/$_repo"
+            _failed=$((_failed + 1))
+            continue
+        }
+        local _new_bin="$x_"
+        [ -f "$_new_bin" ] && [ -x "$_new_bin" ] || {
+            eget:info "Cached binary missing or not executable: $_new_bin"
+            _failed=$((_failed + 1))
+            continue
+        }
+
+        local _dest="$___X_CMD_EGET_USE_BIN_DIR/$_binname"
+        cp "$_new_bin" "$_dest" && chmod +x "$_dest" || {
+            eget:info "Failed to install $_binname to $___X_CMD_EGET_USE_BIN_DIR"
+            _failed=$((_failed + 1))
+            continue
+        }
+
+        eget:info "Upgraded $_binname: ${_current:-none} → $_latest"
+        _upgraded=$((_upgraded + 1))
+    done < "$_tsv"
+
+    [ "$_dry" = "1" ] || \
+        eget:info "Summary — checked=$_checked upgraded=$_upgraded up-to-date=$_up_to_date failed=$_failed skipped=$_skipped"
+}

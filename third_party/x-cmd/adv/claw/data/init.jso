@@ -1,0 +1,52 @@
+{
+"#synopsis"
+:
+[
+"x claw init"
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"初始化 claw 所需的 AI Agent 配置（内部执行 x agent init）"
+,
+"en"
+:
+"Initialize the AI Agent configuration required by claw (runs x agent init internally)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"首次使用 claw 前需要先初始化 agent 配置。\n也可以直接运行 `x agent init` 完成相同操作。\n非交互环境下如果 agent 未初始化，claw 会自动尝试调用此命令。\n"
+,
+"en"
+:
+"Initialize the agent configuration before first use.\nYou can also run `x agent init` directly for the same result.\nIn non-interactive environments, claw will try to invoke this automatically if the agent is not ready.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x claw init"
+,
+"zh"
+:
+"示例: 初始化 claw 的 agent 配置"
+,
+"en"
+:
+"Example: Initialize the claw agent configuration"
+}
+]
+}
+

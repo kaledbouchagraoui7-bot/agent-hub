@@ -1,0 +1,1092 @@
+{
+"#name"
+:
+{
+"x cd"
+:
+{
+"zh"
+:
+"增强 cd 命令"
+,
+"en"
+:
+"Enhanced cd command"
+}
+}
+,
+"#keyword"
+:
+[
+"cd"
+,
+"Quick change directory"
+]
+,
+"#synopsis"
+:
+[
+{
+"x cd <folder> [command]"
+:
+null
+}
+,
+{
+"   c <folder> [command]"
+:
+null
+}
+,
+{
+"x cd [option] [,|:][keyword] [command]"
+:
+null
+}
+,
+{
+"   c [option] [,|:][keyword] [command]"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"该模块是使用 Posix shell、awk 和 find 实现的增强版 cd 命令"
+,
+"en"
+:
+"This module is an enhanced version of the `cd` command implemented using the Posix shell, awk, and find."
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"交互式环境默认设置了一个别名 `alias c='x cd'`"
+,
+"en"
+:
+"The interactive environment has a default alias set as `alias c='x cd'`"
+}
+]
+,
+"-b"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"zh"
+:
+"回退到上级某个目录"
+,
+"en"
+:
+"Go back to the parent directory"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Directory Name or Keywords"
+,
+"zh"
+:
+"目录名或关键词"
+}
+}
+}
+,
+"-f"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"zh"
+:
+"查找并跳转到某个子目录"
+,
+"en"
+:
+"Find and jump to a subdirectory"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Directory Name or Keywords"
+,
+"zh"
+:
+"目录名或关键词"
+}
+}
+}
+,
+"--history"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"History management"
+,
+"zh"
+:
+"历史记录管理"
+}
+,
+"ls"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"List all history paths"
+,
+"zh"
+:
+"列出所有的历史路径"
+}
+}
+,
+"top"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"zh"
+:
+"添加指定路径到历史记录最前面"
+,
+"en"
+:
+"Add the specified path to the top of the history"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Directory path"
+,
+"zh"
+:
+"文件夹路径"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__dir"
+}
+}
+,
+"rm"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Delete the specified path in the history"
+,
+"zh"
+:
+"删除历史记录中指定路径"
+}
+,
+"#n"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Directory path"
+,
+"zh"
+:
+"文件夹路径"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__dir"
+}
+}
+,
+"head"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Print the first few lines in the history to stdout"
+,
+"zh"
+:
+"将历史记录中的前几行打印到标准输出"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Lines"
+,
+"zh"
+:
+"行数"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__seq 1/500"
+}
+}
+,
+"clear"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Clear history"
+,
+"zh"
+:
+"清空历史记录"
+}
+}
+,
+"maxnum"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"Set the maximum number of historical records to store, default is 500"
+,
+"zh"
+:
+"设置存放历史记录的最大条数，默认 500"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Number"
+,
+"zh"
+:
+"数字"
+}
+,
+"#cand"
+:
+[
+500
+]
+}
+,
+"#tag"
+:
+[
+"inner"
+]
+}
+,
+"trim"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"修剪历史，去除无效的路径记录"
+,
+"en"
+:
+"Trim history, remove invalid path records"
+}
+}
+,
+"which"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"获取当前历史记录文件位置"
+,
+"en"
+:
+"Get the current location of the history file"
+}
+}
+}
+,
+"--relm|-r"
+:
+{
+"#subcmd"
+:
+true
+,
+"#desc"
+:
+{
+"en"
+:
+"relm management"
+,
+"zh"
+:
+"relm 管理"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"relm name=[ws|git|nm|lm]，这几个别名已被占用\n  :ws   指向当前 .x-cmd workspace 根目录\n  :git  指向当前 .git 目录\n  :nm   指向当前 .node_modules 目录\n  :lm   指向当前 .lua_modules 目录\n"
+,
+"en"
+:
+"The relm name [ws|git|nm|lm] is already taken.\n  :ws   points to the current .x-cmd workspace root directory\n  :git  points to the current .git directory\n  :nm   points to the current .node_modules directory\n  :lm   points to the current .lua_modules directory\n"
+}
+]
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"List predefined and custom relms"
+,
+"zh"
+:
+"列出预定义和自定义的 relm"
+}
+}
+,
+"set"
+:
+{
+"#synopsis"
+:
+"<name> <path>"
+,
+"#desc"
+:
+{
+"en"
+:
+"Set a custom relm directory"
+,
+"zh"
+:
+"设置自定义的 relm 目录"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Relm name"
+,
+"zh"
+:
+"Relm 名字"
+}
+}
+,
+"#2"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Directory path"
+,
+"zh"
+:
+"文件夹路径"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__file"
+}
+}
+,
+"get"
+:
+{
+"#synopsis"
+:
+"<name>"
+,
+"#desc"
+:
+{
+"en"
+:
+"Get the specified relm directory"
+,
+"zh"
+:
+"获取指定的 relm 目录"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Relm name"
+,
+"zh"
+:
+"Relm 名字"
+}
+,
+"#exec:stdout"
+:
+"x cd --relm ls | ___x_cmd_cmds_awk -v FS=\"\\t=\\t\" '{ print $1; }'"
+}
+}
+,
+"rm"
+:
+{
+"#synopsis"
+:
+"<name>"
+,
+"#desc"
+:
+{
+"en"
+:
+"Delete the specified relm directory"
+,
+"zh"
+:
+"删除指定的 relm 目录"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Relm name"
+,
+"zh"
+:
+"Relm 名字"
+}
+,
+"#exec:stdout"
+:
+"x cd --relm ls | ___x_cmd_cmds_awk -v FS=\"\\t=\\t\" '{ print $1; }'"
+}
+}
+,
+"cd"
+:
+{
+"#synopsis"
+:
+"<name>"
+,
+"#desc"
+:
+{
+"en"
+:
+"Go to the specified relm directory"
+,
+"zh"
+:
+"去到指定的 relm 目录"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Relm name"
+,
+"zh"
+:
+"Relm 名字"
+}
+,
+"#exec:stdout"
+:
+"x cd --relm ls | ___x_cmd_cmds_awk -v FS=\"\\t=\\t\" '{ print $1; }'"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"c -r ls"
+,
+"zh"
+:
+"列出环境已定义的所有 relm 值"
+,
+"en"
+:
+"List all defined relm values in the environment"
+,
+"de"
+:
+"Alle in der Umgebung definierten relm-Werte auflisten"
+,
+"es"
+:
+"Listar todos los valores de relm definidos en el entorno"
+,
+"fr"
+:
+"Lister toutes les valeurs de relm définies dans l'environnement"
+,
+"it"
+:
+"Elenca tutti i valori relm definiti nell'ambiente"
+,
+"pt"
+:
+"Listar todos os valores de relm definidos no ambiente"
+,
+"ru"
+:
+"Показать все значения relm, определённые в окружении"
+,
+"uk"
+:
+"Показати всі значення relm, визначені в оточенні"
+,
+"ja"
+:
+"環境変数で定義されたすべての relm 値を一覧表示する"
+,
+"ko"
+:
+"환경에 정의된 모든 relm 값 나열하기"
+,
+"cs"
+:
+"Vypsat všechny hodnoty relm definované v prostředí"
+,
+"pl"
+:
+"Wypisz wszystkie wartości relm zdefiniowane w środowisku"
+,
+"ro"
+:
+"Listează toate valorile relm definite în mediu"
+,
+"tr"
+:
+"Ortamda tanımlı tüm relm değerlerini listele"
+,
+"vi"
+:
+"Liệt kê tất cả các giá trị relm được định nghĩa trong môi trường"
+,
+"th"
+:
+"แสดงรายการค่า relm ทั้งหมดที่กำหนดไว้ในสภาพแวดล้อม"
+,
+"id"
+:
+"Daftar semua nilai relm yang didefinisikan di lingkungan"
+}
+,
+{
+"cmd"
+:
+"c -r get git"
+,
+"zh"
+:
+"获取名称为 git 的 relm 目录"
+,
+"en"
+:
+"Get the relm directory named git"
+,
+"de"
+:
+"Das relm-Verzeichnis mit dem Namen git abrufen"
+,
+"es"
+:
+"Obtener el directorio relm llamado git"
+,
+"fr"
+:
+"Obtenir le répertoire relm nommé git"
+,
+"it"
+:
+"Ottieni la directory relm denominata git"
+,
+"pt"
+:
+"Obter o diretório relm chamado git"
+,
+"ru"
+:
+"Получить каталог relm с именем git"
+,
+"uk"
+:
+"Отримати каталог relm з назвою git"
+,
+"ja"
+:
+"git という名前の relm ディレクトリを取得する"
+,
+"ko"
+:
+"git 이라는 이름의 relm 디렉터리 가져오기"
+,
+"cs"
+:
+"Načíst adresář relm s názvem git"
+,
+"pl"
+:
+"Pobierz katalog relm o nazwie git"
+,
+"ro"
+:
+"Obține directorul relm numit git"
+,
+"tr"
+:
+"git adlı relm dizinini al"
+,
+"vi"
+:
+"Lấy thư mục relm có tên git"
+,
+"th"
+:
+"รับไดเรกทอรี relm ชื่อ git"
+,
+"id"
+:
+"Dapatkan direktori relm bernama git"
+}
+,
+{
+"cmd"
+:
+"c -r set t /path/to/directory\nc :t\n"
+,
+"en"
+:
+"Define the alias of custom paths and redirect to the corresponding directory"
+,
+"zh"
+:
+"使用 relm 自定义路径的别名，并跳转到对应的目录"
+,
+"de"
+:
+"Alias für benutzerdefinierte Pfade festlegen und in das entsprechende Verzeichnis wechseln"
+,
+"es"
+:
+"Definir el alias de rutas personalizadas y redirigir al directorio correspondiente"
+,
+"fr"
+:
+"Définir l'alias des chemins personnalisés et se rediriger vers le répertoire correspondant"
+,
+"it"
+:
+"Definisci l'alias dei percorsi personalizzati e reindirizza alla directory corrispondente"
+,
+"pt"
+:
+"Definir o alias de caminhos personalizados e redirecionar para o diretório correspondente"
+,
+"ru"
+:
+"Определить псевдоним для пользовательских путей и перейти в соответствующий каталог"
+,
+"uk"
+:
+"Визначити псевдонім для власних шляхів і перейти до відповідного каталогу"
+,
+"ja"
+:
+"カスタムパスのエイリアスを定義し、対応するディレクトリに移動する"
+,
+"ko"
+:
+"사용자 정의 경로의 별칭을 정의하고 해당 디렉터리로 이동하기"
+,
+"cs"
+:
+"Definovat alias vlastních cest a přejít do odpovídajícího adresáře"
+,
+"pl"
+:
+"Zdefiniuj alias własnych ścieżek i przejdź do odpowiadającego katalogu"
+,
+"ro"
+:
+"Definește aliasul căilor personalizate și redirecționează către directorul corespunzător"
+,
+"tr"
+:
+"Özel yolların takma adını tanımla ve ilgili dizine yönlendir"
+,
+"vi"
+:
+"Định nghĩa bí danh cho các đường dẫn tùy chỉnh và chuyển đến thư mục tương ứng"
+,
+"th"
+:
+"กำหนดนามแฝงของเส้นทางแบบกำหนดเองและเปลี่ยนไปยังไดเรกทอรีที่ตรงกัน"
+,
+"id"
+:
+"Tentukan alias untuk jalur kustom dan arahkan ke direktori yang sesuai"
+}
+]
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Directory path"
+,
+"zh"
+:
+"文件夹路径"
+}
+,
+"#exec"
+:
+"___x_cmd_advise__dir"
+,
+"#exec:stdout:nospace"
+:
+"xrc cd; ___x_cmd_cd___comp_relm"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"c ~/.x-cmd.root"
+,
+"zh"
+:
+"切换目录，相当于 `cd ~/.x-cmd.root` 命令"
+,
+"en"
+:
+"Switch directories, which is equivalent to the `cd ~/.x-cmd.root` command"
+}
+,
+{
+"cmd"
+:
+"c /bin ls"
+,
+"zh"
+:
+"切换目录到 /bin，执行ls, 然后切换回原来目录"
+,
+"en"
+:
+"Change directory to /bin, list directory contents, then return to the original directory."
+}
+,
+{
+"cmd"
+:
+"c -"
+,
+"zh"
+:
+"切换回上一次所在的目录，相当于 `cd -` 命令"
+,
+"en"
+:
+"Switch back to the last directory, which is equivalent to the `cd -` command"
+}
+,
+{
+"cmd"
+:
+"c"
+,
+"zh"
+:
+"打开交互式 app 搜索历史路径并进行跳转，相当于 `c ,` 命令"
+,
+"en"
+:
+"Open the interactive app to search for the historical path and jump to it, equivalent to the `c ,` command"
+}
+,
+{
+"cmd"
+:
+"c ,[keyword]"
+,
+"zh"
+:
+"根据关键词从历史路径中查找匹配的路径并进行跳转"
+,
+"en"
+:
+"Find matching paths from the history path based on keyword and jump to them"
+}
+,
+{
+"cmd"
+:
+"c -b [keyword]"
+,
+"zh"
+:
+"回退到与关键词相匹配的上级目录中"
+,
+"en"
+:
+"Go back to the parent directory that matches the keyword"
+}
+,
+{
+"cmd"
+:
+"c -f [keyword]"
+,
+"zh"
+:
+"查找并跳转到与关键词相匹配的子目录中"
+,
+"en"
+:
+"Find and jump to the subdirectory that matches the keyword"
+}
+,
+{
+"cmd"
+:
+"c :<relm name>/src"
+,
+"zh"
+:
+"使用路径别名"
+,
+"en"
+:
+"Using Path Aliases"
+}
+,
+{
+"cmd"
+:
+"c -r ls"
+,
+"zh"
+:
+"列出设置的路径别名"
+,
+"en"
+:
+"List the configured path aliases"
+}
+,
+{
+"cmd"
+:
+"c ~/.x-cmd.root ls -lah"
+,
+"zh"
+:
+"选择在指定目录下执行 ls -lah 命令（不改变当前路径）"
+,
+"en"
+:
+"Run the `ls -lah` command within the specified directory (without changing the current directory)."
+}
+,
+{
+"cmd"
+:
+"c ..."
+,
+"en"
+:
+"Open the parent directory interactively and select to jump"
+,
+"zh"
+:
+"以交互方式打开上级目录，进行选择跳转"
+}
+,
+{
+"cmd"
+:
+"c /u/b"
+,
+"en"
+:
+"The system supports path abbreviations. You can search for paths in the format `/u[word]/b[word]` and the system will redirect you accordingly."
+,
+"zh"
+:
+"支持路径缩写，如搜索 `/u[word]/b[word]` 格式的路径并进行跳转"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com/mod/cd"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com/mod/cd"
+}
+}
+}
+

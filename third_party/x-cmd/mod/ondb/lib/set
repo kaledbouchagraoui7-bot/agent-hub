@@ -1,0 +1,72 @@
+# shellcheck shell=dash
+
+___x_cmd_ondb_set(){
+    local id="" file="" dir="" no_schema=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)  ___x_cmd help -m ondb set "$@" ; return 0 ;;
+            --id)       id="$2"; arg:2:shift ;;
+            --datadir|-d)   dir="$2"; arg:2:shift ;;
+            --no-schema) no_schema=1; shift ;;
+            --)         shift; break ;;
+            *)          break ;;
+        esac
+    done
+
+    [ -n "$id" ] || { N=ondb M="--id is required" log:ret:64; return; }
+    [ $# -gt 0 ] || { N=ondb M="Need at least one key=value argument" log:ret:64; return; }
+
+    if [ -n "$dir" ]; then
+        ___x_cmd_ondb_logpath_write "$dir"
+        file="$x_"
+    else
+        file="ondb.tsv"
+    fi
+
+    # Existence check + type lookup: backend-aware
+    local exists="" e_type="" db_found=""
+    ___x_cmd_ondb_backend_resolve
+    local backend="$x_"
+
+    if [ "$backend" = "sqlite" ]; then
+        ___x_cmd_ondb_db_path "$dir"
+        if [ -n "$x_" ]; then
+            db_found="$x_"
+            ___x_cmd_ondb_db_esc id
+            exists="$( sqlite3 "$db_found" "SELECT COUNT(*) FROM entities WHERE id='$id';" )"
+            e_type="$( sqlite3 "$db_found" "SELECT type FROM entities WHERE id='$id';" )"
+        fi
+    fi
+
+    if [ -z "$db_found" ]; then
+        local input
+        if [ -n "$dir" ]; then
+            ___x_cmd_ondb_logpath_read "$dir"
+            input="$x_"
+        else
+            input="cat 'ondb.tsv'"
+        fi
+        local raw_get
+        raw_get="$( eval "$input" | ___x_cmd_ondb_cawk get -v ONTO_ID="$id" -v ONTO_FMT=tsv 2>/dev/null )"
+        exists="$( printf '%s' "$raw_get" | grep -c '^type' )"
+        e_type="$( printf '%s' "$raw_get" | awk -F'\t' '$1=="type"{print $2}' )"
+    fi
+
+    [ "$exists" = "1" ] || { N=ondb M="Entity not found: $id" log:ret:64; return; }
+
+    local ms; ms="$( x epoch ms )"
+
+    local TAB; TAB="$(printf '\t')"
+    local line="set${TAB}${id}${TAB}${ms}"
+    local prop key val
+    for prop in "$@"; do
+        key="${prop%%=*}"
+        val="${prop#*=}"
+        line="${line}${TAB}${key}${TAB}${val}"
+    done
+
+    printf '%s\n' "$line" >> "$file"
+    rm -f "${file%.tsv}.lines"
+    printf "updated\t%s\n" "$id"
+}

@@ -1,0 +1,772 @@
+{
+"#name"
+:
+{
+"slash"
+:
+null
+,
+"zh"
+:
+"Agent Slash Command 管理器"
+,
+"en"
+:
+"Agent Slash Command Manager"
+}
+,
+"#desc"
+:
+{
+"zh"
+:
+"自动扫描多个 Agent 工具目录的命令和技能，注册为 shell 可直接运行的 /command。\n扫描目录: .claude, .agents, .codex, .config/opencode, .openclaw\n支持 commands/*.md 和 skills/*/SKILL.md 两种格式。\n通过 x agent request 执行，不限于特定 Agent 平台。\n"
+,
+"en"
+:
+"Auto-scan commands and skills from multiple agent tool directories, register as shell-runnable /command.\nScanned dirs: .claude, .agents, .codex, .config/opencode, .openclaw\nSupports both commands/*.md and skills/*/SKILL.md formats.\nExecutes via x agent request, not limited to a specific agent platform.\n"
+}
+,
+"#subcmd:core"
+:
+[
+"ls"
+,
+"run"
+,
+"get"
+,
+"enable"
+,
+"disable"
+]
+,
+"#subcmd:system"
+:
+[
+"init"
+,
+"compile"
+,
+"check"
+,
+"cat"
+]
+,
+"init"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"在 shell 启动时加载已编译的 slash command"
+,
+"en"
+:
+"Load compiled slash commands during shell startup"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x slash init"
+,
+"zh"
+:
+"加载已编译的 slash command"
+,
+"en"
+:
+"Load compiled slash commands"
+}
+]
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出所有已注册的 slash command"
+,
+"en"
+:
+"List all registered slash commands"
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出"
+,
+"en"
+:
+"Output in TSV format"
+}
+}
+,
+"--app"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"使用交互式应用界面"
+,
+"en"
+:
+"Use interactive app interface"
+}
+}
+,
+"--word"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"只输出命令名称"
+,
+"en"
+:
+"Output only command names"
+}
+}
+,
+"--advise"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 name:desc 格式输出，用于命令补全"
+,
+"en"
+:
+"Output in name:desc format for command completion"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x slash ls"
+,
+"zh"
+:
+"列出所有 slash command"
+,
+"en"
+:
+"List all slash commands"
+}
+,
+{
+"cmd"
+:
+"x slash ls --tsv"
+,
+"zh"
+:
+"以 TSV 格式输出"
+,
+"en"
+:
+"Output in TSV format"
+}
+,
+{
+"cmd"
+:
+"x slash ls --word"
+,
+"zh"
+:
+"只输出命令名称"
+,
+"en"
+:
+"Output only command names"
+}
+]
+}
+,
+"compile"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"编译生成 shell 函数代码"
+,
+"en"
+:
+"Compile shell function code"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x slash compile"
+,
+"zh"
+:
+"重新编译 shell 函数"
+,
+"en"
+:
+"Recompile shell functions"
+}
+]
+}
+,
+"cat"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看当前配置文件内容"
+,
+"en"
+:
+"View current configuration file content"
+}
+}
+,
+"check"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"检查并自动恢复配置"
+,
+"en"
+:
+"Check and auto-restore configuration"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x slash check"
+,
+"zh"
+:
+"检查并自动恢复 slash command 配置"
+,
+"en"
+:
+"Check and restore slash command configuration"
+}
+]
+}
+,
+"get"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"获取指定 slash command 的配置"
+,
+"en"
+:
+"Get configuration for specified slash command"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"slash command 名称"
+,
+"en"
+:
+"Slash command name"
+}
+,
+"#exec"
+:
+"___x_cmd_slash_ls_word"
+}
+}
+,
+"enable"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"启用指定的 slash command"
+,
+"en"
+:
+"Enable specified slash command(s)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"slash command 名称，可指定多个"
+,
+"en"
+:
+"Slash command name(s)"
+}
+,
+"#exec"
+:
+"___x_cmd_slash_ls_word"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x slash enable review"
+,
+"zh"
+:
+"启用 review 命令"
+,
+"en"
+:
+"Enable the review command"
+}
+]
+}
+,
+"disable"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"禁用指定的 slash command"
+,
+"en"
+:
+"Disable specified slash command(s)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"slash command 名称，可指定多个"
+,
+"en"
+:
+"Slash command name(s)"
+}
+,
+"#exec"
+:
+"___x_cmd_slash_ls_word"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x slash disable review"
+,
+"zh"
+:
+"禁用 review 命令"
+,
+"en"
+:
+"Disable the review command"
+}
+]
+}
+,
+"run"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"通过 x agent request 运行指定的 slash command"
+,
+"en"
+:
+"Run the specified slash command via x agent request"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"slash command 名称"
+,
+"en"
+:
+"Slash command name"
+}
+,
+"#exec"
+:
+"___x_cmd_slash_ls_word"
+}
+,
+"--info"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示 slash command 的元信息，不执行命令"
+,
+"en"
+:
+"Show slash command metadata without executing"
+}
+}
+,
+"--cat"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示 slash command 的完整内容，不执行命令"
+,
+"en"
+:
+"Show slash command full content without executing"
+}
+}
+,
+"--debug"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"启用调试模式，实时输出 JSON 解析和事件日志"
+,
+"en"
+:
+"Enable debug mode, output real-time JSON parsing and event logs"
+}
+}
+,
+"--quick"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"尽可能快，减少思考过程"
+,
+"en"
+:
+"As fast as possible, reduce the thinking process"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x slash run review \"Check the changes in this PR\""
+,
+"zh"
+:
+"示例: 运行 review 并传入描述"
+,
+"en"
+:
+"Example: run review with a description"
+}
+,
+{
+"cmd"
+:
+"/review \"Check the changes in this PR\""
+,
+"zh"
+:
+"示例: 直接运行并附带描述语句"
+,
+"en"
+:
+"Example: run directly with a descriptive statement"
+}
+,
+{
+"cmd"
+:
+"/review --info"
+,
+"zh"
+:
+"示例: 查看 review 的元信息"
+,
+"en"
+:
+"Example: show review metadata"
+}
+,
+{
+"cmd"
+:
+"/review --cat"
+,
+"zh"
+:
+"示例: 查看 review 的完整内容"
+,
+"en"
+:
+"Example: show review full content"
+}
+]
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x slash init"
+,
+"zh"
+:
+"加载已编译的 slash command"
+,
+"en"
+:
+"Load compiled slash commands"
+}
+,
+{
+"cmd"
+:
+"x slash ls"
+,
+"zh"
+:
+"列出所有已注册的 slash command"
+,
+"en"
+:
+"List all registered slash commands"
+}
+,
+{
+"cmd"
+:
+"x slash get review"
+,
+"zh"
+:
+"查看 review 命令的注册配置"
+,
+"en"
+:
+"Show registration config for the review command"
+}
+,
+{
+"cmd"
+:
+"x slash enable review"
+,
+"zh"
+:
+"启用 review 命令"
+,
+"en"
+:
+"Enable the review command"
+}
+,
+{
+"cmd"
+:
+"x slash disable review"
+,
+"zh"
+:
+"禁用 review 命令"
+,
+"en"
+:
+"Disable the review command"
+}
+,
+{
+"cmd"
+:
+"x slash check"
+,
+"zh"
+:
+"检查并自动恢复配置"
+,
+"en"
+:
+"Check and auto-restore configuration"
+}
+,
+{
+"cmd"
+:
+"x slash run review \"Check the changes in this PR\""
+,
+"zh"
+:
+"通过 x slash run 运行 slash command"
+,
+"en"
+:
+"Run a slash command via x slash run"
+}
+,
+{
+"cmd"
+:
+"/review \"Check the changes in this PR\""
+,
+"zh"
+:
+"示例: 审查当前代码改动"
+,
+"en"
+:
+"Example: review current code changes"
+}
+,
+{
+"cmd"
+:
+"/simplify \"This logic is too complex\""
+,
+"zh"
+:
+"示例: 简化并重构复杂代码"
+,
+"en"
+:
+"Example: simplify and refactor complex code"
+}
+,
+{
+"cmd"
+:
+"/security-review \"Audit the authentication module\""
+,
+"zh"
+:
+"示例: 进行安全审计"
+,
+"en"
+:
+"Example: run a security audit"
+}
+]
+,
+"#subcmd_help_tip"
+:
+true
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com/mod/slash"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com/mod/slash"
+}
+}
+}
+

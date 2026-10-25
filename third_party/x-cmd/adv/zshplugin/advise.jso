@@ -1,0 +1,222 @@
+{
+"#name"
+:
+{
+"zshplugin"
+:
+null
+}
+,
+"#synopsis"
+:
+null
+,
+"#desc"
+:
+{
+"en"
+:
+"zsh plugin"
+,
+"zh"
+:
+"zsh 插件"
+}
+,
+"info"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Show plugins supported by zshplugin"
+,
+"zh"
+:
+"查看 zshplugin 支持的插件"
+}
+}
+,
+"load"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"zsh plugin load"
+,
+"zh"
+:
+"加载 zsh 插件"
+}
+,
+"#n"
+:
+{
+"#cand"
+:
+[
+{
+"zsh-syntax-highlighting"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"zsh syntax highlighting"
+,
+"zh"
+:
+"zsh 语法高亮"
+}
+}
+}
+,
+{
+"zsh-autosuggestions"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"zsh autosuggestions"
+,
+"zh"
+:
+"zsh 自动补全"
+}
+}
+}
+,
+{
+"zsh-config"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"zsh config"
+,
+"zh"
+:
+"zsh 配置"
+}
+}
+}
+]
+}
+}
+,
+"hasload"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Verify whether the specified zsh plugin is loaded"
+,
+"zh"
+:
+"验证指定 zsh 插件是否加载"
+}
+,
+"#n"
+:
+{
+"#cand"
+:
+[
+{
+"zsh-syntax-highlighting"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"zsh syntax highlighting"
+,
+"zh"
+:
+"zsh 语法高亮"
+}
+}
+}
+,
+{
+"zsh-autosuggestions"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"zsh autosuggestions"
+,
+"zh"
+:
+"zsh 自动补全"
+}
+}
+}
+,
+{
+"zsh-config"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"zsh config"
+,
+"zh"
+:
+"zsh 配置"
+}
+}
+}
+]
+}
+}
+,
+"#subcmd_help_tip"
+:
+true
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

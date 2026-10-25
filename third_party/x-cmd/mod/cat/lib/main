@@ -1,0 +1,48 @@
+# shellcheck shell=dash disable=SC2094
+
+xrc:mod:lib cat color
+
+___x_cmd_cat___main(){
+    [ $# -gt 0 ] ||     set --   --help
+
+    case "$1" in
+        -)              ___x_cmd_cat_color "pipe"
+                        return $?
+                        ;;
+        -l|--lang)      local fp="pipe.$2" ; arg:2:shift ;
+                        ___x_cmd_cat_color "$fp"
+                        return $?
+                        ;;
+    esac
+
+    if [ -t 1 ]; then
+        while [ $# -gt 0 ]; do
+            case "$1" in
+                -h|--help)                  ___x_cmd help -m cat           ;;
+
+                https://*|http://*)         ___x_cmd curl "$1"      | ___x_cmd_cat_color "$1"             ;;
+                *.gz|*.xz|*.zst)            ___x_cmd zuz cat "$1"   | ___x_cmd_cat_color "${1%.*}"        ;;
+                *)                          ___x_cmd_cat_color "$1" <"$1"  ;;
+            esac
+
+            shift
+        done
+    else
+        while [ $# -gt 0 ]; do
+            case "$1" in
+                -h|--help)                  ___x_cmd help -m cat           ;;
+
+                https://*|http://*)         ___x_cmd curl "$1"             ;;
+                *.gz|*.xz|*.zst)            ___x_cmd zuz cat "$1"          ;;
+                *)                          ___x_cmd bat "$1"   ;;
+            esac
+
+            shift
+        done
+    fi
+}
+
+___x_cmd_cat___curl(){
+    ___x_cmd curl "$1" | ___x_cmd_cat_color "$1"
+}
+

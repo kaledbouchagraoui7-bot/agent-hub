@@ -1,0 +1,107 @@
+# shellcheck shell=dash
+# x test unit --name "1-ondb-crud" --desc "ondb basic crud operations" --timeout 20 --shell bash test-unit
+
+{
+    x:info "TestCase -> ondb add and get"
+    tdir="$(mktemp -d)"
+    x ondb add -d "$tdir" --type Person --name Alice --id alice -- email=alice@test.com
+    result="$(x ondb get -d "$tdir" --id alice | grep '^prop' | grep 'name=Alice' | wc -l | tr -d ' ')"
+    x assert === "$result" "1" || return $?
+    x rmrf "$tdir"
+}
+
+{
+    x:info "TestCase -> ondb link and linked"
+    tdir="$(mktemp -d)"
+    x ondb add -d "$tdir" --type Task --name T1 --id t1
+    x ondb add -d "$tdir" --type Task --name T2 --id t2
+    x ondb link -d "$tdir" --from t1 --rel blocks --to t2
+    result="$(x ondb linked -d "$tdir" --id t1 | grep -c blocks)"
+    x assert === "$result" "1" || return $?
+    x ondb unlink -d "$tdir" --from t1 --rel blocks --to t2
+    result="$(x ondb linked -d "$tdir" --id t1 | grep -c blocks || true)"
+    x assert === "$result" "0" || return $?
+    x rmrf "$tdir"
+}
+
+{
+    x:info "TestCase -> ondb set and rm"
+    tdir="$(mktemp -d)"
+    x ondb add -d "$tdir" --type Task --name T --id t -- status=open
+    x ondb set -d "$tdir" --id t status=done
+    result="$(x ondb get -d "$tdir" --id t | grep -c 'status=done')"
+    x assert === "$result" "1" || return $?
+    x ondb rm -d "$tdir" --id t
+    x ondb get -d "$tdir" --id t 2>/dev/null
+    x assert ! [ $? -eq 0 ] || return $?
+    x rmrf "$tdir"
+}
+
+{
+    x:info "TestCase -> ondb ls and query"
+    tdir="$(mktemp -d)"
+    x ondb add -d "$tdir" --type Task --name T1 --id t1 -- status=open
+    x ondb add -d "$tdir" --type Task --name T2 --id t2 -- status=done
+    x ondb add -d "$tdir" --type Person --name Alice --id alice
+    result="$(x ondb ls -d "$tdir" --type Task | wc -l | tr -d ' ')"
+    x assert === "$result" "2" || return $?
+    result="$(x ondb query -d "$tdir" --type Task --where status=open | wc -l | tr -d ' ')"
+    x assert === "$result" "1" || return $?
+    x rmrf "$tdir"
+}
+
+{
+    x:info "TestCase -> ondb validate"
+    tdir="$(mktemp -d)"
+    x ondb add -d "$tdir" --type Task --name T1 --id t1
+    x ondb add -d "$tdir" --type Task --name T2 --id t2
+    x ondb link -d "$tdir" --from t1 --rel blocks --to t2
+    x ondb validate -d "$tdir" | grep -q "valid"
+    x assert true [ $? -eq 0 ] || return $?
+    x rmrf "$tdir"
+}
+
+{
+    x:info "TestCase -> ondb compact and read after"
+    tdir="$(mktemp -d)"
+    x ondb add -d "$tdir" --type Task --name T1 --id t1
+    x ondb compact -d "$tdir" >/dev/null
+    x assert true [ -f "$tdir/snapshot."* ] || return $?
+    x ondb add -d "$tdir" --type Task --name T2 --id t2
+    result="$(x ondb ls -d "$tdir" | wc -l | tr -d ' ')"
+    x assert === "$result" "2" || return $?
+    x rmrf "$tdir"
+}
+
+{
+    x:info "TestCase -> ondb rejects -f flag (directory-only mode)"
+    tdir="$(mktemp -d)"
+    tfile="$tdir/test.tsv"
+    : > "$tfile"
+    # After commit 52c65d2 the `-f` flag was removed; only --datadir / -d
+    # is accepted. Verify `-f` is now treated as an unknown option.
+    x ondb add -f "$tfile" --type Test --name X --id x1 2>/dev/null
+    x assert true [ $? -ne 0 ] || return $?
+    x rmrf "$tdir"
+}
+
+{
+    x:info "TestCase -> ondb schema (write schema.tsv directly, validate)"
+    tdir="$(mktemp -d)"
+    # After commit 59c50e3 the `x ondb schema add` CLI was removed;
+    # schema.tsv is written directly. Verify the protocol path:
+    # write schema, add an entity that violates it, expect validate to flag.
+    cat > "$tdir/schema.tsv" << 'EOF'
+type	Task	required	name
+type	Task	enum	status	open,done
+EOF
+    x ondb add -d "$tdir" --type Task --name T --id t1 status=open
+    x ondb add -d "$tdir" --type Task --id t2 2>/dev/null
+    out="$(x ondb validate -d "$tdir" 2>&1)"
+    if ! printf '%s\n' "$out" | grep -q 't2.*missing required.*name'; then
+        echo "validate output:"
+        printf '%s\n' "$out"
+        return 1
+    fi
+    x rmrf "$tdir"
+}

@@ -1,0 +1,434 @@
+{
+"#name"
+:
+{
+"root"
+:
+null
+}
+,
+"#synopsis"
+:
+[
+"x root ls"
+,
+"x root repoint [current]"
+,
+"x root repoint apply <folder>"
+,
+"x root repoint revoke"
+,
+"x root dotconfig"
+]
+,
+"#desc"
+:
+{
+"en"
+:
+"x-cmd root directory management"
+,
+"zh"
+:
+"x-cmd 根目录管理"
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出 x-cmd 所有关键变量和对应的目录路径"
+,
+"en"
+:
+"List all key x-cmd variables and their corresponding directory paths"
+}
+}
+,
+"repoint"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"管理 x-cmd 根目录（`___X_CMD_ROOT`）的实际指向 — 把根目录实例文件夹迁移到其它位置，原位置留下符号链接"
+,
+"en"
+:
+"Manage where the x-cmd root directory (`___X_CMD_ROOT`) actually points — relocate the root instance folder elsewhere, leaving a symlink at the original location"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x root repoint"
+,
+"zh"
+:
+"查看 x-cmd 根目录实际指向的路径"
+,
+"en"
+:
+"Show the actual path the x-cmd root directory points to"
+}
+,
+{
+"cmd"
+:
+"x root repoint apply ~/disk2/x-cmd-root"
+,
+"zh"
+:
+"把根目录实例文件夹迁移到 ~/disk2/x-cmd-root，原路径 ___X_CMD_ROOT 保留为指向它的符号链接"
+,
+"en"
+:
+"Relocate the root instance folder to ~/disk2/x-cmd-root; the original ___X_CMD_ROOT path remains as a symlink pointing to it"
+}
+,
+{
+"cmd"
+:
+"x root repoint revoke"
+,
+"zh"
+:
+"撤销 repoint，把根目录实例文件夹移回默认路径"
+,
+"en"
+:
+"Undo the repoint, moving the root instance folder back to the default path"
+}
+]
+,
+"current"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"查看 x-cmd 根目录实际指向的路径（解析符号链接后的真实路径）"
+,
+"en"
+:
+"Show the actual path the x-cmd root directory points to (the real path after resolving symlinks)"
+}
+}
+,
+"apply"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"把 x-cmd 根目录实例文件夹迁移到目标路径，并让 `___X_CMD_ROOT` 通过符号链接指向它（目标路径必须不存在）"
+,
+"en"
+:
+"Move the x-cmd root instance folder to the target path and make `___X_CMD_ROOT` point to it via a symlink (the target path must not exist)"
+}
+,
+"#synopsis"
+:
+[
+"x root repoint apply <folder>"
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x root repoint apply ~/disk2/x-cmd-root"
+,
+"zh"
+:
+"把根目录实例文件夹迁移到 ~/disk2/x-cmd-root，`___X_CMD_ROOT` 变为指向它的符号链接"
+,
+"en"
+:
+"Move the root instance folder to ~/disk2/x-cmd-root; `___X_CMD_ROOT` becomes a symlink to it"
+}
+]
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目标文件夹路径（必须不存在，迁移时会自动创建）"
+,
+"en"
+:
+"Target folder path (must not exist; created automatically during the move)"
+}
+}
+,
+"#exec"
+:
+"___x_cmd_advise__file"
+}
+,
+"revoke"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"撤销 repoint — 把根目录实例文件夹移回 `___X_CMD_ROOT` 默认路径，并移除符号链接"
+,
+"en"
+:
+"Undo repoint — move the root instance folder back to the default `___X_CMD_ROOT` path and remove the symlink"
+}
+,
+"#synopsis"
+:
+[
+"x root repoint revoke"
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x root repoint revoke"
+,
+"zh"
+:
+"移回默认路径，恢复 `___X_CMD_ROOT` 为真实文件夹"
+,
+"en"
+:
+"Move back to the default path, restoring `___X_CMD_ROOT` as a real folder"
+}
+]
+}
+}
+,
+"dotconfig"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"将 x-cmd 模块配置映射到 ~/.config，方便 chezmoi 等工具进行全局同步"
+,
+"en"
+:
+"Map x-cmd module configuration to ~/.config for easy global synchronization with tools like chezmoi"
+}
+,
+"activate"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"激活 dotconfig 链接，将配置目录移动到 ~/.config/x-cmd-cfg 并创建符号链接"
+,
+"en"
+:
+"Activate dotconfig link, move config directory to ~/.config/x-cmd-cfg and create symlink"
+}
+}
+,
+"isactivated"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"检查 dotconfig 链接是否已激活"
+,
+"en"
+:
+"Check if dotconfig link is activated"
+}
+}
+,
+"status"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示 dotconfig 链接的当前状态"
+,
+"en"
+:
+"Show current status of dotconfig link"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x root dotconfig activate"
+,
+"zh"
+:
+"激活 dotconfig 链接，将配置移动到 ~/.config/x-cmd-cfg"
+,
+"en"
+:
+"Activate dotconfig link, move config to ~/.config/x-cmd-cfg"
+}
+,
+{
+"cmd"
+:
+"x root dotconfig status"
+,
+"zh"
+:
+"查看 dotconfig 链接的当前状态"
+,
+"en"
+:
+"Check current status of dotconfig link"
+}
+,
+{
+"cmd"
+:
+"x root dotconfig isactivated"
+,
+"zh"
+:
+"检查 dotconfig 是否已激活"
+,
+"en"
+:
+"Check if dotconfig is activated"
+}
+]
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x root repoint"
+,
+"zh"
+:
+"查看 x-cmd 根目录实际指向的路径"
+,
+"en"
+:
+"Show the actual path the x-cmd root directory points to"
+}
+,
+{
+"cmd"
+:
+"x root repoint apply ~/disk2/x-cmd-root"
+,
+"zh"
+:
+"把根目录实例文件夹迁移到 ~/disk2/x-cmd-root，原路径 ___X_CMD_ROOT 保留为指向它的符号链接"
+,
+"en"
+:
+"Relocate the root instance folder to ~/disk2/x-cmd-root; the original ___X_CMD_ROOT path remains as a symlink pointing to it"
+}
+,
+{
+"cmd"
+:
+"x root repoint revoke"
+,
+"zh"
+:
+"撤销 repoint，把根目录实例文件夹移回默认路径"
+,
+"en"
+:
+"Undo the repoint, moving the root instance folder back to the default path"
+}
+,
+{
+"cmd"
+:
+"x root"
+,
+"zh"
+:
+"列出 x-cmd 所有关键变量和对应的目录路径"
+,
+"en"
+:
+"List all key x-cmd variables and their corresponding directory paths"
+}
+,
+{
+"cmd"
+:
+"x root dotconfig activate"
+,
+"zh"
+:
+"激活 dotconfig 链接，将配置移动到 ~/.config/x-cmd-cfg"
+,
+"en"
+:
+"Activate dotconfig link, move config to ~/.config/x-cmd-cfg"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

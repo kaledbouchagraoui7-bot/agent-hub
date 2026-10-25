@@ -1,0 +1,93 @@
+
+# shellcheck shell=dash
+
+xrc find
+
+___x_cmd_bfind___main(){
+    [ "$#" -gt 0 ] ||   set -- .
+
+    local ___X_CMD_FIND_PRUNE="${___X_CMD_FIND_PRUNE}"
+    local ___X_CMD_FIND_HOMEPRUNE="${___X_CMD_FIND_HOMEPRUNE}"
+    local ___X_CMD_FIND_UNHIDE="${___X_CMD_FIND_UNHIDE}"
+
+    local homeprune=1
+    local hint=""
+    local prune_hidden=1
+    local maxdepth=3
+    local rootfp=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)          ___x_cmd help -m bfind ;                return 0    ;;
+            --dfs2bfs)          shift; ___x_cmd_bfind___dfs2bfs "$@" ;   return $?   ;;
+
+            --all)              maxdepth=65535;                          shift       ;;
+            --depth)            maxdepth="$2";                          shift 2     ;;
+
+            # x find prune options
+            --prune)            ___x_cmd_find_prune_add_multi "$2" ;    shift 2     ;;
+            --unhide)           ___x_cmd_find_unhide_add_multi "$2" ;   shift 2     ;;
+            --unhide-all)       prune_hidden="" ;                       shift       ;;
+            --reset-prune)      ___X_CMD_FIND_PRUNE=""
+                                shift ;;
+            --no-homeprune)     homeprune="" ;                          shift       ;;
+            --verbose|-v)       hint=1 ;                                shift       ;;
+
+            --)                 shift; break ;;
+            -*)                 break ;;
+            *)                  rootfp="$1"; shift ;;
+        esac
+    done
+
+    if [ -z "$rootfp" ] && [ $# -gt 0 ]; then
+        case "$1" in
+            -*)  rootfp="." ;;
+            *)   rootfp="$1"; shift ;;
+        esac
+    fi
+    [ -n "$rootfp" ] || rootfp="."
+
+    [ -z "$homeprune" ]    || ___x_cmd_find_homeprune "$rootfp"
+
+    local has_user_args=$#
+    local x_
+    ___x_cmd_find_prune_expr "$rootfp" "$prune_hidden"
+    [ -z "$x_" ] || eval "set -- $x_ \"\$@\""
+
+    [ "$has_user_args" -gt 0 ] || set -- "$@" -print
+
+    if [ -n "$hint" ]; then
+        if [ -n "$prune_hidden" ]; then
+            local unhide_info=""
+            [ -z "$___X_CMD_FIND_UNHIDE" ] || {
+                ___x_cmd pipevar ___X_CMD_FIND_UNHIDE   ___x_cmd line join_ ' '
+                unhide_info=" (unhide: $x_)"
+            }
+            find:info "Prune hidden directories${unhide_info}"
+        fi
+
+        if [ -n "$___X_CMD_FIND_PRUNE" ]; then
+            ___x_cmd pipevar ___X_CMD_FIND_PRUNE   ___x_cmd line join_ ' '
+            find:info "Prune patterns -> $x_"
+        fi
+
+        if [ -n "$___X_CMD_FIND_HOMEPRUNE" ]; then
+            ___x_cmd pipevar ___X_CMD_FIND_HOMEPRUNE   ___x_cmd line join_ ' '
+            find:info "Home prune directories -> $x_"
+        fi
+    fi
+
+    ___x_cmd_find___cmd "$rootfp"       \
+        -mindepth 1 -maxdepth "$maxdepth" "$@" 2>/dev/null | \
+            ___x_cmd_bfind___dfs2bfs "$rootfp"
+}
+
+___x_cmd_bfind___dfs2bfs(){
+    case "$1" in -h|--help)     ___x_cmd help -m bfind --dfs2bfs ; return 0 ;; esac
+
+    local color=""
+    ___x_cmd_is_stdout2tty && color=1
+    local base="${1:-}"
+    base="${base%/}"
+    ___x_cmd_cmds awk -v color="$color" -v base="$base" -f "$___X_CMD_ROOT_MOD/bfind/lib/awk/to_bfs_result.awk"
+}

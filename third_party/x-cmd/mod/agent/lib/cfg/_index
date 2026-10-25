@@ -1,0 +1,82 @@
+
+xrc:mod:lib agent cfg/init
+
+xrc cfgy
+___x_cmd_agent_cfg(){
+    [ "$#" -gt 0 ] || {
+        ___x_cmd_agent_init
+        return
+    }
+
+    local op="$1"; shift
+    case "$op" in
+        -h|--help)      ___x_cmd help -m agent --cfg ;;
+        *)              ___x_cmd_agent_cfg___invoke "$op" "$@" ;;
+    esac
+}
+
+___x_cmd_agent_cur(){
+    local X_help_cmd=; X_help_cmd='___x_cmd help -m agent --cur' help:arg:parse
+    ___x_cmd_agent_cfg --current "$@"
+}
+
+___x_cmd_agent_harness_(){
+    local zero_harness=
+    ___x_cmd_agent_cur zero_harness:=zero_harness 2>/dev/null
+    x_="$zero_harness"
+    [ -n "$x_" ] || ___x_cmd_agent_fallback_ || return 1
+    ___x_cmd_agent_cfg --set zero_harness="$x_"
+}
+
+___x_cmd_agent_default_harness(){
+    local x_=""; ___x_cmd_agent_harness_ "$@" || return 1
+    printf '%s\n' "$x_"
+}
+
+___x_cmd_agent_default_harness_(){
+    ___x_cmd_agent_harness_ "$@"
+}
+
+___x_cmd_agent_harness_validate(){
+    local harness="$1"
+    case "$harness" in
+        claude|claude-*|codex|codex-ds|cursor|gemini-cli|kimi-cli|opencode|x-chat) return 0 ;;
+        "") N=agent M="Please specify harness using '--harness <name>'" log:ret:64 ;;
+        *)  N=agent M="Unsupported harness '$harness'" log:ret:1 ;;
+    esac
+}
+
+___x_cmd_agent_isready(){
+    local x_=""; ___x_cmd_agent_harness_
+    case "$x_" in
+        claude|claude-*|codex|codex-ds|cursor|gemini-cli|kimi-cli|opencode|x-chat) return 0 ;;
+    esac
+    return 1
+}
+
+___X_CMD_AGENT_CFG_VARLIST="zero_harness"
+___x_cmd_agent_cfg___invoke(){
+    ___x_cmd_cfgy_obj       \
+        --prefix            ___X_CMD_AGENT_CFG_DATA                \
+        --default-config    "${___X_CMD_ROOT_CFG}/agent/X.cfg.yml" \
+        --current-config    "${___X_CMD_AGENT_LOCAL_CONFIG}"       \
+        --current-profile   "${___X_CMD_AGENT_LOCAL_PROFILE}"      \
+        --varlist           "$___X_CMD_AGENT_CFG_VARLIST"          \
+        "$@"
+}
+
+___x_cmd_agent_fallback_(){
+    agent:info "No AI harness configured yet, falling back to auto-detection mode"
+    local i; for i in claude codex cursor gemini-cli opencode kimi-cli x-chat; do
+        case "$i" in
+            x-chat)     ;;  # readiness is checked by ___x_cmd_agent_init___harness_isready via x chat --isready
+            gemini-cli) ___x_cmd_hascmd gemini || continue ;;
+            *)          ___x_cmd_hascmd "$i" || continue ;;
+        esac
+
+        ___x_cmd_agent_init___harness_isready "$i" || continue
+        x_="$i"
+        return 0
+    done
+    return 1
+}

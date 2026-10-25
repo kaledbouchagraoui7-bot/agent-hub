@@ -1,0 +1,3307 @@
+{
+ "meta": {
+  "version": "0.1.0",
+  "root": "/tmp/arena/tenants/6e6e56ee-1cde-4461-9e72-7d3e90738727/sessions/c5024215-ad64-495f-9c4f-f7ec31ba1e1c/workspace/agent-hub/obsidian-datafarm/demo_vault",
+  "directed": true,
+  "note_count": 123,
+  "edge_count": 361
+ },
+ "nodes": [
+  {
+   "id": "10-Sources/SRC-001_Attention_Is_All_You_Need.md",
+   "title": "SRC-001 Attention Is All You Need",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 9,
+   "in": 6,
+   "out": 3,
+   "words": 227,
+   "x": 23.375,
+   "y": 90.984
+  },
+  {
+   "id": "10-Sources/SRC-002_The_Design_of_Everyday_Things.md",
+   "title": "SRC-002 The Design of Everyday Things",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 4,
+   "in": 3,
+   "out": 1,
+   "words": 190,
+   "x": -23.972,
+   "y": -70.499
+  },
+  {
+   "id": "10-Sources/SRC-003_Thinking_Fast_and_Slow.md",
+   "title": "SRC-003 Thinking Fast and Slow",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 3,
+   "out": 3,
+   "words": 189,
+   "x": -135.616,
+   "y": -6.059
+  },
+  {
+   "id": "10-Sources/SRC-004_Godel_Escher_Bach.md",
+   "title": "SRC-004 Godel Escher Bach",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 6,
+   "in": 5,
+   "out": 1,
+   "words": 162,
+   "x": 94.427,
+   "y": -43.808
+  },
+  {
+   "id": "10-Sources/SRC-005_Antifragile.md",
+   "title": "SRC-005 Antifragile",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 3,
+   "in": 2,
+   "out": 1,
+   "words": 72,
+   "x": 33.551,
+   "y": -62.922
+  },
+  {
+   "id": "10-Sources/SRC-006_Site_Reliability_Workbook.md",
+   "title": "SRC-006 Site Reliability Workbook",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 8,
+   "in": 4,
+   "out": 4,
+   "words": 120,
+   "x": 123.137,
+   "y": 79.433
+  },
+  {
+   "id": "10-Sources/SRC-007_Attention_Is_All_You_Need.md",
+   "title": "SRC-007 Attention Is All You Need",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 1,
+   "out": 5,
+   "words": 81,
+   "x": 62.711,
+   "y": -47.326
+  },
+  {
+   "id": "10-Sources/SRC-008_The_Design_of_Everyday_Things.md",
+   "title": "SRC-008 The Design of Everyday Things",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 5,
+   "in": 4,
+   "out": 1,
+   "words": 87,
+   "x": -16.861,
+   "y": -29.17
+  },
+  {
+   "id": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md",
+   "title": "SRC-009 Thinking Fast and Slow",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 11,
+   "in": 7,
+   "out": 4,
+   "words": 142,
+   "x": -101.407,
+   "y": 80.864
+  },
+  {
+   "id": "10-Sources/SRC-010_Godel_Escher_Bach.md",
+   "title": "SRC-010 Godel Escher Bach",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 5,
+   "in": 3,
+   "out": 2,
+   "words": 201,
+   "x": 13.033,
+   "y": 26.776
+  },
+  {
+   "id": "10-Sources/SRC-011_Antifragile.md",
+   "title": "SRC-011 Antifragile",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 7,
+   "in": 5,
+   "out": 2,
+   "words": 193,
+   "x": -56.92,
+   "y": 30.484
+  },
+  {
+   "id": "10-Sources/SRC-012_Site_Reliability_Workbook.md",
+   "title": "SRC-012 Site Reliability Workbook",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 8,
+   "in": 7,
+   "out": 1,
+   "words": 66,
+   "x": -32.214,
+   "y": 12.743
+  },
+  {
+   "id": "10-Sources/SRC-013_Attention_Is_All_You_Need.md",
+   "title": "SRC-013 Attention Is All You Need",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 4,
+   "in": 2,
+   "out": 2,
+   "words": 193,
+   "x": 17.065,
+   "y": 317.53
+  },
+  {
+   "id": "10-Sources/SRC-014_The_Design_of_Everyday_Things.md",
+   "title": "SRC-014 The Design of Everyday Things",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 7,
+   "in": 4,
+   "out": 3,
+   "words": 177,
+   "x": -167.083,
+   "y": 32.27
+  },
+  {
+   "id": "10-Sources/SRC-015_Thinking_Fast_and_Slow.md",
+   "title": "SRC-015 Thinking Fast and Slow",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 8,
+   "in": 5,
+   "out": 3,
+   "words": 238,
+   "x": -23.479,
+   "y": 82.52
+  },
+  {
+   "id": "10-Sources/SRC-016_Godel_Escher_Bach.md",
+   "title": "SRC-016 Godel Escher Bach",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 4,
+   "in": 3,
+   "out": 1,
+   "words": 127,
+   "x": -18.941,
+   "y": -1.099
+  },
+  {
+   "id": "10-Sources/SRC-017_Antifragile.md",
+   "title": "SRC-017 Antifragile",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 7,
+   "in": 3,
+   "out": 4,
+   "words": 134,
+   "x": 90.002,
+   "y": -71.946
+  },
+  {
+   "id": "10-Sources/SRC-018_Site_Reliability_Workbook.md",
+   "title": "SRC-018 Site Reliability Workbook",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 1,
+   "in": 0,
+   "out": 1,
+   "words": 182,
+   "x": -70.171,
+   "y": -26.571
+  },
+  {
+   "id": "10-Sources/SRC-019_Attention_Is_All_You_Need.md",
+   "title": "SRC-019 Attention Is All You Need",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 6,
+   "in": 4,
+   "out": 2,
+   "words": 95,
+   "x": -10.423,
+   "y": -17.701
+  },
+  {
+   "id": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md",
+   "title": "SRC-020 The Design of Everyday Things",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 9,
+   "in": 5,
+   "out": 4,
+   "words": 207,
+   "x": -155.2,
+   "y": 187.798
+  },
+  {
+   "id": "10-Sources/SRC-021_Thinking_Fast_and_Slow.md",
+   "title": "SRC-021 Thinking Fast and Slow",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 7,
+   "in": 4,
+   "out": 3,
+   "words": 212,
+   "x": -34.122,
+   "y": 63.927
+  },
+  {
+   "id": "10-Sources/SRC-022_Godel_Escher_Bach.md",
+   "title": "SRC-022 Godel Escher Bach",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 6,
+   "in": 1,
+   "out": 5,
+   "words": 136,
+   "x": 23.592,
+   "y": -76.111
+  },
+  {
+   "id": "10-Sources/SRC-023_Antifragile.md",
+   "title": "SRC-023 Antifragile",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 3,
+   "in": 2,
+   "out": 1,
+   "words": 228,
+   "x": -135.41,
+   "y": 2.975
+  },
+  {
+   "id": "10-Sources/SRC-024_Site_Reliability_Workbook.md",
+   "title": "SRC-024 Site Reliability Workbook",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 7,
+   "in": 2,
+   "out": 5,
+   "words": 165,
+   "x": 67.234,
+   "y": -54.939
+  },
+  {
+   "id": "10-Sources/SRC-025_Attention_Is_All_You_Need.md",
+   "title": "SRC-025 Attention Is All You Need",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 7,
+   "in": 4,
+   "out": 3,
+   "words": 151,
+   "x": -168.526,
+   "y": 67.849
+  },
+  {
+   "id": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md",
+   "title": "SRC-026 The Design of Everyday Things",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 9,
+   "in": 4,
+   "out": 5,
+   "words": 142,
+   "x": -198.577,
+   "y": 56.264
+  },
+  {
+   "id": "10-Sources/SRC-027_Thinking_Fast_and_Slow.md",
+   "title": "SRC-027 Thinking Fast and Slow",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 4,
+   "out": 2,
+   "words": 183,
+   "x": 19.794,
+   "y": 109.63
+  },
+  {
+   "id": "10-Sources/SRC-028_Godel_Escher_Bach.md",
+   "title": "SRC-028 Godel Escher Bach",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 5,
+   "in": 3,
+   "out": 2,
+   "words": 195,
+   "x": 36.357,
+   "y": -350.26
+  },
+  {
+   "id": "10-Sources/SRC-029_Antifragile.md",
+   "title": "SRC-029 Antifragile",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 6,
+   "in": 4,
+   "out": 2,
+   "words": 193,
+   "x": -61.228,
+   "y": -96.533
+  },
+  {
+   "id": "10-Sources/SRC-030_Site_Reliability_Workbook.md",
+   "title": "SRC-030 Site Reliability Workbook",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 5,
+   "in": 1,
+   "out": 4,
+   "words": 122,
+   "x": 281.647,
+   "y": 38.104
+  },
+  {
+   "id": "10-Sources/SRC-031_Attention_Is_All_You_Need.md",
+   "title": "SRC-031 Attention Is All You Need",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 2,
+   "in": 1,
+   "out": 1,
+   "words": 91,
+   "x": -14.73,
+   "y": 83.886
+  },
+  {
+   "id": "10-Sources/SRC-032_The_Design_of_Everyday_Things.md",
+   "title": "SRC-032 The Design of Everyday Things",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 4,
+   "in": 2,
+   "out": 2,
+   "words": 207,
+   "x": 53.252,
+   "y": -291.665
+  },
+  {
+   "id": "10-Sources/SRC-033_Thinking_Fast_and_Slow.md",
+   "title": "SRC-033 Thinking Fast and Slow",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 6,
+   "in": 3,
+   "out": 3,
+   "words": 167,
+   "x": 119.098,
+   "y": -27.57
+  },
+  {
+   "id": "10-Sources/SRC-034_Godel_Escher_Bach.md",
+   "title": "SRC-034 Godel Escher Bach",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 6,
+   "in": 3,
+   "out": 3,
+   "words": 91,
+   "x": 2.972,
+   "y": -240.105
+  },
+  {
+   "id": "10-Sources/SRC-035_Antifragile.md",
+   "title": "SRC-035 Antifragile",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 8,
+   "in": 3,
+   "out": 5,
+   "words": 78,
+   "x": -23.714,
+   "y": -23.616
+  },
+  {
+   "id": "10-Sources/SRC-036_Site_Reliability_Workbook.md",
+   "title": "SRC-036 Site Reliability Workbook",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 8,
+   "in": 3,
+   "out": 5,
+   "words": 169,
+   "x": -53.218,
+   "y": -17.912
+  },
+  {
+   "id": "10-Sources/SRC-037_Attention_Is_All_You_Need.md",
+   "title": "SRC-037 Attention Is All You Need",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 3,
+   "in": 1,
+   "out": 2,
+   "words": 169,
+   "x": -35.986,
+   "y": 72.583
+  },
+  {
+   "id": "10-Sources/SRC-038_The_Design_of_Everyday_Things.md",
+   "title": "SRC-038 The Design of Everyday Things",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 5,
+   "in": 4,
+   "out": 1,
+   "words": 206,
+   "x": 37.64,
+   "y": -10.684
+  },
+  {
+   "id": "10-Sources/SRC-039_Thinking_Fast_and_Slow.md",
+   "title": "SRC-039 Thinking Fast and Slow",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 2,
+   "in": 1,
+   "out": 1,
+   "words": 197,
+   "x": 19.693,
+   "y": 72.333
+  },
+  {
+   "id": "10-Sources/SRC-040_Godel_Escher_Bach.md",
+   "title": "SRC-040 Godel Escher Bach",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 1,
+   "out": 5,
+   "words": 85,
+   "x": 20.538,
+   "y": 82.194
+  },
+  {
+   "id": "10-Sources/SRC-041_Antifragile.md",
+   "title": "SRC-041 Antifragile",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 5,
+   "in": 0,
+   "out": 5,
+   "words": 219,
+   "x": -7.317,
+   "y": 61.568
+  },
+  {
+   "id": "10-Sources/SRC-042_Site_Reliability_Workbook.md",
+   "title": "SRC-042 Site Reliability Workbook",
+   "folder": "10-Sources",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 8,
+   "in": 4,
+   "out": 4,
+   "words": 182,
+   "x": -9.999,
+   "y": -61.312
+  },
+  {
+   "id": "20-Entities/ENT-001_Vector_Database.md",
+   "title": "ENT-001 Vector Database",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 8,
+   "in": 4,
+   "out": 4,
+   "words": 149,
+   "x": -25.099,
+   "y": 17.296
+  },
+  {
+   "id": "20-Entities/ENT-002_Retrieval_Pipeline.md",
+   "title": "ENT-002 Retrieval Pipeline",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 5,
+   "in": 2,
+   "out": 3,
+   "words": 99,
+   "x": -56.717,
+   "y": 23.054
+  },
+  {
+   "id": "20-Entities/ENT-003_Evaluation_Harness.md",
+   "title": "ENT-003 Evaluation Harness",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 7,
+   "in": 6,
+   "out": 1,
+   "words": 185,
+   "x": 16.919,
+   "y": 15.834
+  },
+  {
+   "id": "20-Entities/ENT-004_Schema_Registry.md",
+   "title": "ENT-004 Schema Registry",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 6,
+   "in": 4,
+   "out": 2,
+   "words": 60,
+   "x": -18.577,
+   "y": 23.287
+  },
+  {
+   "id": "20-Entities/ENT-005_Event_Bus.md",
+   "title": "ENT-005 Event Bus",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 8,
+   "in": 5,
+   "out": 3,
+   "words": 236,
+   "x": 84.308,
+   "y": -11.975
+  },
+  {
+   "id": "20-Entities/ENT-006_Provenance_Ledger.md",
+   "title": "ENT-006 Provenance Ledger",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 6,
+   "in": 1,
+   "out": 5,
+   "words": 123,
+   "x": 5.63,
+   "y": 4.682
+  },
+  {
+   "id": "20-Entities/ENT-007_Vector_Database.md",
+   "title": "ENT-007 Vector Database",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 1,
+   "out": 5,
+   "words": 222,
+   "x": -61.383,
+   "y": -20.778
+  },
+  {
+   "id": "20-Entities/ENT-008_Retrieval_Pipeline.md",
+   "title": "ENT-008 Retrieval Pipeline",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 4,
+   "out": 2,
+   "words": 112,
+   "x": 88.879,
+   "y": 1.035
+  },
+  {
+   "id": "20-Entities/ENT-009_Evaluation_Harness.md",
+   "title": "ENT-009 Evaluation Harness",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 6,
+   "in": 1,
+   "out": 5,
+   "words": 137,
+   "x": 10.906,
+   "y": -16.321
+  },
+  {
+   "id": "20-Entities/ENT-010_Schema_Registry.md",
+   "title": "ENT-010 Schema Registry",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 11,
+   "in": 8,
+   "out": 3,
+   "words": 146,
+   "x": -33.174,
+   "y": 34.943
+  },
+  {
+   "id": "20-Entities/ENT-011_Event_Bus.md",
+   "title": "ENT-011 Event Bus",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 3,
+   "out": 3,
+   "words": 84,
+   "x": 12.993,
+   "y": -109.622
+  },
+  {
+   "id": "20-Entities/ENT-012_Provenance_Ledger.md",
+   "title": "ENT-012 Provenance Ledger",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 7,
+   "in": 3,
+   "out": 4,
+   "words": 221,
+   "x": -76.193,
+   "y": 38.793
+  },
+  {
+   "id": "20-Entities/ENT-013_Vector_Database.md",
+   "title": "ENT-013 Vector Database",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 2,
+   "in": 1,
+   "out": 1,
+   "words": 217,
+   "x": -33.764,
+   "y": -25.975
+  },
+  {
+   "id": "20-Entities/ENT-014_Retrieval_Pipeline.md",
+   "title": "ENT-014 Retrieval Pipeline",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 2,
+   "in": 1,
+   "out": 1,
+   "words": 219,
+   "x": -46.58,
+   "y": -2.551
+  },
+  {
+   "id": "20-Entities/ENT-015_Evaluation_Harness.md",
+   "title": "ENT-015 Evaluation Harness",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 2,
+   "out": 4,
+   "words": 184,
+   "x": -59.031,
+   "y": 15.917
+  },
+  {
+   "id": "20-Entities/ENT-016_Schema_Registry.md",
+   "title": "ENT-016 Schema Registry",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 7,
+   "in": 3,
+   "out": 4,
+   "words": 163,
+   "x": -37.476,
+   "y": 4.077
+  },
+  {
+   "id": "20-Entities/ENT-017_Event_Bus.md",
+   "title": "ENT-017 Event Bus",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 11,
+   "in": 7,
+   "out": 4,
+   "words": 102,
+   "x": 21.529,
+   "y": -90.141
+  },
+  {
+   "id": "20-Entities/ENT-018_Provenance_Ledger.md",
+   "title": "ENT-018 Provenance Ledger",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 3,
+   "in": 1,
+   "out": 2,
+   "words": 205,
+   "x": -27.226,
+   "y": 42.931
+  },
+  {
+   "id": "20-Entities/ENT-019_Vector_Database.md",
+   "title": "ENT-019 Vector Database",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 6,
+   "in": 4,
+   "out": 2,
+   "words": 206,
+   "x": -67.978,
+   "y": -14.763
+  },
+  {
+   "id": "20-Entities/ENT-020_Retrieval_Pipeline.md",
+   "title": "ENT-020 Retrieval Pipeline",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 4,
+   "in": 1,
+   "out": 3,
+   "words": 63,
+   "x": -38.497,
+   "y": 47.842
+  },
+  {
+   "id": "20-Entities/ENT-021_Evaluation_Harness.md",
+   "title": "ENT-021 Evaluation Harness",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 5,
+   "in": 4,
+   "out": 1,
+   "words": 85,
+   "x": -54.194,
+   "y": -0.973
+  },
+  {
+   "id": "20-Entities/ENT-022_Schema_Registry.md",
+   "title": "ENT-022 Schema Registry",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 4,
+   "out": 2,
+   "words": 108,
+   "x": 26.427,
+   "y": -117.645
+  },
+  {
+   "id": "20-Entities/ENT-023_Event_Bus.md",
+   "title": "ENT-023 Event Bus",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 11,
+   "in": 8,
+   "out": 3,
+   "words": 119,
+   "x": -19.681,
+   "y": -9.682
+  },
+  {
+   "id": "20-Entities/ENT-024_Provenance_Ledger.md",
+   "title": "ENT-024 Provenance Ledger",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 10,
+   "in": 7,
+   "out": 3,
+   "words": 91,
+   "x": -41.76,
+   "y": -55.518
+  },
+  {
+   "id": "20-Entities/ENT-025_Vector_Database.md",
+   "title": "ENT-025 Vector Database",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 4,
+   "in": 1,
+   "out": 3,
+   "words": 207,
+   "x": -28.405,
+   "y": -49.704
+  },
+  {
+   "id": "20-Entities/ENT-026_Retrieval_Pipeline.md",
+   "title": "ENT-026 Retrieval Pipeline",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 6,
+   "in": 2,
+   "out": 4,
+   "words": 95,
+   "x": 12.95,
+   "y": -8.11
+  },
+  {
+   "id": "20-Entities/ENT-027_Evaluation_Harness.md",
+   "title": "ENT-027 Evaluation Harness",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 5,
+   "in": 3,
+   "out": 2,
+   "words": 58,
+   "x": -32.464,
+   "y": -11.459
+  },
+  {
+   "id": "20-Entities/ENT-028_Schema_Registry.md",
+   "title": "ENT-028 Schema Registry",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 3,
+   "in": 1,
+   "out": 2,
+   "words": 92,
+   "x": 6.469,
+   "y": 32.72
+  },
+  {
+   "id": "20-Entities/ENT-029_Event_Bus.md",
+   "title": "ENT-029 Event Bus",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 6,
+   "in": 4,
+   "out": 2,
+   "words": 84,
+   "x": -64.453,
+   "y": -7.14
+  },
+  {
+   "id": "20-Entities/ENT-030_Provenance_Ledger.md",
+   "title": "ENT-030 Provenance Ledger",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 4,
+   "in": 3,
+   "out": 1,
+   "words": 224,
+   "x": -38.18,
+   "y": -4.643
+  },
+  {
+   "id": "20-Entities/ENT-031_Vector_Database.md",
+   "title": "ENT-031 Vector Database",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 1,
+   "out": 5,
+   "words": 209,
+   "x": -74.37,
+   "y": 16.222
+  },
+  {
+   "id": "20-Entities/ENT-032_Retrieval_Pipeline.md",
+   "title": "ENT-032 Retrieval Pipeline",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 5,
+   "in": 3,
+   "out": 2,
+   "words": 64,
+   "x": -18.217,
+   "y": -37.845
+  },
+  {
+   "id": "20-Entities/ENT-033_Evaluation_Harness.md",
+   "title": "ENT-033 Evaluation Harness",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 9,
+   "in": 4,
+   "out": 5,
+   "words": 82,
+   "x": -18.758,
+   "y": 11.764
+  },
+  {
+   "id": "20-Entities/ENT-034_Schema_Registry.md",
+   "title": "ENT-034 Schema Registry",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 8,
+   "in": 5,
+   "out": 3,
+   "words": 189,
+   "x": -56.024,
+   "y": -9.655
+  },
+  {
+   "id": "20-Entities/ENT-035_Event_Bus.md",
+   "title": "ENT-035 Event Bus",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 3,
+   "in": 0,
+   "out": 3,
+   "words": 180,
+   "x": -47.189,
+   "y": -28.578
+  },
+  {
+   "id": "20-Entities/ENT-036_Provenance_Ledger.md",
+   "title": "ENT-036 Provenance Ledger",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 3,
+   "in": 1,
+   "out": 2,
+   "words": 120,
+   "x": -24.088,
+   "y": -91.707
+  },
+  {
+   "id": "20-Entities/ENT-037_Vector_Database.md",
+   "title": "ENT-037 Vector Database",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 5,
+   "in": 3,
+   "out": 2,
+   "words": 89,
+   "x": -9.946,
+   "y": 10.9
+  },
+  {
+   "id": "20-Entities/ENT-038_Retrieval_Pipeline.md",
+   "title": "ENT-038 Retrieval Pipeline",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 6,
+   "in": 5,
+   "out": 1,
+   "words": 163,
+   "x": -17.634,
+   "y": -51.377
+  },
+  {
+   "id": "20-Entities/ENT-039_Evaluation_Harness.md",
+   "title": "ENT-039 Evaluation Harness",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 3,
+   "in": 2,
+   "out": 1,
+   "words": 111,
+   "x": -57.773,
+   "y": 7.777
+  },
+  {
+   "id": "20-Entities/ENT-040_Schema_Registry.md",
+   "title": "ENT-040 Schema Registry",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 2,
+   "in": 1,
+   "out": 1,
+   "words": 221,
+   "x": 18.469,
+   "y": -246.12
+  },
+  {
+   "id": "20-Entities/ENT-041_Event_Bus.md",
+   "title": "ENT-041 Event Bus",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 6,
+   "in": 5,
+   "out": 1,
+   "words": 89,
+   "x": -39.346,
+   "y": 17.528
+  },
+  {
+   "id": "20-Entities/ENT-042_Provenance_Ledger.md",
+   "title": "ENT-042 Provenance Ledger",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 5,
+   "in": 2,
+   "out": 3,
+   "words": 93,
+   "x": 42.469,
+   "y": -3.262
+  },
+  {
+   "id": "20-Entities/ENT-043_Vector_Database.md",
+   "title": "ENT-043 Vector Database",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 4,
+   "in": 2,
+   "out": 2,
+   "words": 78,
+   "x": 1.779,
+   "y": -43.768
+  },
+  {
+   "id": "20-Entities/ENT-044_Retrieval_Pipeline.md",
+   "title": "ENT-044 Retrieval Pipeline",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 6,
+   "in": 2,
+   "out": 4,
+   "words": 103,
+   "x": -47.348,
+   "y": -11.422
+  },
+  {
+   "id": "20-Entities/ENT-045_Evaluation_Harness.md",
+   "title": "ENT-045 Evaluation Harness",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 8,
+   "in": 4,
+   "out": 4,
+   "words": 112,
+   "x": -80.449,
+   "y": 50.502
+  },
+  {
+   "id": "20-Entities/ENT-046_Schema_Registry.md",
+   "title": "ENT-046 Schema Registry",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 4,
+   "in": 1,
+   "out": 3,
+   "words": 62,
+   "x": 21.047,
+   "y": -11.695
+  },
+  {
+   "id": "20-Entities/ENT-047_Event_Bus.md",
+   "title": "ENT-047 Event Bus",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 9,
+   "in": 4,
+   "out": 5,
+   "words": 150,
+   "x": 48.593,
+   "y": 52.428
+  },
+  {
+   "id": "20-Entities/ENT-048_Provenance_Ledger.md",
+   "title": "ENT-048 Provenance Ledger",
+   "folder": "20-Entities",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 11,
+   "in": 6,
+   "out": 5,
+   "words": 124,
+   "x": -28.664,
+   "y": 24.186
+  },
+  {
+   "id": "30-Claims/CLM-001_Embeddings_degrade_without_reindex.md",
+   "title": "CLM-001 Embeddings degrade without reindex",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 3,
+   "in": 2,
+   "out": 1,
+   "words": 121,
+   "x": -30.433,
+   "y": -113.053
+  },
+  {
+   "id": "30-Claims/CLM-002_Batch_size_changes_recall.md",
+   "title": "CLM-002 Batch size changes recall",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 3,
+   "in": 1,
+   "out": 2,
+   "words": 89,
+   "x": 18.983,
+   "y": 7.333
+  },
+  {
+   "id": "30-Claims/CLM-003_Provenance_is_the_product.md",
+   "title": "CLM-003 Provenance is the product",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 6,
+   "in": 3,
+   "out": 3,
+   "words": 191,
+   "x": -46.525,
+   "y": 51.578
+  },
+  {
+   "id": "30-Claims/CLM-004_Latency_budget_is_200ms.md",
+   "title": "CLM-004 Latency budget is 200ms",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 7,
+   "in": 3,
+   "out": 4,
+   "words": 78,
+   "x": -8.122,
+   "y": -27.748
+  },
+  {
+   "id": "30-Claims/CLM-005_Embeddings_degrade_without_reindex.md",
+   "title": "CLM-005 Embeddings degrade without reindex",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 4,
+   "in": 2,
+   "out": 2,
+   "words": 74,
+   "x": 13.912,
+   "y": -33.318
+  },
+  {
+   "id": "30-Claims/CLM-006_Batch_size_changes_recall.md",
+   "title": "CLM-006 Batch size changes recall",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 2,
+   "in": 1,
+   "out": 1,
+   "words": 74,
+   "x": -2.411,
+   "y": -138.447
+  },
+  {
+   "id": "30-Claims/CLM-007_Provenance_is_the_product.md",
+   "title": "CLM-007 Provenance is the product",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 3,
+   "in": 2,
+   "out": 1,
+   "words": 108,
+   "x": -1.108,
+   "y": -84.303
+  },
+  {
+   "id": "30-Claims/CLM-008_Latency_budget_is_200ms.md",
+   "title": "CLM-008 Latency budget is 200ms",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 8,
+   "in": 5,
+   "out": 3,
+   "words": 62,
+   "x": 2.495,
+   "y": -14.318
+  },
+  {
+   "id": "30-Claims/CLM-009_Embeddings_degrade_without_reindex.md",
+   "title": "CLM-009 Embeddings degrade without reindex",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 7,
+   "in": 2,
+   "out": 5,
+   "words": 101,
+   "x": -65.584,
+   "y": 52.234
+  },
+  {
+   "id": "30-Claims/CLM-010_Batch_size_changes_recall.md",
+   "title": "CLM-010 Batch size changes recall",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 7,
+   "in": 2,
+   "out": 5,
+   "words": 135,
+   "x": -66.032,
+   "y": 19.204
+  },
+  {
+   "id": "30-Claims/CLM-011_Provenance_is_the_product.md",
+   "title": "CLM-011 Provenance is the product",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 4,
+   "in": 2,
+   "out": 2,
+   "words": 135,
+   "x": -96.137,
+   "y": 19.807
+  },
+  {
+   "id": "30-Claims/CLM-012_Latency_budget_is_200ms.md",
+   "title": "CLM-012 Latency budget is 200ms",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 5,
+   "in": 2,
+   "out": 3,
+   "words": 134,
+   "x": -15.731,
+   "y": 33.669
+  },
+  {
+   "id": "30-Claims/CLM-013_Embeddings_degrade_without_reindex.md",
+   "title": "CLM-013 Embeddings degrade without reindex",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 8,
+   "in": 3,
+   "out": 5,
+   "words": 72,
+   "x": -44.171,
+   "y": 10.103
+  },
+  {
+   "id": "30-Claims/CLM-014_Batch_size_changes_recall.md",
+   "title": "CLM-014 Batch size changes recall",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 4,
+   "in": 3,
+   "out": 1,
+   "words": 56,
+   "x": -6.817,
+   "y": -36.555
+  },
+  {
+   "id": "30-Claims/CLM-015_Provenance_is_the_product.md",
+   "title": "CLM-015 Provenance is the product",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 5,
+   "in": 0,
+   "out": 5,
+   "words": 182,
+   "x": -53.417,
+   "y": -91.718
+  },
+  {
+   "id": "30-Claims/CLM-016_Latency_budget_is_200ms.md",
+   "title": "CLM-016 Latency budget is 200ms",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 7,
+   "in": 3,
+   "out": 4,
+   "words": 164,
+   "x": 5.382,
+   "y": -35.693
+  },
+  {
+   "id": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md",
+   "title": "CLM-017 Embeddings degrade without reindex",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 10,
+   "in": 7,
+   "out": 3,
+   "words": 147,
+   "x": 70.537,
+   "y": -67.396
+  },
+  {
+   "id": "30-Claims/CLM-018_Batch_size_changes_recall.md",
+   "title": "CLM-018 Batch size changes recall",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 6,
+   "in": 4,
+   "out": 2,
+   "words": 69,
+   "x": -24.789,
+   "y": 5.471
+  },
+  {
+   "id": "30-Claims/CLM-019_Provenance_is_the_product.md",
+   "title": "CLM-019 Provenance is the product",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 3,
+   "in": 2,
+   "out": 1,
+   "words": 212,
+   "x": 16.87,
+   "y": -22.374
+  },
+  {
+   "id": "30-Claims/CLM-020_Latency_budget_is_200ms.md",
+   "title": "CLM-020 Latency budget is 200ms",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 4,
+   "in": 1,
+   "out": 3,
+   "words": 81,
+   "x": -29.597,
+   "y": -2.467
+  },
+  {
+   "id": "30-Claims/CLM-021_Embeddings_degrade_without_reindex.md",
+   "title": "CLM-021 Embeddings degrade without reindex",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 4,
+   "in": 0,
+   "out": 4,
+   "words": 217,
+   "x": -10.698,
+   "y": 2.077
+  },
+  {
+   "id": "30-Claims/CLM-022_Batch_size_changes_recall.md",
+   "title": "CLM-022 Batch size changes recall",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 5,
+   "in": 2,
+   "out": 3,
+   "words": 100,
+   "x": 64.0,
+   "y": -8.665
+  },
+  {
+   "id": "30-Claims/CLM-023_Provenance_is_the_product.md",
+   "title": "CLM-023 Provenance is the product",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 7,
+   "in": 3,
+   "out": 4,
+   "words": 204,
+   "x": 16.291,
+   "y": -58.123
+  },
+  {
+   "id": "30-Claims/CLM-024_Latency_budget_is_200ms.md",
+   "title": "CLM-024 Latency budget is 200ms",
+   "folder": "30-Claims",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 4,
+   "in": 2,
+   "out": 2,
+   "words": 135,
+   "x": 44.633,
+   "y": -47.906
+  },
+  {
+   "id": "40-Projects/PRJ-001_Data_Farm.md",
+   "title": "PRJ-001 Data Farm",
+   "folder": "40-Projects",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 5,
+   "in": 2,
+   "out": 3,
+   "words": 155,
+   "x": 104.467,
+   "y": 24.85
+  },
+  {
+   "id": "40-Projects/PRJ-002_Second_Brain_Ingest.md",
+   "title": "PRJ-002 Second Brain Ingest",
+   "folder": "40-Projects",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 8,
+   "in": 4,
+   "out": 4,
+   "words": 126,
+   "x": -62.866,
+   "y": 0.556
+  },
+  {
+   "id": "40-Projects/PRJ-003_Graph_QA.md",
+   "title": "PRJ-003 Graph QA",
+   "folder": "40-Projects",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 1,
+   "in": 0,
+   "out": 1,
+   "words": 117,
+   "x": -41.919,
+   "y": 36.336
+  },
+  {
+   "id": "50-Areas/AREA_Architecture.md",
+   "title": "AREA Architecture",
+   "folder": "50-Areas",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 4,
+   "in": 2,
+   "out": 2,
+   "words": 63,
+   "x": -70.152,
+   "y": 5.589
+  },
+  {
+   "id": "50-Areas/AREA_Data_Quality.md",
+   "title": "AREA Data Quality",
+   "folder": "50-Areas",
+   "tags": [
+    "datafarm",
+    "lorem/status-draft"
+   ],
+   "degree": 4,
+   "in": 2,
+   "out": 2,
+   "words": 189,
+   "x": -87.82,
+   "y": 27.937
+  },
+  {
+   "id": "50-Areas/AREA_Security.md",
+   "title": "AREA Security",
+   "folder": "50-Areas",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 5,
+   "in": 4,
+   "out": 1,
+   "words": 126,
+   "x": -6.092,
+   "y": 51.416
+  },
+  {
+   "id": "90-Meta/Conventions.md",
+   "title": "Conventions",
+   "folder": "90-Meta",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 7,
+   "in": 2,
+   "out": 5,
+   "words": 195,
+   "x": -9.461,
+   "y": 22.372
+  },
+  {
+   "id": "90-Meta/Home.md",
+   "title": "Home",
+   "folder": "90-Meta",
+   "tags": [
+    "datafarm",
+    "lorem/status-verified"
+   ],
+   "degree": 18,
+   "in": 1,
+   "out": 17,
+   "words": 128,
+   "x": -1.744,
+   "y": -0.09
+  },
+  {
+   "id": "90-Meta/Inbox.md",
+   "title": "Inbox",
+   "folder": "90-Meta",
+   "tags": [
+    "datafarm",
+    "lorem/status-stale"
+   ],
+   "degree": 10,
+   "in": 6,
+   "out": 4,
+   "words": 102,
+   "x": 13.24,
+   "y": 0.593
+  }
+ ],
+ "edges": [
+  {
+   "source": "10-Sources/SRC-001_Attention_Is_All_You_Need.md",
+   "target": "10-Sources/SRC-021_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-001_Attention_Is_All_You_Need.md",
+   "target": "20-Entities/ENT-010_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-001_Attention_Is_All_You_Need.md",
+   "target": "90-Meta/Inbox.md"
+  },
+  {
+   "source": "10-Sources/SRC-002_The_Design_of_Everyday_Things.md",
+   "target": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "10-Sources/SRC-003_Thinking_Fast_and_Slow.md",
+   "target": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-003_Thinking_Fast_and_Slow.md",
+   "target": "20-Entities/ENT-034_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-003_Thinking_Fast_and_Slow.md",
+   "target": "50-Areas/AREA_Architecture.md"
+  },
+  {
+   "source": "10-Sources/SRC-004_Godel_Escher_Bach.md",
+   "target": "10-Sources/SRC-013_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "10-Sources/SRC-005_Antifragile.md",
+   "target": "10-Sources/SRC-032_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-006_Site_Reliability_Workbook.md",
+   "target": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-006_Site_Reliability_Workbook.md",
+   "target": "10-Sources/SRC-017_Antifragile.md"
+  },
+  {
+   "source": "10-Sources/SRC-006_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-032_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "10-Sources/SRC-006_Site_Reliability_Workbook.md",
+   "target": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "10-Sources/SRC-007_Attention_Is_All_You_Need.md",
+   "target": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-007_Attention_Is_All_You_Need.md",
+   "target": "20-Entities/ENT-010_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-007_Attention_Is_All_You_Need.md",
+   "target": "20-Entities/ENT-033_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-007_Attention_Is_All_You_Need.md",
+   "target": "20-Entities/ENT-034_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-007_Attention_Is_All_You_Need.md",
+   "target": "90-Meta/Inbox.md"
+  },
+  {
+   "source": "10-Sources/SRC-008_The_Design_of_Everyday_Things.md",
+   "target": "20-Entities/ENT-031_Vector_Database.md"
+  },
+  {
+   "source": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md",
+   "target": "10-Sources/SRC-017_Antifragile.md"
+  },
+  {
+   "source": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md",
+   "target": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md",
+   "target": "20-Entities/ENT-029_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md",
+   "target": "20-Entities/ENT-033_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-010_Godel_Escher_Bach.md",
+   "target": "10-Sources/SRC-015_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-010_Godel_Escher_Bach.md",
+   "target": "20-Entities/ENT-034_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-011_Antifragile.md",
+   "target": "10-Sources/SRC-014_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-011_Antifragile.md",
+   "target": "20-Entities/ENT-007_Vector_Database.md"
+  },
+  {
+   "source": "10-Sources/SRC-012_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-032_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "10-Sources/SRC-013_Attention_Is_All_You_Need.md",
+   "target": "20-Entities/ENT-023_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-013_Attention_Is_All_You_Need.md",
+   "target": "20-Entities/ENT-047_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-014_The_Design_of_Everyday_Things.md",
+   "target": "20-Entities/ENT-019_Vector_Database.md"
+  },
+  {
+   "source": "10-Sources/SRC-014_The_Design_of_Everyday_Things.md",
+   "target": "20-Entities/ENT-034_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-014_The_Design_of_Everyday_Things.md",
+   "target": "50-Areas/AREA_Data_Quality.md"
+  },
+  {
+   "source": "10-Sources/SRC-015_Thinking_Fast_and_Slow.md",
+   "target": "10-Sources/SRC-025_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "10-Sources/SRC-015_Thinking_Fast_and_Slow.md",
+   "target": "10-Sources/SRC-033_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-015_Thinking_Fast_and_Slow.md",
+   "target": "30-Claims/CLM-013_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "10-Sources/SRC-016_Godel_Escher_Bach.md",
+   "target": "20-Entities/ENT-033_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-017_Antifragile.md",
+   "target": "20-Entities/ENT-003_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-017_Antifragile.md",
+   "target": "20-Entities/ENT-017_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-017_Antifragile.md",
+   "target": "30-Claims/CLM-005_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "10-Sources/SRC-017_Antifragile.md",
+   "target": "30-Claims/CLM-024_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "10-Sources/SRC-018_Site_Reliability_Workbook.md",
+   "target": "10-Sources/SRC-016_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "10-Sources/SRC-019_Attention_Is_All_You_Need.md",
+   "target": "20-Entities/ENT-003_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-019_Attention_Is_All_You_Need.md",
+   "target": "30-Claims/CLM-008_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md",
+   "target": "10-Sources/SRC-006_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md",
+   "target": "10-Sources/SRC-010_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md",
+   "target": "20-Entities/ENT-045_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md",
+   "target": "30-Claims/CLM-009_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "10-Sources/SRC-021_Thinking_Fast_and_Slow.md",
+   "target": "20-Entities/ENT-003_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-021_Thinking_Fast_and_Slow.md",
+   "target": "20-Entities/ENT-004_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-021_Thinking_Fast_and_Slow.md",
+   "target": "20-Entities/ENT-048_Provenance_Ledger.md"
+  },
+  {
+   "source": "10-Sources/SRC-022_Godel_Escher_Bach.md",
+   "target": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-022_Godel_Escher_Bach.md",
+   "target": "10-Sources/SRC-012_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "10-Sources/SRC-022_Godel_Escher_Bach.md",
+   "target": "20-Entities/ENT-018_Provenance_Ledger.md"
+  },
+  {
+   "source": "10-Sources/SRC-022_Godel_Escher_Bach.md",
+   "target": "30-Claims/CLM-014_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "10-Sources/SRC-022_Godel_Escher_Bach.md",
+   "target": "30-Claims/CLM-019_Provenance_is_the_product.md"
+  },
+  {
+   "source": "10-Sources/SRC-023_Antifragile.md",
+   "target": "10-Sources/SRC-008_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-024_Site_Reliability_Workbook.md",
+   "target": "10-Sources/SRC-038_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-024_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-017_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-024_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-047_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-024_Site_Reliability_Workbook.md",
+   "target": "30-Claims/CLM-003_Provenance_is_the_product.md"
+  },
+  {
+   "source": "10-Sources/SRC-024_Site_Reliability_Workbook.md",
+   "target": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "10-Sources/SRC-025_Attention_Is_All_You_Need.md",
+   "target": "10-Sources/SRC-003_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-025_Attention_Is_All_You_Need.md",
+   "target": "20-Entities/ENT-019_Vector_Database.md"
+  },
+  {
+   "source": "10-Sources/SRC-025_Attention_Is_All_You_Need.md",
+   "target": "90-Meta/Conventions.md"
+  },
+  {
+   "source": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md",
+   "target": "10-Sources/SRC-008_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md",
+   "target": "10-Sources/SRC-015_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md",
+   "target": "10-Sources/SRC-029_Antifragile.md"
+  },
+  {
+   "source": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md",
+   "target": "20-Entities/ENT-023_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md",
+   "target": "30-Claims/CLM-010_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "10-Sources/SRC-027_Thinking_Fast_and_Slow.md",
+   "target": "20-Entities/ENT-010_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-027_Thinking_Fast_and_Slow.md",
+   "target": "50-Areas/AREA_Security.md"
+  },
+  {
+   "source": "10-Sources/SRC-028_Godel_Escher_Bach.md",
+   "target": "20-Entities/ENT-011_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-028_Godel_Escher_Bach.md",
+   "target": "20-Entities/ENT-017_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-029_Antifragile.md",
+   "target": "20-Entities/ENT-015_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-029_Antifragile.md",
+   "target": "30-Claims/CLM-016_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "10-Sources/SRC-030_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-005_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-030_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-008_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "10-Sources/SRC-030_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-047_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-030_Site_Reliability_Workbook.md",
+   "target": "40-Projects/PRJ-001_Data_Farm.md"
+  },
+  {
+   "source": "10-Sources/SRC-031_Attention_Is_All_You_Need.md",
+   "target": "10-Sources/SRC-023_Antifragile.md"
+  },
+  {
+   "source": "10-Sources/SRC-032_The_Design_of_Everyday_Things.md",
+   "target": "10-Sources/SRC-002_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-032_The_Design_of_Everyday_Things.md",
+   "target": "20-Entities/ENT-022_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-033_Thinking_Fast_and_Slow.md",
+   "target": "10-Sources/SRC-001_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "10-Sources/SRC-033_Thinking_Fast_and_Slow.md",
+   "target": "10-Sources/SRC-019_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "10-Sources/SRC-033_Thinking_Fast_and_Slow.md",
+   "target": "10-Sources/SRC-038_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-034_Godel_Escher_Bach.md",
+   "target": "10-Sources/SRC-042_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "10-Sources/SRC-034_Godel_Escher_Bach.md",
+   "target": "20-Entities/ENT-032_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "10-Sources/SRC-034_Godel_Escher_Bach.md",
+   "target": "20-Entities/ENT-038_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "10-Sources/SRC-035_Antifragile.md",
+   "target": "20-Entities/ENT-039_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-035_Antifragile.md",
+   "target": "20-Entities/ENT-043_Vector_Database.md"
+  },
+  {
+   "source": "10-Sources/SRC-035_Antifragile.md",
+   "target": "20-Entities/ENT-046_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-035_Antifragile.md",
+   "target": "30-Claims/CLM-006_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "10-Sources/SRC-035_Antifragile.md",
+   "target": "90-Meta/Inbox.md"
+  },
+  {
+   "source": "10-Sources/SRC-036_Site_Reliability_Workbook.md",
+   "target": "10-Sources/SRC-014_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-036_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-010_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-036_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-011_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-036_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-021_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-036_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-041_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-037_Attention_Is_All_You_Need.md",
+   "target": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-037_Attention_Is_All_You_Need.md",
+   "target": "10-Sources/SRC-027_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-038_The_Design_of_Everyday_Things.md",
+   "target": "20-Entities/ENT-003_Evaluation_Harness.md"
+  },
+  {
+   "source": "10-Sources/SRC-039_Thinking_Fast_and_Slow.md",
+   "target": "10-Sources/SRC-001_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "10-Sources/SRC-040_Godel_Escher_Bach.md",
+   "target": "10-Sources/SRC-004_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "10-Sources/SRC-040_Godel_Escher_Bach.md",
+   "target": "10-Sources/SRC-013_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "10-Sources/SRC-040_Godel_Escher_Bach.md",
+   "target": "20-Entities/ENT-006_Provenance_Ledger.md"
+  },
+  {
+   "source": "10-Sources/SRC-040_Godel_Escher_Bach.md",
+   "target": "20-Entities/ENT-038_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "10-Sources/SRC-040_Godel_Escher_Bach.md",
+   "target": "90-Meta/Inbox.md"
+  },
+  {
+   "source": "10-Sources/SRC-041_Antifragile.md",
+   "target": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "10-Sources/SRC-041_Antifragile.md",
+   "target": "10-Sources/SRC-033_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-041_Antifragile.md",
+   "target": "20-Entities/ENT-004_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-041_Antifragile.md",
+   "target": "20-Entities/ENT-008_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "10-Sources/SRC-041_Antifragile.md",
+   "target": "20-Entities/ENT-041_Event_Bus.md"
+  },
+  {
+   "source": "10-Sources/SRC-042_Site_Reliability_Workbook.md",
+   "target": "10-Sources/SRC-015_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "10-Sources/SRC-042_Site_Reliability_Workbook.md",
+   "target": "10-Sources/SRC-016_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "10-Sources/SRC-042_Site_Reliability_Workbook.md",
+   "target": "20-Entities/ENT-022_Schema_Registry.md"
+  },
+  {
+   "source": "10-Sources/SRC-042_Site_Reliability_Workbook.md",
+   "target": "30-Claims/CLM-020_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "20-Entities/ENT-001_Vector_Database.md",
+   "target": "10-Sources/SRC-011_Antifragile.md"
+  },
+  {
+   "source": "20-Entities/ENT-001_Vector_Database.md",
+   "target": "10-Sources/SRC-014_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "20-Entities/ENT-001_Vector_Database.md",
+   "target": "10-Sources/SRC-019_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "20-Entities/ENT-001_Vector_Database.md",
+   "target": "10-Sources/SRC-040_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "20-Entities/ENT-002_Retrieval_Pipeline.md",
+   "target": "20-Entities/ENT-021_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-002_Retrieval_Pipeline.md",
+   "target": "20-Entities/ENT-048_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-002_Retrieval_Pipeline.md",
+   "target": "30-Claims/CLM-018_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "20-Entities/ENT-003_Evaluation_Harness.md",
+   "target": "10-Sources/SRC-027_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "20-Entities/ENT-004_Schema_Registry.md",
+   "target": "20-Entities/ENT-029_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-004_Schema_Registry.md",
+   "target": "20-Entities/ENT-048_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-005_Event_Bus.md",
+   "target": "10-Sources/SRC-012_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "20-Entities/ENT-005_Event_Bus.md",
+   "target": "20-Entities/ENT-042_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-005_Event_Bus.md",
+   "target": "30-Claims/CLM-022_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "20-Entities/ENT-006_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-022_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "20-Entities/ENT-006_Provenance_Ledger.md",
+   "target": "20-Entities/ENT-004_Schema_Registry.md"
+  },
+  {
+   "source": "20-Entities/ENT-006_Provenance_Ledger.md",
+   "target": "20-Entities/ENT-005_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-006_Provenance_Ledger.md",
+   "target": "30-Claims/CLM-010_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "20-Entities/ENT-006_Provenance_Ledger.md",
+   "target": "50-Areas/AREA_Architecture.md"
+  },
+  {
+   "source": "20-Entities/ENT-007_Vector_Database.md",
+   "target": "10-Sources/SRC-029_Antifragile.md"
+  },
+  {
+   "source": "20-Entities/ENT-007_Vector_Database.md",
+   "target": "20-Entities/ENT-001_Vector_Database.md"
+  },
+  {
+   "source": "20-Entities/ENT-007_Vector_Database.md",
+   "target": "20-Entities/ENT-024_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-007_Vector_Database.md",
+   "target": "20-Entities/ENT-041_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-007_Vector_Database.md",
+   "target": "30-Claims/CLM-011_Provenance_is_the_product.md"
+  },
+  {
+   "source": "20-Entities/ENT-008_Retrieval_Pipeline.md",
+   "target": "20-Entities/ENT-011_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-008_Retrieval_Pipeline.md",
+   "target": "30-Claims/CLM-016_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "20-Entities/ENT-009_Evaluation_Harness.md",
+   "target": "10-Sources/SRC-004_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "20-Entities/ENT-009_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-004_Schema_Registry.md"
+  },
+  {
+   "source": "20-Entities/ENT-009_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-023_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-009_Evaluation_Harness.md",
+   "target": "30-Claims/CLM-005_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "20-Entities/ENT-009_Evaluation_Harness.md",
+   "target": "30-Claims/CLM-013_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "20-Entities/ENT-010_Schema_Registry.md",
+   "target": "10-Sources/SRC-025_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "20-Entities/ENT-010_Schema_Registry.md",
+   "target": "20-Entities/ENT-037_Vector_Database.md"
+  },
+  {
+   "source": "20-Entities/ENT-010_Schema_Registry.md",
+   "target": "20-Entities/ENT-048_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-011_Event_Bus.md",
+   "target": "10-Sources/SRC-011_Antifragile.md"
+  },
+  {
+   "source": "20-Entities/ENT-011_Event_Bus.md",
+   "target": "10-Sources/SRC-029_Antifragile.md"
+  },
+  {
+   "source": "20-Entities/ENT-011_Event_Bus.md",
+   "target": "20-Entities/ENT-005_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-012_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "20-Entities/ENT-012_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-027_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "20-Entities/ENT-012_Provenance_Ledger.md",
+   "target": "20-Entities/ENT-002_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "20-Entities/ENT-012_Provenance_Ledger.md",
+   "target": "20-Entities/ENT-021_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-013_Vector_Database.md",
+   "target": "20-Entities/ENT-021_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-014_Retrieval_Pipeline.md",
+   "target": "30-Claims/CLM-018_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "20-Entities/ENT-015_Evaluation_Harness.md",
+   "target": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "20-Entities/ENT-015_Evaluation_Harness.md",
+   "target": "30-Claims/CLM-003_Provenance_is_the_product.md"
+  },
+  {
+   "source": "20-Entities/ENT-015_Evaluation_Harness.md",
+   "target": "30-Claims/CLM-008_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "20-Entities/ENT-015_Evaluation_Harness.md",
+   "target": "30-Claims/CLM-012_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "20-Entities/ENT-016_Schema_Registry.md",
+   "target": "10-Sources/SRC-012_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "20-Entities/ENT-016_Schema_Registry.md",
+   "target": "20-Entities/ENT-001_Vector_Database.md"
+  },
+  {
+   "source": "20-Entities/ENT-016_Schema_Registry.md",
+   "target": "20-Entities/ENT-041_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-016_Schema_Registry.md",
+   "target": "30-Claims/CLM-013_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "20-Entities/ENT-017_Event_Bus.md",
+   "target": "10-Sources/SRC-011_Antifragile.md"
+  },
+  {
+   "source": "20-Entities/ENT-017_Event_Bus.md",
+   "target": "30-Claims/CLM-004_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "20-Entities/ENT-017_Event_Bus.md",
+   "target": "30-Claims/CLM-007_Provenance_is_the_product.md"
+  },
+  {
+   "source": "20-Entities/ENT-017_Event_Bus.md",
+   "target": "90-Meta/Inbox.md"
+  },
+  {
+   "source": "20-Entities/ENT-018_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-004_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "20-Entities/ENT-018_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "20-Entities/ENT-019_Vector_Database.md",
+   "target": "20-Entities/ENT-038_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "20-Entities/ENT-019_Vector_Database.md",
+   "target": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "20-Entities/ENT-020_Retrieval_Pipeline.md",
+   "target": "10-Sources/SRC-017_Antifragile.md"
+  },
+  {
+   "source": "20-Entities/ENT-020_Retrieval_Pipeline.md",
+   "target": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "20-Entities/ENT-020_Retrieval_Pipeline.md",
+   "target": "20-Entities/ENT-030_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-021_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-027_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-022_Schema_Registry.md",
+   "target": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "20-Entities/ENT-022_Schema_Registry.md",
+   "target": "30-Claims/CLM-023_Provenance_is_the_product.md"
+  },
+  {
+   "source": "20-Entities/ENT-023_Event_Bus.md",
+   "target": "10-Sources/SRC-028_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "20-Entities/ENT-023_Event_Bus.md",
+   "target": "10-Sources/SRC-038_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "20-Entities/ENT-023_Event_Bus.md",
+   "target": "20-Entities/ENT-024_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-024_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-034_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "20-Entities/ENT-024_Provenance_Ledger.md",
+   "target": "20-Entities/ENT-012_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-024_Provenance_Ledger.md",
+   "target": "20-Entities/ENT-029_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-025_Vector_Database.md",
+   "target": "20-Entities/ENT-017_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-025_Vector_Database.md",
+   "target": "20-Entities/ENT-044_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "20-Entities/ENT-025_Vector_Database.md",
+   "target": "40-Projects/PRJ-002_Second_Brain_Ingest.md"
+  },
+  {
+   "source": "20-Entities/ENT-026_Retrieval_Pipeline.md",
+   "target": "20-Entities/ENT-023_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-026_Retrieval_Pipeline.md",
+   "target": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "20-Entities/ENT-026_Retrieval_Pipeline.md",
+   "target": "30-Claims/CLM-024_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "20-Entities/ENT-026_Retrieval_Pipeline.md",
+   "target": "50-Areas/AREA_Security.md"
+  },
+  {
+   "source": "20-Entities/ENT-027_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-024_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-027_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-026_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "20-Entities/ENT-028_Schema_Registry.md",
+   "target": "10-Sources/SRC-001_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "20-Entities/ENT-028_Schema_Registry.md",
+   "target": "20-Entities/ENT-037_Vector_Database.md"
+  },
+  {
+   "source": "20-Entities/ENT-029_Event_Bus.md",
+   "target": "20-Entities/ENT-019_Vector_Database.md"
+  },
+  {
+   "source": "20-Entities/ENT-029_Event_Bus.md",
+   "target": "20-Entities/ENT-039_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-030_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-042_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "20-Entities/ENT-031_Vector_Database.md",
+   "target": "10-Sources/SRC-014_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "20-Entities/ENT-031_Vector_Database.md",
+   "target": "20-Entities/ENT-020_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "20-Entities/ENT-031_Vector_Database.md",
+   "target": "20-Entities/ENT-030_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-031_Vector_Database.md",
+   "target": "30-Claims/CLM-011_Provenance_is_the_product.md"
+  },
+  {
+   "source": "20-Entities/ENT-031_Vector_Database.md",
+   "target": "30-Claims/CLM-012_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "20-Entities/ENT-032_Retrieval_Pipeline.md",
+   "target": "10-Sources/SRC-025_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "20-Entities/ENT-032_Retrieval_Pipeline.md",
+   "target": "10-Sources/SRC-036_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "20-Entities/ENT-033_Evaluation_Harness.md",
+   "target": "10-Sources/SRC-004_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "20-Entities/ENT-033_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-016_Schema_Registry.md"
+  },
+  {
+   "source": "20-Entities/ENT-033_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-030_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-033_Evaluation_Harness.md",
+   "target": "30-Claims/CLM-009_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "20-Entities/ENT-033_Evaluation_Harness.md",
+   "target": "40-Projects/PRJ-002_Second_Brain_Ingest.md"
+  },
+  {
+   "source": "20-Entities/ENT-034_Schema_Registry.md",
+   "target": "20-Entities/ENT-023_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-034_Schema_Registry.md",
+   "target": "20-Entities/ENT-037_Vector_Database.md"
+  },
+  {
+   "source": "20-Entities/ENT-034_Schema_Registry.md",
+   "target": "20-Entities/ENT-038_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "20-Entities/ENT-035_Event_Bus.md",
+   "target": "20-Entities/ENT-016_Schema_Registry.md"
+  },
+  {
+   "source": "20-Entities/ENT-035_Event_Bus.md",
+   "target": "20-Entities/ENT-024_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-035_Event_Bus.md",
+   "target": "20-Entities/ENT-027_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-036_Provenance_Ledger.md",
+   "target": "20-Entities/ENT-025_Vector_Database.md"
+  },
+  {
+   "source": "20-Entities/ENT-036_Provenance_Ledger.md",
+   "target": "30-Claims/CLM-001_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "20-Entities/ENT-037_Vector_Database.md",
+   "target": "20-Entities/ENT-016_Schema_Registry.md"
+  },
+  {
+   "source": "20-Entities/ENT-037_Vector_Database.md",
+   "target": "30-Claims/CLM-019_Provenance_is_the_product.md"
+  },
+  {
+   "source": "20-Entities/ENT-038_Retrieval_Pipeline.md",
+   "target": "20-Entities/ENT-009_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-039_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-045_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-040_Schema_Registry.md",
+   "target": "10-Sources/SRC-028_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "20-Entities/ENT-041_Event_Bus.md",
+   "target": "40-Projects/PRJ-002_Second_Brain_Ingest.md"
+  },
+  {
+   "source": "20-Entities/ENT-042_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-019_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "20-Entities/ENT-042_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-033_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "20-Entities/ENT-042_Provenance_Ledger.md",
+   "target": "40-Projects/PRJ-001_Data_Farm.md"
+  },
+  {
+   "source": "20-Entities/ENT-043_Vector_Database.md",
+   "target": "30-Claims/CLM-007_Provenance_is_the_product.md"
+  },
+  {
+   "source": "20-Entities/ENT-043_Vector_Database.md",
+   "target": "90-Meta/Inbox.md"
+  },
+  {
+   "source": "20-Entities/ENT-044_Retrieval_Pipeline.md",
+   "target": "10-Sources/SRC-021_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "20-Entities/ENT-044_Retrieval_Pipeline.md",
+   "target": "10-Sources/SRC-029_Antifragile.md"
+  },
+  {
+   "source": "20-Entities/ENT-044_Retrieval_Pipeline.md",
+   "target": "20-Entities/ENT-045_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-044_Retrieval_Pipeline.md",
+   "target": "30-Claims/CLM-018_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "20-Entities/ENT-045_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-002_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "20-Entities/ENT-045_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-010_Schema_Registry.md"
+  },
+  {
+   "source": "20-Entities/ENT-045_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-012_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-045_Evaluation_Harness.md",
+   "target": "20-Entities/ENT-024_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-046_Schema_Registry.md",
+   "target": "10-Sources/SRC-012_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "20-Entities/ENT-046_Schema_Registry.md",
+   "target": "20-Entities/ENT-005_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-046_Schema_Registry.md",
+   "target": "30-Claims/CLM-004_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "20-Entities/ENT-047_Event_Bus.md",
+   "target": "10-Sources/SRC-003_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "20-Entities/ENT-047_Event_Bus.md",
+   "target": "20-Entities/ENT-008_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "20-Entities/ENT-047_Event_Bus.md",
+   "target": "20-Entities/ENT-015_Evaluation_Harness.md"
+  },
+  {
+   "source": "20-Entities/ENT-047_Event_Bus.md",
+   "target": "20-Entities/ENT-017_Event_Bus.md"
+  },
+  {
+   "source": "20-Entities/ENT-047_Event_Bus.md",
+   "target": "30-Claims/CLM-002_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "20-Entities/ENT-048_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "20-Entities/ENT-048_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-015_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "20-Entities/ENT-048_Provenance_Ledger.md",
+   "target": "10-Sources/SRC-038_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "20-Entities/ENT-048_Provenance_Ledger.md",
+   "target": "20-Entities/ENT-024_Provenance_Ledger.md"
+  },
+  {
+   "source": "20-Entities/ENT-048_Provenance_Ledger.md",
+   "target": "50-Areas/AREA_Security.md"
+  },
+  {
+   "source": "30-Claims/CLM-001_Embeddings_degrade_without_reindex.md",
+   "target": "10-Sources/SRC-034_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "30-Claims/CLM-002_Batch_size_changes_recall.md",
+   "target": "10-Sources/SRC-035_Antifragile.md"
+  },
+  {
+   "source": "30-Claims/CLM-002_Batch_size_changes_recall.md",
+   "target": "30-Claims/CLM-008_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "30-Claims/CLM-003_Provenance_is_the_product.md",
+   "target": "10-Sources/SRC-020_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "30-Claims/CLM-003_Provenance_is_the_product.md",
+   "target": "20-Entities/ENT-010_Schema_Registry.md"
+  },
+  {
+   "source": "30-Claims/CLM-003_Provenance_is_the_product.md",
+   "target": "20-Entities/ENT-027_Evaluation_Harness.md"
+  },
+  {
+   "source": "30-Claims/CLM-004_Latency_budget_is_200ms.md",
+   "target": "10-Sources/SRC-012_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "30-Claims/CLM-004_Latency_budget_is_200ms.md",
+   "target": "10-Sources/SRC-036_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "30-Claims/CLM-004_Latency_budget_is_200ms.md",
+   "target": "10-Sources/SRC-042_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "30-Claims/CLM-004_Latency_budget_is_200ms.md",
+   "target": "20-Entities/ENT-048_Provenance_Ledger.md"
+  },
+  {
+   "source": "30-Claims/CLM-005_Embeddings_degrade_without_reindex.md",
+   "target": "20-Entities/ENT-013_Vector_Database.md"
+  },
+  {
+   "source": "30-Claims/CLM-005_Embeddings_degrade_without_reindex.md",
+   "target": "40-Projects/PRJ-002_Second_Brain_Ingest.md"
+  },
+  {
+   "source": "30-Claims/CLM-006_Batch_size_changes_recall.md",
+   "target": "20-Entities/ENT-040_Schema_Registry.md"
+  },
+  {
+   "source": "30-Claims/CLM-007_Provenance_is_the_product.md",
+   "target": "20-Entities/ENT-036_Provenance_Ledger.md"
+  },
+  {
+   "source": "30-Claims/CLM-008_Latency_budget_is_200ms.md",
+   "target": "10-Sources/SRC-016_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "30-Claims/CLM-008_Latency_budget_is_200ms.md",
+   "target": "20-Entities/ENT-017_Event_Bus.md"
+  },
+  {
+   "source": "30-Claims/CLM-008_Latency_budget_is_200ms.md",
+   "target": "30-Claims/CLM-022_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "30-Claims/CLM-009_Embeddings_degrade_without_reindex.md",
+   "target": "10-Sources/SRC-035_Antifragile.md"
+  },
+  {
+   "source": "30-Claims/CLM-009_Embeddings_degrade_without_reindex.md",
+   "target": "20-Entities/ENT-012_Provenance_Ledger.md"
+  },
+  {
+   "source": "30-Claims/CLM-009_Embeddings_degrade_without_reindex.md",
+   "target": "20-Entities/ENT-038_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "30-Claims/CLM-009_Embeddings_degrade_without_reindex.md",
+   "target": "50-Areas/AREA_Data_Quality.md"
+  },
+  {
+   "source": "30-Claims/CLM-009_Embeddings_degrade_without_reindex.md",
+   "target": "50-Areas/AREA_Security.md"
+  },
+  {
+   "source": "30-Claims/CLM-010_Batch_size_changes_recall.md",
+   "target": "10-Sources/SRC-015_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "30-Claims/CLM-010_Batch_size_changes_recall.md",
+   "target": "10-Sources/SRC-021_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "30-Claims/CLM-010_Batch_size_changes_recall.md",
+   "target": "10-Sources/SRC-031_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "30-Claims/CLM-010_Batch_size_changes_recall.md",
+   "target": "30-Claims/CLM-001_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "30-Claims/CLM-010_Batch_size_changes_recall.md",
+   "target": "90-Meta/Conventions.md"
+  },
+  {
+   "source": "30-Claims/CLM-011_Provenance_is_the_product.md",
+   "target": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "30-Claims/CLM-011_Provenance_is_the_product.md",
+   "target": "90-Meta/Home.md"
+  },
+  {
+   "source": "30-Claims/CLM-012_Latency_budget_is_200ms.md",
+   "target": "10-Sources/SRC-027_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "30-Claims/CLM-012_Latency_budget_is_200ms.md",
+   "target": "20-Entities/ENT-026_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "30-Claims/CLM-012_Latency_budget_is_200ms.md",
+   "target": "30-Claims/CLM-008_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "30-Claims/CLM-013_Embeddings_degrade_without_reindex.md",
+   "target": "10-Sources/SRC-023_Antifragile.md"
+  },
+  {
+   "source": "30-Claims/CLM-013_Embeddings_degrade_without_reindex.md",
+   "target": "10-Sources/SRC-035_Antifragile.md"
+  },
+  {
+   "source": "30-Claims/CLM-013_Embeddings_degrade_without_reindex.md",
+   "target": "20-Entities/ENT-003_Evaluation_Harness.md"
+  },
+  {
+   "source": "30-Claims/CLM-013_Embeddings_degrade_without_reindex.md",
+   "target": "20-Entities/ENT-045_Evaluation_Harness.md"
+  },
+  {
+   "source": "30-Claims/CLM-013_Embeddings_degrade_without_reindex.md",
+   "target": "30-Claims/CLM-014_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "30-Claims/CLM-014_Batch_size_changes_recall.md",
+   "target": "10-Sources/SRC-002_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "30-Claims/CLM-015_Provenance_is_the_product.md",
+   "target": "10-Sources/SRC-025_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "30-Claims/CLM-015_Provenance_is_the_product.md",
+   "target": "10-Sources/SRC-032_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "30-Claims/CLM-015_Provenance_is_the_product.md",
+   "target": "20-Entities/ENT-019_Vector_Database.md"
+  },
+  {
+   "source": "30-Claims/CLM-015_Provenance_is_the_product.md",
+   "target": "20-Entities/ENT-024_Provenance_Ledger.md"
+  },
+  {
+   "source": "30-Claims/CLM-015_Provenance_is_the_product.md",
+   "target": "20-Entities/ENT-029_Event_Bus.md"
+  },
+  {
+   "source": "30-Claims/CLM-016_Latency_budget_is_200ms.md",
+   "target": "20-Entities/ENT-022_Schema_Registry.md"
+  },
+  {
+   "source": "30-Claims/CLM-016_Latency_budget_is_200ms.md",
+   "target": "20-Entities/ENT-028_Schema_Registry.md"
+  },
+  {
+   "source": "30-Claims/CLM-016_Latency_budget_is_200ms.md",
+   "target": "20-Entities/ENT-043_Vector_Database.md"
+  },
+  {
+   "source": "30-Claims/CLM-016_Latency_budget_is_200ms.md",
+   "target": "30-Claims/CLM-018_Batch_size_changes_recall.md"
+  },
+  {
+   "source": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md",
+   "target": "10-Sources/SRC-028_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md",
+   "target": "10-Sources/SRC-030_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md",
+   "target": "20-Entities/ENT-047_Event_Bus.md"
+  },
+  {
+   "source": "30-Claims/CLM-018_Batch_size_changes_recall.md",
+   "target": "20-Entities/ENT-003_Evaluation_Harness.md"
+  },
+  {
+   "source": "30-Claims/CLM-018_Batch_size_changes_recall.md",
+   "target": "20-Entities/ENT-010_Schema_Registry.md"
+  },
+  {
+   "source": "30-Claims/CLM-019_Provenance_is_the_product.md",
+   "target": "10-Sources/SRC-010_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "30-Claims/CLM-020_Latency_budget_is_200ms.md",
+   "target": "10-Sources/SRC-008_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "30-Claims/CLM-020_Latency_budget_is_200ms.md",
+   "target": "10-Sources/SRC-021_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "30-Claims/CLM-020_Latency_budget_is_200ms.md",
+   "target": "20-Entities/ENT-014_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "30-Claims/CLM-021_Embeddings_degrade_without_reindex.md",
+   "target": "10-Sources/SRC-037_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "30-Claims/CLM-021_Embeddings_degrade_without_reindex.md",
+   "target": "20-Entities/ENT-023_Event_Bus.md"
+  },
+  {
+   "source": "30-Claims/CLM-021_Embeddings_degrade_without_reindex.md",
+   "target": "20-Entities/ENT-044_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "30-Claims/CLM-021_Embeddings_degrade_without_reindex.md",
+   "target": "30-Claims/CLM-023_Provenance_is_the_product.md"
+  },
+  {
+   "source": "30-Claims/CLM-022_Batch_size_changes_recall.md",
+   "target": "10-Sources/SRC-006_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "30-Claims/CLM-022_Batch_size_changes_recall.md",
+   "target": "10-Sources/SRC-024_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "30-Claims/CLM-022_Batch_size_changes_recall.md",
+   "target": "20-Entities/ENT-017_Event_Bus.md"
+  },
+  {
+   "source": "30-Claims/CLM-023_Provenance_is_the_product.md",
+   "target": "10-Sources/SRC-001_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "30-Claims/CLM-023_Provenance_is_the_product.md",
+   "target": "10-Sources/SRC-034_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "30-Claims/CLM-023_Provenance_is_the_product.md",
+   "target": "20-Entities/ENT-001_Vector_Database.md"
+  },
+  {
+   "source": "30-Claims/CLM-023_Provenance_is_the_product.md",
+   "target": "20-Entities/ENT-005_Event_Bus.md"
+  },
+  {
+   "source": "30-Claims/CLM-024_Latency_budget_is_200ms.md",
+   "target": "10-Sources/SRC-005_Antifragile.md"
+  },
+  {
+   "source": "30-Claims/CLM-024_Latency_budget_is_200ms.md",
+   "target": "30-Claims/CLM-023_Provenance_is_the_product.md"
+  },
+  {
+   "source": "40-Projects/PRJ-001_Data_Farm.md",
+   "target": "10-Sources/SRC-001_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "40-Projects/PRJ-001_Data_Farm.md",
+   "target": "10-Sources/SRC-024_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "40-Projects/PRJ-001_Data_Farm.md",
+   "target": "20-Entities/ENT-001_Vector_Database.md"
+  },
+  {
+   "source": "40-Projects/PRJ-002_Second_Brain_Ingest.md",
+   "target": "10-Sources/SRC-026_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "40-Projects/PRJ-002_Second_Brain_Ingest.md",
+   "target": "10-Sources/SRC-036_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "40-Projects/PRJ-002_Second_Brain_Ingest.md",
+   "target": "20-Entities/ENT-023_Event_Bus.md"
+  },
+  {
+   "source": "40-Projects/PRJ-002_Second_Brain_Ingest.md",
+   "target": "20-Entities/ENT-042_Provenance_Ledger.md"
+  },
+  {
+   "source": "40-Projects/PRJ-003_Graph_QA.md",
+   "target": "10-Sources/SRC-012_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "50-Areas/AREA_Architecture.md",
+   "target": "20-Entities/ENT-010_Schema_Registry.md"
+  },
+  {
+   "source": "50-Areas/AREA_Architecture.md",
+   "target": "20-Entities/ENT-034_Schema_Registry.md"
+  },
+  {
+   "source": "50-Areas/AREA_Data_Quality.md",
+   "target": "10-Sources/SRC-011_Antifragile.md"
+  },
+  {
+   "source": "50-Areas/AREA_Data_Quality.md",
+   "target": "20-Entities/ENT-033_Evaluation_Harness.md"
+  },
+  {
+   "source": "50-Areas/AREA_Security.md",
+   "target": "10-Sources/SRC-039_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "90-Meta/Conventions.md",
+   "target": "10-Sources/SRC-006_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "90-Meta/Conventions.md",
+   "target": "10-Sources/SRC-019_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "90-Meta/Conventions.md",
+   "target": "20-Entities/ENT-041_Event_Bus.md"
+  },
+  {
+   "source": "90-Meta/Conventions.md",
+   "target": "30-Claims/CLM-016_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "90-Meta/Conventions.md",
+   "target": "30-Claims/CLM-017_Embeddings_degrade_without_reindex.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-001_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-002_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-003_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-004_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-005_Antifragile.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-006_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-007_Attention_Is_All_You_Need.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-008_The_Design_of_Everyday_Things.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-009_Thinking_Fast_and_Slow.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-010_Godel_Escher_Bach.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-011_Antifragile.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-012_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "10-Sources/SRC-042_Site_Reliability_Workbook.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "20-Entities/ENT-008_Retrieval_Pipeline.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "20-Entities/ENT-022_Schema_Registry.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "30-Claims/CLM-003_Provenance_is_the_product.md"
+  },
+  {
+   "source": "90-Meta/Home.md",
+   "target": "30-Claims/CLM-008_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "90-Meta/Inbox.md",
+   "target": "20-Entities/ENT-023_Event_Bus.md"
+  },
+  {
+   "source": "90-Meta/Inbox.md",
+   "target": "20-Entities/ENT-048_Provenance_Ledger.md"
+  },
+  {
+   "source": "90-Meta/Inbox.md",
+   "target": "30-Claims/CLM-004_Latency_budget_is_200ms.md"
+  },
+  {
+   "source": "90-Meta/Inbox.md",
+   "target": "30-Claims/CLM-014_Batch_size_changes_recall.md"
+  }
+ ],
+ "unresolved": {
+  "This Note Does Not Exist Yet": [
+   "90-Meta/Inbox.md"
+  ]
+ }
+}

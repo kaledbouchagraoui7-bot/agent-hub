@@ -1,0 +1,60 @@
+# shellcheck shell=dash
+
+___x_cmd_pkg_bootupdate(){
+    if [ -f "$___X_CMD_ROOT_EXTMETA_TAR" ]; then
+        ___x_cmd_pkg_bootupdate___tar
+    else
+        ___x_cmd_pkg_update
+    fi
+}
+
+___x_cmd_pkg_bootupdate___tar(){
+    [ -f "$___X_CMD_ROOT_EXTMETA_TAR" ]             || N=pkg M="Not found pkg extmeta tar file" log:ret:1
+    ___x_cmd_pkg_bootupdate___tar_prepare_advise    || return $?
+    ___x_cmd_pkg_bootupdate___tar_prepare_theme
+}
+
+___x_cmd_pkg_bootupdate___tar_prepare_advise(){
+    xrc:mod:lib advise env
+
+    local metatar="$___X_CMD_ROOT_EXTMETA_TAR"
+    [ -f "$metatar" ] || N=pkg M="Not found extmeta tar file -> $metatar" log:ret:1
+    local tgtdir="$___X_CMD_ADVISE_MAN_XCMD_FOLDER"
+    local tmpdir="$___X_CMD_ROOT_TMP/extmeta"
+    pkg:info --extmeta_tar "$metatar" --metadata_folder "$tgtdir" "Extracting x-cmd/advise metadata"
+
+    [ -d "$tmpdir" ] || ___x_cmd mkdirp "$tmpdir"
+    ___x_cmd_cmds tar -xf "$metatar" -C "$tmpdir" "./advise/$___X_CMD_ADVISE_MAN_PKG_XCMD_VERSION" || N=pkg M="Failed to extract extmeta tar file" log:ret:1
+    local tmpdetail="$tmpdir/advise/$___X_CMD_ADVISE_MAN_PKG_XCMD_VERSION"
+    [ -d "$tmpdetail" ] || N=pkg M="Not found extracted extmeta x-cmd/advise folder -> $tmpdetail" log:ret:1
+
+    [ ! -d "$tgtdir" ] || ___x_cmd rmrf "$tgtdir"
+    tgtdir="${tgtdir%/*}"
+    ___x_cmd mkdirp "$tgtdir"
+    ___x_cmd_cmds mv -f "$tmpdetail" "$tgtdir" || return $?
+    ___x_cmd rmrf "$tmpdir"
+
+    ___x_cmd touch "$___X_CMD_ADVISE_MAN_XCMD_FOLDER/timefile"
+    ___x_cmd advise __rm_bootcode
+}
+
+___x_cmd_pkg_bootupdate___tar_prepare_theme(){
+    xrc:mod:lib theme envvar
+
+    local metatar="$___X_CMD_ROOT_EXTMETA_TAR"
+    [ -f "$metatar" ] || N=pkg M="Not found extmeta tar file -> $metatar" log:ret:1
+    local tgtdir="$___X_CMD_THEME_DATA_PATH"
+    local tmpdir="$___X_CMD_ROOT_TMP/extmeta"
+    pkg:info --extmeta_tar "$metatar" --metadata_folder "$tgtdir" "Extracting theme metadata"
+
+    [ -d "$tmpdir" ] || ___x_cmd mkdirp "$tmpdir"
+    ___x_cmd_cmds tar -xf "$metatar" -C "$tmpdir" "./theme/$___X_CMD_THEME_PKG_VERSION" || N=pkg M="Failed to extract extmeta tar file" log:ret:1
+    local tmpdetail="$tmpdir/theme/$___X_CMD_THEME_PKG_VERSION"
+    [ -d "$tmpdetail" ] || N=pkg M="Not found extracted extmeta theme folder -> $tmpdetail" log:ret:1
+
+    [ ! -d "$tgtdir" ] || ___x_cmd rmrf "$tgtdir"
+    tgtdir="${tgtdir%/*}"
+    ___x_cmd mkdirp "$tgtdir"
+    ___x_cmd_cmds mv -f "$tmpdetail" "$tgtdir" || return $?
+    ___x_cmd rmrf "$tmpdir"
+}

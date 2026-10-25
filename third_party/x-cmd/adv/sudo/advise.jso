@@ -1,0 +1,212 @@
+{
+"#name"
+:
+{
+"sudo"
+:
+{
+"en"
+:
+"Run commands with elevated privileges, preserving user PATH and env"
+,
+"zh"
+:
+"以提升权限执行命令，保持用户级 PATH 和环境变量"
+}
+}
+,
+"#synopsis"
+:
+[
+{
+"x sudo [options] [command]"
+:
+null
+}
+,
+{
+"x sudo --suuser <user> [command]"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"en"
+:
+"Wraps sudo/doas/su to run commands with elevated privileges while preserving\nthe user's PATH and environment variables in the privileged process.\n"
+,
+"zh"
+:
+"封装 sudo/doas/su，在提升权限执行命令的同时，保持用户的 PATH 和环境变量\n在特权进程中可用。\n"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"回退顺序：优先 sudo，不可用则尝试 doas，最后回退到 su。\n当 sudo 认证失败时，会提示是否切换到 su 方式。\n"
+,
+"en"
+:
+"Fallback order: prefers sudo, then doas, then su.\nIf sudo auth fails, prompts whether to retry with su.\n"
+}
+,
+{
+"zh"
+:
+"su 与 sudo 的区别：su 通过 `su <user> -s /bin/sh <script>` 执行，\n需要 root 密码（而非当前用户密码），且默认切到 root。\n使用 --suuser 指定用户；不指定时默认 root。\n"
+,
+"en"
+:
+"su vs sudo: su runs via `su <user> -s /bin/sh <script>`, requires the\nroot password (not your user password), defaults to root.\nUse --suuser to specify a user; defaults to root if unset.\n"
+}
+,
+{
+"zh"
+:
+"为什么用 x sudo 而非裸 sudo：例如你用 `x env use jq` 安装了 jq 到 HOME 下，\n`sudo jq` 会因 PATH 被重置而报 \"command not found\"。x sudo 保持 PATH，\n`x sudo jq` 正常执行。任何装在 HOME 下的软件（node、python 等）同理。\n"
+,
+"en"
+:
+"Why x sudo over bare sudo: e.g. you installed jq via `x env use jq` under HOME,\n`sudo jq` fails with \"command not found\" because sudo resets PATH.\n`x sudo jq` works because PATH is preserved. Same for any software\ninstalled under HOME (node, python, etc.).\n"
+}
+]
+,
+"--suuser"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Specify the username for the su command"
+,
+"zh"
+:
+"指定 su 命令的用户名"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"username"
+,
+"zh"
+:
+"用户名"
+}
+}
+}
+,
+"#n"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Command and arguments to run with elevated privileges"
+,
+"zh"
+:
+"要以提升权限运行的命令和参数"
+}
+,
+"#exec"
+:
+"___X_CMD_ADVISE__COMP_IS_LIST_CMD_NAME=1 ___x_cmd_advise__comp_from_xcmd_or_origin"
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x sudo vim /etc/hosts"
+,
+"en"
+:
+"Edit system hosts file with root privileges"
+,
+"zh"
+:
+"以 root 权限编辑系统 hosts 文件"
+}
+,
+{
+"cmd"
+:
+"x sudo apt update"
+,
+"en"
+:
+"Update package index (auto-selects sudo/doas/su)"
+,
+"zh"
+:
+"更新软件包索引（自动选择 sudo/doas/su）"
+}
+,
+{
+"cmd"
+:
+"x sudo --suuser admin whoami"
+,
+"en"
+:
+"Run as specific user using su"
+,
+"zh"
+:
+"使用 su 以指定用户身份运行"
+}
+,
+{
+"cmd"
+:
+"x sudo hostname set myhost"
+,
+"en"
+:
+"Execute x-cmd command with sudo (preserves PATH)"
+,
+"zh"
+:
+"以 sudo 执行 x-cmd 命令（保持 PATH）"
+}
+]
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com"
+}
+}
+}
+

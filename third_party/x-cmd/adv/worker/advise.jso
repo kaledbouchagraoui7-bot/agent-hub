@@ -1,0 +1,692 @@
+{
+"#name"
+:
+{
+"worker"
+:
+null
+,
+"zh"
+:
+"Worker 进程管理器"
+,
+"en"
+:
+"Worker process manager"
+}
+,
+"#synopsis"
+:
+[
+"x worker <subcmd> [options]"
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"后台 Worker 进程管理模块，支持启动、停止、查询、存活检查、列表查看。\n通过命名空间和名称隔离不同 Worker，使用进程指纹验证存活状态。\n"
+,
+"en"
+:
+"Background worker process manager with start, stop, query, alive check, and list.\nIsolates workers by namespace and name, uses process fingerprint for alive verification.\n"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"三者分工：worker 是常驻后台进程管理（如守护服务）；bgjob 是一次性后台任务（run and finish）；cron 是循环定时任务调度。\n完整对比参见 x bgjob --help。\n"
+,
+"en"
+:
+"Three-way comparison: worker = persistent background process (e.g. daemon); bgjob = one-shot background task; cron = recurring scheduled task.\nSee x bgjob --help for full comparison.\n"
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x worker run --name mytask -- my_command arg1"
+,
+"zh"
+:
+"示例: 启动一个名为 mytask 的后台 Worker"
+,
+"en"
+:
+"Example: Start a background worker named mytask"
+}
+,
+{
+"cmd"
+:
+"x worker stop --name mytask"
+,
+"zh"
+:
+"示例: 关闭名为 mytask 的后台 Worker"
+,
+"en"
+:
+"Example: Stop the background worker named mytask"
+}
+,
+{
+"cmd"
+:
+"x worker isalive --name mytask"
+,
+"zh"
+:
+"示例: 检查 Worker 是否存活"
+,
+"en"
+:
+"Example: Check if worker is alive"
+}
+,
+{
+"cmd"
+:
+"x worker info --name mytask"
+,
+"zh"
+:
+"示例: 查看 Worker 信息（PID、启动时间、状态）"
+,
+"en"
+:
+"Example: Show worker info (PID, start time, status)"
+}
+,
+{
+"cmd"
+:
+"x worker ls"
+,
+"zh"
+:
+"示例: 列出所有 Worker"
+,
+"en"
+:
+"Example: List all workers"
+}
+,
+{
+"cmd"
+:
+"x worker run --ns myapp --name worker1 -- my_script.sh"
+,
+"zh"
+:
+"示例: 在自定义命名空间中启动 Worker"
+,
+"en"
+:
+"Example: Start worker in custom namespace"
+}
+]
+,
+"#subcmd:Manage"
+:
+[
+"run"
+,
+"stop"
+,
+"isalive"
+,
+"info"
+,
+"ls"
+]
+,
+"run"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"启动一个后台 Worker 进程"
+,
+"en"
+:
+"Start a background worker process"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"写了一个长跑脚本不想占终端？用 --name 命名后启动，日志自动保存在 runner.$name 目录"
+,
+"en"
+:
+"Got a long-running script? Name it with --name and run in background; logs are auto-saved under runner.$name"
+}
+]
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间"
+,
+"en"
+:
+"Specify namespace"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"命名空间名称"
+,
+"en"
+:
+"Namespace name"
+}
+}
+}
+,
+"--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 Worker 名称"
+,
+"en"
+:
+"Specify worker name"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Worker 名称"
+,
+"en"
+:
+"Worker name"
+}
+}
+}
+,
+"--"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"分隔选项与要执行的命令"
+,
+"en"
+:
+"Separator between options and the command to run"
+}
+}
+}
+,
+"stop"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"关闭指定 Worker 进程并清理状态文件"
+,
+"en"
+:
+"Stop the specified worker process and remove its state file"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"进程卡住不退？调大 --timeout（默认 3 秒），超时后自动 SIGKILL；日志和命令文件不受影响"
+,
+"en"
+:
+"Process stuck? Increase --timeout (default 3s); SIGKILL kicks in after timeout. Logs and cmd files are preserved"
+}
+]
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间"
+,
+"en"
+:
+"Specify namespace"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"命名空间名称"
+,
+"en"
+:
+"Namespace name"
+}
+}
+}
+,
+"--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 Worker 名称"
+,
+"en"
+:
+"Specify worker name"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Worker 名称"
+,
+"en"
+:
+"Worker name"
+}
+}
+}
+,
+"--timeout"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"SIGTERM 等待超时秒数"
+,
+"en"
+:
+"Seconds to wait for SIGTERM before forcing SIGKILL"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"超时秒数，默认 3"
+,
+"en"
+:
+"Timeout in seconds, default 3"
+}
+}
+}
+}
+,
+"isalive"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"检查指定 Worker 进程是否仍在运行"
+,
+"en"
+:
+"Check if the specified worker process is still running"
+}
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间"
+,
+"en"
+:
+"Specify namespace"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"命名空间名称"
+,
+"en"
+:
+"Namespace name"
+}
+}
+}
+,
+"--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 Worker 名称"
+,
+"en"
+:
+"Specify worker name"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Worker 名称"
+,
+"en"
+:
+"Worker name"
+}
+}
+}
+}
+,
+"info"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示 Worker 详细信息"
+,
+"en"
+:
+"Show worker details"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"输出包含 PID、启动时间、状态（ongoing/done）；适合在脚本中判断 Worker 是否还在跑"
+,
+"en"
+:
+"Output includes PID, start time, state (ongoing/done); handy for scripting to check if a worker is still alive"
+}
+]
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间"
+,
+"en"
+:
+"Specify namespace"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"命名空间名称"
+,
+"en"
+:
+"Namespace name"
+}
+}
+}
+,
+"--name"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定 Worker 名称"
+,
+"en"
+:
+"Specify worker name"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"Worker 名称"
+,
+"en"
+:
+"Worker name"
+}
+}
+}
+}
+,
+"ls"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"列出所有 Worker"
+,
+"en"
+:
+"List all workers"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"默认 TSV 输出，各列含义为：name（Worker 名称）、pid（进程 ID）、fingerprint（进程指纹）、stime（启动时间戳）、state（ongoing 运行中 / done 已结束）。\n需要结构化数据可用 --json 或 --yml。\n"
+,
+"en"
+:
+"TSV by default. Columns are: name (worker name), pid (process ID), fingerprint (process fingerprint), stime (start epoch), state (ongoing / done).\nUse --json or --yml for structured output.\n"
+}
+]
+,
+"--ns"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"指定命名空间"
+,
+"en"
+:
+"Specify namespace"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"命名空间名称"
+,
+"en"
+:
+"Namespace name"
+}
+}
+}
+,
+"--tsv"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 TSV 格式输出"
+,
+"en"
+:
+"Output in TSV format"
+}
+}
+,
+"--json"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 JSON 格式输出"
+,
+"en"
+:
+"Output in JSON format"
+}
+}
+,
+"--yml"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"以 YAML 格式输出"
+,
+"en"
+:
+"Output in YAML format"
+}
+}
+}
+,
+"#other"
+:
+{
+"en"
+:
+{
+"Please visit our homepage for more information:"
+:
+"https://x-cmd.com/mod/worker"
+}
+,
+"zh"
+:
+{
+"请访问我们的主页以获取更多信息："
+:
+"https://x-cmd.com/mod/worker"
+}
+}
+}
+

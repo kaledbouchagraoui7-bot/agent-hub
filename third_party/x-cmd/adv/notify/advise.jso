@@ -1,0 +1,168 @@
+{
+"#name"
+:
+{
+"notify"
+:
+null
+,
+"zh"
+:
+"发送系统通知"
+,
+"en"
+:
+"Send system notification"
+}
+,
+"#synopsis"
+:
+[
+{
+"x notify [--title <title>] [--icon <icon>] <msg>"
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"跨平台发送桌面通知，自动识别系统并使用对应原生通知后端（macOS、Linux、Windows / WSL）"
+,
+"en"
+:
+"Send cross-platform desktop notifications using the OS-native backend (macOS, Linux, Windows / WSL)"
+}
+,
+"#tip"
+:
+[
+{
+"zh"
+:
+"后端依赖：macOS 使用 osascript，Linux 使用 notify-send（需 libnotify），Windows / WSL 使用 PowerShell。"
+,
+"en"
+:
+"Backend dependencies: osascript on macOS, notify-send (libnotify) on Linux, PowerShell on Windows / WSL."
+}
+,
+{
+"zh"
+:
+"msg 与 title 中的引号和反斜杠会自动转义以适配各平台通知接口。"
+,
+"en"
+:
+"Quotes and backslashes in msg and title are auto-escaped per platform."
+}
+,
+{
+"zh"
+:
+"macOS 的 `display notification` 不支持自定义 icon，--icon 在 macOS 上会被忽略。"
+,
+"en"
+:
+"macOS `display notification` does not support custom icons; --icon is ignored on macOS."
+}
+]
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x notify \"build finished\""
+,
+"zh"
+:
+"示例: 发送一条默认标题的通知"
+,
+"en"
+:
+"Example: Send a notification with the default title"
+}
+,
+{
+"cmd"
+:
+"x notify --title \"Build\" \"build finished\""
+,
+"zh"
+:
+"示例: 自定义通知标题"
+,
+"en"
+:
+"Example: Use a custom notification title"
+}
+,
+{
+"cmd"
+:
+"x notify --icon /usr/share/icons/Adwaita/symbolic/status/dialog-warning.svg \"task done\""
+,
+"zh"
+:
+"示例: Linux/Windows 上使用自定义图标"
+,
+"en"
+:
+"Example: Use a custom icon on Linux/Windows"
+}
+]
+,
+"--title|-t"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"通知标题，默认 X-CMD Notify"
+,
+"en"
+:
+"Notification title, default X-CMD Notify"
+}
+}
+,
+"--icon|-i"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"自定义图标路径（Linux/Windows 生效，macOS 忽略）"
+,
+"en"
+:
+"Custom icon path (Linux/Windows only; ignored on macOS)"
+}
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"通知内容"
+,
+"en"
+:
+"Notification message"
+}
+}
+}
+

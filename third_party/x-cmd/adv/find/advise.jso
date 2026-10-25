@@ -1,0 +1,344 @@
+{
+"#name"
+:
+{
+"find"
+:
+null
+,
+"zh"
+:
+"默认剪枝噪音目录的 find 封装，为 AI Agent 设计。通过控制隐藏目录，非隐藏目录，home目录噪音三个维度管理剪枝。"
+,
+"en"
+:
+"Shell wrapper around find with default prune for AI agents. Manages pruning via three dimensions: hidden dirs, project noise, and HOME platform dirs."
+}
+,
+"#synopsis"
+:
+[
+{
+"x find [prune-args] [--] <path> [find-expr]"
+:
+null
+}
+,
+{
+"x find . -name \"*.ts\""
+:
+null
+}
+,
+{
+"x find --prune vendor -- . -name \"*.go\""
+:
+null
+}
+,
+{
+"x find --unhide .vscode:.claude -- . -name \"*.ts\""
+:
+null
+}
+]
+,
+"#desc"
+:
+{
+"zh"
+:
+"100% 兼容原生 find 表达式，自动剪枝噪音目录以加速搜索。默认排除隐藏目录，以及 node_modules 和 __pycache__。搜索根目录为 $HOME 时，自动排除平台系统目录以避免权限弹窗。"
+,
+"en"
+:
+"100% native find compatible, auto-prunes noise dirs to speed up search. Excludes hidden dirs, node_modules and __pycache__ by default. Under $HOME, auto-excludes platform dirs to avoid permission dialogs."
+}
+,
+"#tip"
+:
+[
+{
+"en"
+:
+"Note! Three prune dimensions : (1) Hidden dirs — the main noise source. .* blanket rule, --unhide to exempt specific dirs; (2) Project noise — only node_modules, __pycache__ by default, --prune to add more; (3) HOME — auto-exclude platform dirs (macOS: Applications/Library etc) to avoid permission dialogs, only active when start root is $HOME, --no-homeprune to disable.\n"
+,
+"zh"
+:
+"注意！请使用三个维度管理 prune：(1) 隐藏目录——主要噪声来源，默认全部排除，通过 --unhide 放行指定目录；(2) 非隐藏目录，默认排除 node_modules、__pycache__，可通过 --prune 追加；(3) 搜索根目录为 $HOME 时，自动排除平台目录（macOS: Applications/Library 等）避免权限弹窗，可用 --no-homeprune 关闭。\n"
+}
+,
+{
+"en"
+:
+"--prune and --unhide support : separator for multiple values: --prune vendor:venv is equivalent to --prune vendor --prune venv.\n"
+,
+"zh"
+:
+"--prune 和 --unhide 支持 : 分隔多值：--prune vendor:venv 等同于 --prune vendor --prune venv。\n"
+}
+,
+{
+"en"
+:
+"For git projects, prefer git ls-files and git grep for faster indexed search. For system-wide search, use mdfind (macOS) or locate (Linux).\n"
+,
+"zh"
+:
+"在 git 项目中，优先使用 git ls-files 和 git grep 进行更高效的索引搜索。全局搜索可使用 mdfind (macOS) 或 locate (Linux)。\n"
+}
+,
+{
+"en"
+:
+"Use x bfind for BFS (breadth-first) search — shares the same prune rules, results sorted by depth (shallow first). Default depth 3, adjustable with -d.\n"
+,
+"zh"
+:
+"使用 x bfind 进行 BFS（广度优先）搜索 — 共享排除规则，结果按深度排序（浅层优先）。默认 3 层，可用 -d 调整。\n"
+}
+,
+{
+"en"
+:
+"Principle: find ROOT ! \\( [hidden dir control] -prune -o <item1> -prune -o <item2> -prune ... \\) [user expression]. Three dimensions is a thinking model — --prune accepts any dir name including hidden ones, generating a separate prune condition. If both --unhide and --prune target the same hidden dir, it still gets pruned.\n"
+,
+"zh"
+:
+"原理：find ROOT ! \\( [隐藏目录控制] -prune -o <排除项1> -prune -o <排除项2> -prune ... \\) [用户表达式]。三维是思维框架——--prune 接受任何目录名（含隐藏目录），生成独立的排除条件。若 --unhide 和 --prune 同时指向同一隐藏目录，该目录仍会被排除。\n"
+}
+]
+,
+"--unhide"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"放行指定隐藏目录（支持 : 分隔多值）"
+,
+"en"
+:
+"Exempt hidden dirs from prune (supports : separator)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"隐藏目录名（如 .vscode:.claude）"
+,
+"en"
+:
+"Hidden dir name (e.g. .vscode:.claude)"
+}
+}
+}
+,
+"--prune"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"追加排除目录（支持 : 分隔多值）"
+,
+"en"
+:
+"Add prune targets (supports : separator)"
+}
+,
+"#1"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"目录名（如 vendor:venv）"
+,
+"en"
+:
+"Dir name (e.g. vendor:venv)"
+}
+}
+}
+,
+"--unhide-all"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"不排除任何隐藏目录"
+,
+"en"
+:
+"Do not exclude any hidden directories"
+}
+}
+,
+"--reset-prune"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"清空项目噪音列表（隐藏目录排除和 HOME 排除不受影响）"
+,
+"en"
+:
+"Clear project noise list (hidden dir prune and HOME prune unaffected)"
+}
+}
+,
+"--no-homeprune"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"关闭 $HOME 目录下的自动排除"
+,
+"en"
+:
+"Disable automatic HOME directory prune"
+}
+}
+,
+"-v|--verbose"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"显示当前生效的排除列表"
+,
+"en"
+:
+"Show active prune lists"
+}
+}
+,
+"--dryrun"
+:
+{
+"#desc"
+:
+{
+"zh"
+:
+"打印生成的 find 表达式，不执行"
+,
+"en"
+:
+"Print the generated find expression without executing"
+}
+}
+,
+"#tldr"
+:
+[
+{
+"cmd"
+:
+"x find . -name \"*.ts\""
+,
+"zh"
+:
+"搜索 .ts 文件（自动排除隐藏目录和噪音）"
+,
+"en"
+:
+"Search .ts files (auto prune hidden dirs + noise)"
+}
+,
+{
+"cmd"
+:
+"x find --unhide .vscode:.claude -- . -name \"*.json\""
+,
+"zh"
+:
+"放行 .vscode .claude，找 json"
+,
+"en"
+:
+"Keep .vscode .claude, find json files"
+}
+,
+{
+"cmd"
+:
+"x find --prune build:release -- . -name \"*.go\""
+,
+"zh"
+:
+"追加排除 build 和 release 目录"
+,
+"en"
+:
+"Add build and release to prune list"
+}
+,
+{
+"cmd"
+:
+"x find --no-homeprune ~ -name \"*.json\""
+,
+"zh"
+:
+"HOME 找 json，关闭 HOME 排除"
+,
+"en"
+:
+"HOME find json, disable HOME prune"
+}
+,
+{
+"cmd"
+:
+"x find --reset-prune --prune release:build -- . -name \"*.log\""
+,
+"zh"
+:
+"重设 prune 列表，排除 release 和 build 两个目录"
+,
+"en"
+:
+"Reset prune list, exclude release and build dirs"
+}
+,
+{
+"cmd"
+:
+"x find --unhide-all --reset-prune --no-homeprune -- . -name \"*.ts\""
+,
+"zh"
+:
+"三维全关，等同 raw find"
+,
+"en"
+:
+"All three dimensions off, equivalent to raw find"
+}
+]
+}
+

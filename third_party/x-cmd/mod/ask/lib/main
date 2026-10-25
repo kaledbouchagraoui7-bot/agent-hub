@@ -1,0 +1,105 @@
+# shellcheck shell=dash
+
+# default no-check
+# default itermax  3
+
+# TODO: Add --check, --itermax, --itermin options
+# TODO: Add chat --request fallback (refer to is coco mode) for provider selection
+
+___x_cmd log init ask
+___x_cmd_ask___main(){
+    [ "$#" -gt 0 ] ||   set -- --help
+
+    local is_quick="" is_debug="" is_pipe=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)      ___x_cmd help -m ask "$@";      return 0 ;;
+
+            # --check)      ;;
+            # --itermax)    ;;
+            # --itermin)    ;;
+
+            --quick)        is_quick=1; shift ;;
+            --debug)        is_debug=1; shift ;;
+
+            --)             shift ;     break ;;
+            -|--pipe)       is_pipe=1 ;  shift ;;
+            *)              break ;;
+        esac
+    done
+
+    local IFS=' '
+    local msg="$*";     shift $#
+
+    if [ "$is_pipe" = "1" ]; then
+        local stdin_content
+        stdin_content="$(___x_cmd_cmds cat)" || return $?
+        [ -z "$stdin_content" ] || {
+            msg="${msg:+"${msg}${___X_CMD_UNSEENCHAR_NEWLINE}${___X_CMD_UNSEENCHAR_NEWLINE}"}<STDIN>
+${stdin_content}
+</STDIN>"
+        }
+    fi
+
+    [ -n "$msg" ]   ||  return 0
+
+    local x_=""
+    ___x_cmd epoch get_
+    local tmpfile="$___X_CMD_ROOT_TMP/ask/result/${x_}-$$.result"
+    ___x_cmd ensurefp "$tmpfile"
+
+    local prompt="You are a direct response assistant. The user asks you a question or makes a request. Provide a focused answer.
+
+## MANDATORY — WRITE TO FILE (NON-NEGOTIABLE)
+You MUST write your answer to this exact file path:
+  $tmpfile
+
+You have access to file-writing capabilities. USE THEM. Do NOT rely on chat output.
+Failure to write to the file is a COMPLETE FAILURE.
+
+## Absolute Rules
+1. USE your available file-writing tool/function/capability to write to '$tmpfile' — Do NOT output the answer in the conversation text.
+2. ZERO chat output — Your entire response must be the action of writing the file. No confirmations, no summaries, no 'Here is the answer'.
+3. File content = answer ONLY — No preamble, no postamble, no thinking, no markdown wrapping unless the answer itself is code.
+4. Give a direct, focused response. Do not offer alternatives unless explicitly asked.
+5. If you cannot answer the request, write ONLY this exact line to the file:
+   ___ASK_FAILED___:[brief reason]
+6. AFTER writing, verify the file exists at '$tmpfile'.
+
+## User's Ask
+$msg"
+
+    set -- --tool read-write
+
+    if [ -n "$is_quick" ]; then
+        set -- "$@" --no-thinking
+    fi
+
+    if [ -n "$is_debug" ]; then
+        set -- "$@" --debug
+    fi
+
+    ___x_cmd agent request "$@" "$prompt" >/dev/null || return $?
+
+    [ -f "$tmpfile" ] || return 1
+
+    local firstline
+    IFS= read -r firstline < "$tmpfile" 2>/dev/null
+
+    case "$firstline" in
+        ___ASK_FAILED___:*)
+            local reason="${firstline#___ASK_FAILED___:}"
+            if [ -n "$reason" ]; then
+                ask:error "$reason"
+            else
+                ask:error "Failed to answer"
+            fi
+            ___x_cmd rmrf "$tmpfile"
+            return 1
+            ;;
+    esac
+
+    ___x_cmd_cmds cat "$tmpfile"
+    ___x_cmd rmrf "$tmpfile"
+}

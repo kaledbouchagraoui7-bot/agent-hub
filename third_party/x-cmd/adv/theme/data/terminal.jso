@@ -1,0 +1,146 @@
+{
+"--apple"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Theme of Apple"
+,
+"zh"
+:
+"apple 的主题"
+}
+}
+,
+"--iterm"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Theme of iterm"
+,
+"zh"
+:
+"iterm 的主题"
+}
+}
+,
+"--vscode"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Theme of vscode"
+,
+"zh"
+:
+"vscode 的主题"
+}
+}
+,
+"--windows"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Theme of windows terminal"
+,
+"zh"
+:
+"windows terminal 的主题"
+}
+}
+,
+"--gnome"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Theme of gnome"
+,
+"zh"
+:
+"gnome 的主题"
+}
+}
+,
+"--konsole"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Theme of konsole"
+,
+"zh"
+:
+"konsole 的主题"
+}
+}
+,
+"--kde"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Theme of kde"
+,
+"zh"
+:
+"kde 的主题"
+}
+}
+,
+"--ide"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Theme of ide"
+,
+"zh"
+:
+"ide 的主题"
+}
+}
+,
+"--default"
+:
+{
+"#desc"
+:
+{
+"en"
+:
+"Theme of default"
+,
+"zh"
+:
+"默认主题"
+}
+}
+}
+
